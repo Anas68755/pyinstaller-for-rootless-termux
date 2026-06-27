@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>2048 نيون - 8×8 مع أصوات</title>
+    <style>
+        /* === إعدادات عامة === */
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #0b0b12;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Cairo', sans-serif;
+            padding: 16px;
+            direction: rtl;
+        }
+
+        .game-wrapper {
+            max-width: 700px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 40px;
+            padding: 20px;
+            box-shadow: 0 0 60px rgba(0, 255, 255, 0.15), 0 0 120px rgba(255, 0, 255, 0.08);
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        /* === الرأس === */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .title {
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00f0ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 240, 255, 0.4), 0 0 60px rgba(255, 0, 255, 0.3);
+            letter-spacing: 2px;
+        }
+        .scores {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .score-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 4px 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+            min-width: 60px;
+        }
+        .score-box .label {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            color: #8a8aaa;
+            letter-spacing: 1px;
+        }
+        .score-box .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+        }
+        .score-box.best .value {
+            color: #ff66ff;
+            text-shadow: 0 0 15px rgba(255, 102, 255, 0.5);
+        }
+        .btn-restart {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #fff;
+            font-size: 1.2rem;
+            padding: 6px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.1);
+            line-height: 1;
+        }
+        .btn-restart:hover {
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        /* === الشبكة === */
+        .grid-container {
+            position: relative;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 20px;
+            padding: 10px;
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            margin: 8px 0 12px;
+            aspect-ratio: 1/1;
+            width: 100%;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-gap: 6px;
+            width: 100%;
+            height: 100%;
+        }
+        .cell {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            aspect-ratio: 1/1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #fff;
+            transition: background 0.1s ease, box-shadow 0.1s ease, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+            will-change: transform, background, box-shadow;
+        }
+
+        /* === أنماط البلاطات (نيون مكثف للأرقام الكبيرة) === */
+        .tile-0 {
+            background: transparent !important;
+            box-shadow: none !important;
+            color: transparent !important;
+        }
+        .tile-2 {
+            background: rgba(0, 240, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+            color: #b0f0ff;
+            text-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+        }
+        .tile-4 {
+            background: rgba(255, 0, 255, 0.2);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.2);
+            color: #ffb0ff;
+            text-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+        }
+        .tile-8 {
+            background: rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+            color: #90ffb0;
+            text-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+        }
+        .tile-16 {
+            background: rgba(255, 140, 0, 0.25);
+            box-shadow: 0 0 25px rgba(255, 140, 0, 0.25);
+            color: #ffcc80;
+            text-shadow: 0 0 20px rgba(255, 140, 0, 0.6);
+        }
+        .tile-32 {
+            background: rgba(255, 234, 0, 0.25);
+            box-shadow: 0 0 25px rgba(255, 234, 0, 0.25);
+            color: #fff5b0;
+            text-shadow: 0 0 20px rgba(255, 234, 0, 0.6);
+        }
+        .tile-64 {
+            background: rgba(255, 0, 64, 0.25);
+            box-shadow: 0 0 25px rgba(255, 0, 64, 0.25);
+            color: #ff8a9e;
+            text-shadow: 0 0 20px rgba(255, 0, 64, 0.6);
+        }
+        .tile-128 {
+            background: rgba(180, 0, 255, 0.25);
+            box-shadow: 0 0 30px rgba(180, 0, 255, 0.3);
+            color: #d9b0ff;
+            text-shadow: 0 0 25px rgba(180, 0, 255, 0.7);
+        }
+        .tile-256 {
+            background: rgba(0, 255, 204, 0.25);
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.3);
+            color: #90ffea;
+            text-shadow: 0 0 25px rgba(0, 255, 204, 0.7);
+        }
+        .tile-512 {
+            background: rgba(255, 102, 255, 0.25);
+            box-shadow: 0 0 35px rgba(255, 102, 255, 0.35);
+            color: #ffccff;
+            text-shadow: 0 0 30px rgba(255, 102, 255, 0.8);
+        }
+        .tile-1024 {
+            background: rgba(255, 204, 0, 0.3);
+            box-shadow: 0 0 40px rgba(255, 204, 0, 0.4);
+            color: #fff0b0;
+            text-shadow: 0 0 35px rgba(255, 204, 0, 0.9);
+            font-size: 1rem;
+        }
+        .tile-2048 {
+            background: rgba(255, 68, 68, 0.35);
+            box-shadow: 0 0 50px rgba(255, 68, 68, 0.5);
+            color: #ffb0b0;
+            text-shadow: 0 0 40px rgba(255, 68, 68, 0.9);
+            font-size: 1rem;
+            animation: glow-pulse 1.2s infinite alternate;
+        }
+        /* للأرقام الأكبر من 2048 */
+        .tile-4096 {
+            background: rgba(255, 215, 0, 0.35);
+            box-shadow: 0 0 55px rgba(255, 215, 0, 0.5);
+            color: #ffeb99;
+            text-shadow: 0 0 45px rgba(255, 215, 0, 0.9);
+            font-size: 0.9rem;
+        }
+        .tile-8192 {
+            background: rgba(255, 20, 147, 0.35);
+            box-shadow: 0 0 60px rgba(255, 20, 147, 0.5);
+            color: #ffb0d9;
+            text-shadow: 0 0 50px rgba(255, 20, 147, 0.9);
+            font-size: 0.9rem;
+        }
+
+        @keyframes glow-pulse {
+            0% {
+                box-shadow: 0 0 40px rgba(255, 68, 68, 0.5), inset 0 0 20px rgba(255, 68, 68, 0.1);
+            }
+            100% {
+                box-shadow: 0 0 70px rgba(255, 68, 68, 0.8), inset 0 0 35px rgba(255, 68, 68, 0.2);
+            }
+        }
+
+        /* === تأثيرات الحركة === */
+        .cell.tile-new {
+            animation: pop-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes pop-in {
+            0% {
+                transform: scale(0.2) rotate(-3deg);
+                opacity: 0.2;
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+        .cell.tile-merged {
+            animation: merge-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes merge-pop {
+            0% {
+                transform: scale(1.35);
+                filter: brightness(2);
+            }
+            100% {
+                transform: scale(1);
+                filter: brightness(1);
+            }
+        }
+
+        /* === رسالة النهاية === */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(6px);
+            border-radius: 20px;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            color: #fff;
+            gap: 14px;
+            padding: 20px;
+        }
+        .overlay.show {
+            display: flex;
+            animation: fade-in 0.4s ease;
+        }
+        @keyframes fade-in {
+            0% {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .overlay .msg {
+            font-size: 2.2rem;
+            font-weight: 900;
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+        }
+        .overlay .msg.win {
+            color: #00ffcc;
+            text-shadow: 0 0 60px rgba(0, 255, 204, 0.6);
+        }
+        .overlay .msg.lose {
+            color: #ff4466;
+            text-shadow: 0 0 60px rgba(255, 68, 102, 0.6);
+        }
+        .overlay .btn-retry {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 1.1rem;
+            padding: 10px 28px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+            font-weight: 600;
+        }
+        .overlay .btn-retry:hover {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 50px rgba(0, 240, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        /* === شريط الحالة === */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #6a6a8a;
+            font-size: 0.75rem;
+            padding: 0 4px;
+        }
+        .status-bar .hint {
+            color: #8a8aaa;
+            letter-spacing: 0.5px;
+        }
+        .status-bar .sound-toggle {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #aaa;
+            padding: 4px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+        .status-bar .sound-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        /* === توافق الشاشات الصغيرة === */
+        @media (max-width: 600px) {
+            .game-wrapper {
+                padding: 12px;
+            }
+            .title {
+                font-size: 1.5rem;
+            }
+            .score-box {
+                padding: 3px 8px;
+                min-width: 45px;
+            }
+            .score-box .value {
+                font-size: 1rem;
+            }
+            .grid {
+                grid-gap: 4px;
+            }
+            .grid-container {
+                padding: 6px;
+            }
+            .cell {
+                font-size: 0.85rem;
+                border-radius: 8px;
+            }
+            .overlay .msg {
+                font-size: 1.6rem;
+            }
+        }
+        @media (max-width: 400px) {
+            .cell {
+                font-size: 0.65rem;
+            }
+            .grid {
+                grid-gap: 3px;
+            }
+            .grid-container {
+                padding: 4px;
+            }
+            .title {
+                font-size: 1.2rem;
+            }
+            .status-bar {
+                font-size: 0.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-wrapper">
+        <!-- الرأس -->
+        <div class="header">
+            <span class="title">2048 نيون</span>
+            <div class="scores">
+                <div class="score-box">
+                    <div class="label">النقاط</div>
+                    <div class="value" id="scoreDisplay">0</div>
+                </div>
+                <div class="score-box best">
+                    <div class="label">الأفضل</div>
+                    <div class="value" id="bestDisplay">0</div>
+                </div>
+                <button class="btn-restart" id="restartBtn" title="إعادة تشغيل">↻</button>
+            </div>
+        </div>
+
+        <!-- الشبكة -->
+        <div class="grid-container" id="gridContainer">
+            <div class="grid" id="grid"></div>
+            <div class="overlay" id="overlay">
+                <div class="msg" id="overlayMsg"></div>
+                <button class="btn-retry" id="retryBtn">↻ العب مجدداً</button>
+            </div>
+        </div>
+
+        <!-- شريط الحالة -->
+        <div class="status-bar">
+            <span class="hint">🡑 🡓  معكوسة الجانبية</span>
+            <button class="sound-toggle" id="soundToggle">🔊 صوت</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // === إعدادات ===
+            const SIZE = 8;
+            const WIN_VALUE = 2048;
+
+            // === عناصر DOM ===
+            const gridEl = document.getElementById('grid');
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const bestDisplay = document.getElementById('bestDisplay');
+            const overlay = document.getElementById('overlay');
+            const overlayMsg = document.getElementById('overlayMsg');
+            const restartBtn = document.getElementById('restartBtn');
+            const retryBtn = document.getElementById('retryBtn');
+            const soundToggle = document.getElementById('soundToggle');
+
+            // === نظام الصوت (باستخدام Web Audio API) ===
+            let audioCtx = null;
+            let soundEnabled = true;
+
+            function initAudio() {
+                if (!audioCtx) {
+                    try {
+                        audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                    } catch (e) {
+                        console.warn('Web Audio API غير مدعوم');
+                    }
+                }
+            }
+
+            function playTone(freq, duration, volume = 0.15, type = 'sine') {
+                if (!soundEnabled || !audioCtx) return;
+                try {
+                    const oscillator = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    oscillator.type = type;
+                    oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                    oscillator.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + duration);
+                } catch (e) {
+                    // تجاهل أخطاء الصوت
+                }
+            }
+
+            function playMoveSound() {
+                playTone(400, 0.08, 0.08);
+            }
+
+            function playMergeSound() {
+                playTone(600, 0.15, 0.15, 'square');
+                setTimeout(() => playTone(800, 0.1, 0.1, 'sine'), 100);
+            }
+
+            function playWinSound() {
+                [523, 659, 784, 1047].forEach((freq, i) => {
+                    setTimeout(() => playTone(freq, 0.2, 0.12, 'sine'), i * 150);
+                });
+            }
+
+            function playGameOverSound() {
+                [400, 300, 200].forEach((freq, i) => {
+                    setTimeout(() => playTone(freq, 0.25, 0.1, 'sawtooth'), i * 200);
+                });
+            }
+
+            // === تبديل الصوت ===
+            soundToggle.addEventListener('click', () => {
+                soundEnabled = !soundEnabled;
+                soundToggle.textContent = soundEnabled ? '🔊 صوت' : '🔇 كتم';
+                if (soundEnabled) initAudio();
+            });
+
+            // === حالة اللعبة ===
+            let grid = [];
+            let score = 0;
+            let bestScore = parseInt(localStorage.getItem('bestScoreNeon8x8')) || 0;
+            let gameOver = false;
+            let win = false;
+            let keepPlaying = false;
+
+            // === تهيئة ===
+            function init() {
+                grid = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+                score = 0;
+                gameOver = false;
+                win = false;
+                keepPlaying = false;
+                overlay.classList.remove('show');
+                addRandomTile();
+                addRandomTile();
+                updateDisplay();
+                updateBestScore();
+                initAudio();
+            }
+
+            // === إضافة بلاطة عشوائية ===
+            function addRandomTile() {
+                const empty = [];
+                for (let r = 0; r < SIZE; r++) {
+                    for (let c = 0; c < SIZE; c++) {
+                        if (grid[r][c] === 0) empty.push({ r, c });
+                    }
+                }
+                if (empty.length === 0) return null;
+                const pos = empty[Math.floor(Math.random() * empty.length)];
+                const value = Math.random() < 0.9 ? 2 : 4;
+                grid[pos.r][pos.c] = value;
+                return { r: pos.r, c: pos.c, value };
+            }
+
+            // === تحديث العرض ===
+            function updateDisplay(newTilePos, mergedPositions, isMerge = false) {
+                gridEl.innerHTML = '';
+                let hasMerged = new Set();
+                if (mergedPositions) {
+                    mergedPositions.forEach(p => hasMerged.add(p.r + ',' + p.c));
+                }
+                let newSet = new Set();
+                if (newTilePos) {
+                    newSet.add(newTilePos.r + ',' + newTilePos.c);
+                }
+
+                for (let r = 0; r < SIZE; r++) {
+                    for (let c = 0; c < SIZE; c++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        const val = grid[r][c];
+                        if (val !== 0) {
+                            let tileClass = 'tile-' + val;
+                            // دعم للأرقام الأكبر من 2048
+                            if (!document.querySelector(`.${tileClass}`) && val > 2048) {
+                                // نضيف فئة عامة للأرقام الكبيرة
+                                cell.style.background = `rgba(${Math.min(255, 100 + (val % 255))}, ${Math.min(255, 50 + (val % 200))}, ${Math.min(255, 150 + (val % 100))}, 0.3)`;
+                                cell.style.boxShadow = `0 0 40px rgba(${Math.min(255, 100 + (val % 255))}, ${Math.min(255, 50 + (val % 200))}, ${Math.min(255, 150 + (val % 100))}, 0.3)`;
+                                cell.style.color = '#fff';
+                                cell.style.textShadow = '0 0 30px rgba(255,255,255,0.3)';
+                                if (val >= 10000) cell.style.fontSize = '0.7rem';
+                                else if (val >= 5000) cell.style.fontSize = '0.8rem';
+                            } else {
+                                cell.classList.add(tileClass);
+                            }
+                            cell.textContent = val;
+                            const key = r + ',' + c;
+                            if (newSet.has(key)) {
+                                cell.classList.add('tile-new');
+                            }
+                            if (hasMerged.has(key)) {
+                                cell.classList.add('tile-merged');
+                            }
+                        } else {
+                            cell.classList.add('tile-0');
+                        }
+                        gridEl.appendChild(cell);
+                    }
+                }
+
+                scoreDisplay.textContent = score;
+                updateBestScore();
+
+                if (!win && !keepPlaying) {
+                    if (hasWon()) {
+                        win = true;
+                        showOverlay('🎉 لقد فزت!', 'win');
+                        playWinSound();
+                    }
+                }
+                if (!gameOver && isGameOver()) {
+                    gameOver = true;
+                    if (!win || keepPlaying) {
+                        showOverlay('😵 انتهت اللعبة!', 'lose');
+                        playGameOverSound();
+                    }
+                }
+            }
+
+            // === تحديث أفضل نقاط ===
+            function updateBestScore() {
+                if (score > bestScore) {
+                    bestScore = score;
+                    localStorage.setItem('bestScoreNeon8x8', bestScore);
+                }
+                bestDisplay.textContent = bestScore;
+            }
+
+            // === عرض النافذة المنبثقة ===
+            function showOverlay(text, type) {
+                overlayMsg.textContent = text;
+                overlayMsg.className = 'msg ' + type;
+                overlay.classList.add('show');
+            }
+
+            // === التحقق من الفوز ===
+            function hasWon() {
+                for (let r = 0; r < SIZE; r++) {
+                    for (let c = 0; c < SIZE; c++) {
+                        if (grid[r][c] === WIN_VALUE) return true;
+                    }
+                }
+                return false;
+            }
+
+            // === التحقق من انتهاء اللعبة ===
+            function isGameOver() {
+                for (let r = 0; r < SIZE; r++) {
+                    for (let c = 0; c < SIZE; c++) {
+                        if (grid[r][c] === 0) return false;
+                        if (c < SIZE - 1 && grid[r][c] === grid[r][c + 1]) return false;
+                        if (r < SIZE - 1 && grid[r][c] === grid[r + 1][c]) return false;
+                    }
+                }
+                return true;
+            }
+
+            // === عمليات الانزلاق ===
+            function slideLine(line) {
+                let filtered = line.filter(v => v !== 0);
+                let merged = [];
+                let mergedIndices = [];
+                let i = 0;
+                let hasMerge = false;
+                while (i < filtered.length) {
+                    if (i + 1 < filtered.length && filtered[i] === filtered[i + 1]) {
+                        const newVal = filtered[i] * 2;
+                        merged.push(newVal);
+                        mergedIndices.push(merged.length - 1);
+                        score += newVal;
+                        i += 2;
+                        hasMerge = true;
+                    } else {
+                        merged.push(filtered[i]);
+                        i++;
+                    }
+                }
+                while (merged.length < SIZE) {
+                    merged.push(0);
+                }
+                return { newLine: merged, mergedIndices: mergedIndices, hasMerge };
+            }
+
+            function getCol(col) {
+                return grid.map(row => row[col]);
+            }
+
+            function setCol(col, values) {
+                for (let r = 0; r < SIZE; r++) {
+                    grid[r][col] = values[r];
+                }
+            }
+
+            function getRow(row) {
+                return grid[row].slice();
+            }
+
+            function setRow(row, values) {
+                grid[row] = values.slice();
+            }
+
+            // === تنفيذ الحركة ===
+            function move(direction) {
+                if (gameOver) return false;
+                if (win && !keepPlaying) return false;
+
+                // عكس الأسهم الجانبية
+                let actualDirection = direction;
+                if (direction === 'left') actualDirection = 'right';
+                else if (direction === 'right') actualDirection = 'left';
+
+                let moved = false;
+                let newTilePos = null;
+                let mergedPositions = [];
+                let anyMerge = false;
+                const oldGrid = grid.map(row => row.slice());
+
+                switch (actualDirection) {
+                    case 'up':
+                        for (let c = 0; c < SIZE; c++) {
+                            const col = getCol(c);
+                            const result = slideLine(col);
+                            const newCol = result.newLine;
+                            result.mergedIndices.forEach(idx => {
+                                mergedPositions.push({ r: idx, c: c });
+                            });
+                            setCol(c, newCol);
+                            if (result.hasMerge) anyMerge = true;
+                        }
+                        break;
+                    case 'down':
+                        for (let c = 0; c < SIZE; c++) {
+                            const col = getCol(c).reverse();
+                            const result = slideLine(col);
+                            const newCol = result.newLine.reverse();
+                            result.mergedIndices.forEach(idx => {
+                                const r = SIZE - 1 - idx;
+                                mergedPositions.push({ r: r, c: c });
+                            });
+                            setCol(c, newCol);
+                            if (result.hasMerge) anyMerge = true;
+                        }
+                        break;
+                    case 'left':
+                        for (let r = 0; r < SIZE; r++) {
+                            const row = getRow(r);
+                            const result = slideLine(row);
+                            const newRow = result.newLine;
+                            result.mergedIndices.forEach(idx => {
+                                mergedPositions.push({ r: r, c: idx });
+                            });
+                            setRow(r, newRow);
+                            if (result.hasMerge) anyMerge = true;
+                        }
+                        break;
+                    case 'right':
+                        for (let r = 0; r < SIZE; r++) {
+                            const row = getRow(r).reverse();
+                            const result = slideLine(row);
+                            const newRow = result.newLine.reverse();
+                            result.mergedIndices.forEach(idx => {
+                                const c = SIZE - 1 - idx;
+                                mergedPositions.push({ r: r, c: c });
+                            });
+                            setRow(r, newRow);
+                            if (result.hasMerge) anyMerge = true;
+                        }
+                        break;
+                    default:
+                        return false;
+                }
+
+                // التحقق من التغيير
+                for (let r = 0; r < SIZE; r++) {
+                    for (let c = 0; c < SIZE; c++) {
+                        if (grid[r][c] !== oldGrid[r][c]) {
+                            moved = true;
+                            break;
+                        }
+                    }
+                    if (moved) break;
+                }
+
+                if (!moved) return false;
+
+                // تشغيل الأصوات
+                if (anyMerge) {
+                    playMergeSound();
+                } else {
+                    playMoveSound();
+                }
+
+                const newPos = addRandomTile();
+                if (newPos) {
+                    newTilePos = { r: newPos.r, c: newPos.c };
+                }
+
+                updateDisplay(newTilePos, mergedPositions);
+                return true;
+            }
+
+            // === إعادة التشغيل ===
+            function restartGame() {
+                init();
+            }
+
+            // === الاستمرار بعد الفوز ===
+            function continueGame() {
+                keepPlaying = true;
+                overlay.classList.remove('show');
+            }
+
+            // === أحداث لوحة المفاتيح ===
+            document.addEventListener('keydown', (e) => {
+                const key = e.key;
+                let dir = null;
+                if (key === 'ArrowUp') dir = 'up';
+                else if (key === 'ArrowDown') dir = 'down';
+                else if (key === 'ArrowLeft') dir = 'left';
+                else if (key === 'ArrowRight') dir = 'right';
+                else return;
+
+                e.preventDefault();
+                if (dir) {
+                    move(dir);
+                }
+            });
+
+            // === أحداث اللمس ===
+            let touchStartX = 0,
+                touchStartY = 0;
+            let isSwiping = false;
+
+            document.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                touchStartX = touch.clientX;
+                touchStartY = touch.clientY;
+                isSwiping = true;
+            }, { passive: true });
+
+            document.addEventListener('touchmove', (e) => {
+                if (!isSwiping) return;
+                e.preventDefault();
+            }, { passive: false });
+
+            document.addEventListener('touchend', (e) => {
+                if (!isSwiping) return;
+                isSwiping = false;
+                if (touchStartX === 0 && touchStartY === 0) return;
+                const touchEnd = e.changedTouches[0];
+                const dx = touchEnd.clientX - touchStartX;
+                const dy = touchEnd.clientY - touchStartY;
+                const absDx = Math.abs(dx);
+                const absDy = Math.abs(dy);
+                if (Math.max(absDx, absDy) < 20) return;
+
+                let dir = null;
+                if (absDx > absDy) {
+                    dir = dx > 0 ? 'right' : 'left';
+                } else {
+                    dir = dy > 0 ? 'down' : 'up';
+                }
+                if (dir) move(dir);
+
+                touchStartX = 0;
+                touchStartY = 0;
+            }, { passive: true });
+
+            // === أزرار إعادة التشغيل ===
+            restartBtn.addEventListener('click', restartGame);
+            retryBtn.addEventListener('click', () => {
+                if (win && !keepPlaying) {
+                    restartGame();
+                } else {
+                    restartGame();
+                }
+            });
+
+            // النقر على الخلفية للاستمرار بعد الفوز
+            overlay.addEventListener('click', (e) => {
+                if (win && !keepPlaying) {
+                    e.stopPropagation();
+                    continueGame();
+                }
+            });
+
+            // === بدء اللعبة ===
+            init();
+            bestDisplay.textContent = bestScore;
+
+        })();
+    </script>
+</body>
+</html>

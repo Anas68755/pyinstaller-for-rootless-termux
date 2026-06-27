@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🔥 الحقيقة أو الجرأة · 200+ سؤال</title>
+    <style>
+        /* ── reset & base ── */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Tajawal', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(145deg, #0b0a1a 0%, #1a1035 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            margin: 0;
+            color: #f0eefe;
+            transition: all 0.3s ease;
+        }
+        body.lang-en {
+            direction: ltr;
+        }
+        body.lang-ar {
+            direction: rtl;
+        }
+
+        .game-container {
+            max-width: 680px;
+            width: 100%;
+            background: rgba(20, 18, 48, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 48px;
+            padding: 28px 24px 36px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 215, 0, 0.08);
+        }
+
+        /* header */
+        .title {
+            font-size: 2.4rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-align: center;
+            background: linear-gradient(135deg, #f5c542, #ff8a5c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 30px rgba(255, 200, 50, 0.15);
+            margin-bottom: 4px;
+            line-height: 1.1;
+        }
+        .sub {
+            text-align: center;
+            font-weight: 400;
+            font-size: 0.9rem;
+            color: #a89ec9;
+            letter-spacing: 1px;
+            margin-bottom: 24px;
+            border-bottom: 1px dashed rgba(255, 215, 0, 0.15);
+            padding-bottom: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .sub span {
+            background: rgba(255, 215, 0, 0.08);
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #f5c542;
+        }
+
+        /* language toggle */
+        .lang-toggle {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 40px;
+            padding: 4px 6px;
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .lang-btn {
+            background: transparent;
+            border: none;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #7a6f9a;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            font-family: inherit;
+        }
+        .lang-btn.active {
+            background: rgba(255, 215, 0, 0.15);
+            color: #f5c542;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.05);
+        }
+        .lang-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* prompt card */
+        .prompt-card {
+            background: rgba(10, 8, 28, 0.6);
+            border-radius: 32px;
+            padding: 32px 20px 28px;
+            margin: 8px 0 22px;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 215, 0, 0.06);
+            box-shadow: inset 0 8px 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.25s ease;
+        }
+        .prompt-type-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 4px 16px;
+            border-radius: 40px;
+            background: rgba(255, 215, 0, 0.12);
+            color: #f5c542;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 215, 0, 0.10);
+        }
+        .prompt-text {
+            font-size: 1.6rem;
+            font-weight: 600;
+            line-height: 1.5;
+            text-align: center;
+            color: #f2edff;
+            word-break: break-word;
+            padding: 0 4px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .prompt-number {
+            margin-top: 14px;
+            font-size: 0.75rem;
+            color: #5d5380;
+            letter-spacing: 0.5px;
+        }
+
+        /* buttons */
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0 16px;
+        }
+        .btn {
+            border: none;
+            border-radius: 80px;
+            padding: 16px 10px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            background: rgba(30, 26, 60, 0.7);
+            color: #d6cef0;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            touch-action: manipulation;
+            user-select: none;
+            font-family: inherit;
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+        .btn-truth {
+            background: linear-gradient(145deg, #2f2a6b, #1d184a);
+            border-color: rgba(120, 100, 255, 0.25);
+            color: #c8beff;
+            box-shadow: 0 4px 14px rgba(90, 70, 255, 0.15);
+        }
+        .btn-truth:active {
+            box-shadow: 0 2px 8px rgba(90, 70, 255, 0.25);
+        }
+        .btn-dare {
+            background: linear-gradient(145deg, #6b2a4a, #4a1835);
+            border-color: rgba(255, 100, 120, 0.25);
+            color: #ffc8d4;
+            box-shadow: 0 4px 14px rgba(255, 70, 100, 0.15);
+        }
+        .btn-dare:active {
+            box-shadow: 0 2px 8px rgba(255, 70, 100, 0.25);
+        }
+        .btn-random {
+            background: rgba(255, 215, 0, 0.08);
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            color: #f5d98a;
+            grid-column: 1 / -1;
+            padding: 14px;
+        }
+        .btn-random:active {
+            background: rgba(255, 215, 0, 0.16);
+        }
+
+        /* footer & misc */
+        .footer-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .counter {
+            font-size: 0.85rem;
+            color: #6e6492;
+            letter-spacing: 0.3px;
+        }
+        .counter strong {
+            color: #c4b8ec;
+            font-weight: 600;
+        }
+        .btn-small {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 40px;
+            padding: 6px 14px;
+            font-size: 0.75rem;
+            color: #7a6f9a;
+            cursor: pointer;
+            transition: 0.15s;
+            touch-action: manipulation;
+            font-family: inherit;
+        }
+        .btn-small:active {
+            background: rgba(255, 255, 255, 0.04);
+            color: #b8abda;
+        }
+
+        /* responsive */
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 20px 16px 28px;
+                border-radius: 32px;
+            }
+            .title {
+                font-size: 1.9rem;
+            }
+            .prompt-text {
+                font-size: 1.3rem;
+                min-height: 70px;
+            }
+            .prompt-card {
+                padding: 24px 14px 20px;
+                min-height: 180px;
+            }
+            .btn {
+                padding: 14px 8px;
+                font-size: 0.95rem;
+            }
+            .sub {
+                font-size: 0.8rem;
+            }
+        }
+        @media (max-width: 380px) {
+            .title {
+                font-size: 1.6rem;
+            }
+            .prompt-text {
+                font-size: 1.1rem;
+            }
+            .action-grid {
+                gap: 8px;
+            }
+            .lang-btn {
+                font-size: 0.7rem;
+                padding: 3px 10px;
+            }
+        }
+
+        /* scrollable prompt list (hidden behind card) */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+
+        /* RTL specific adjustments */
+        body.lang-ar .prompt-text {
+            font-family: 'Tajawal', 'Segoe UI', system-ui, sans-serif;
+        }
+        body.lang-ar .title {
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container" role="main">
+    <h1 class="title" id="titleMain">⚡ الحقيقة · الجرأة</h1>
+    <div class="sub">
+        <span id="subBadge">🔥 200+ سؤال</span>
+        <div class="lang-toggle">
+            <button class="lang-btn active" id="langAr" data-lang="ar">🇸🇦 عربي</button>
+            <button class="lang-btn" id="langEn" data-lang="en">🇬🇧 English</button>
+        </div>
+    </div>
+
+    <!-- prompt card -->
+    <div class="prompt-card" id="promptCard">
+        <div class="prompt-type-badge" id="typeBadge">✦ جاهز</div>
+        <div class="prompt-text" id="promptText">اختر <strong style="color:#f5c542;">الحقيقة</strong> أو <strong style="color:#ff8a9e;">الجرأة</strong></div>
+        <div class="prompt-number" id="promptNumber"># —</div>
+    </div>
+
+    <!-- main buttons -->
+    <div class="action-grid">
+        <button class="btn btn-truth" id="truthBtn">🔮 الحقيقة</button>
+        <button class="btn btn-dare" id="dareBtn">⚡ الجرأة</button>
+        <button class="btn btn-random" id="randomBtn">🎲 عشوائي</button>
+    </div>
+
+    <!-- footer -->
+    <div class="footer-actions">
+        <span class="counter" id="counterDisplay"><strong>0</strong> مستخدم · 0T 0D</span>
+        <button class="btn-small" id="resetBtn">⟳ إعادة تعيين</button>
+    </div>
+</div>
+
+<script>
+    (function() {
+        "use strict";
+
+        // ─── PROMPT DATABASE ──────────────────────────────────────────────
+        // 200+ carefully curated Truth & Dare prompts (Bilingual)
+
+        // English prompts
+        const TRUTHS_EN = [
+            "What's the most embarrassing thing you've ever done in public?",
+            "Have you ever lied to your best friend? What about?",
+            "What's the worst date you've ever been on?",
+            "What's a secret you've never told anyone?",
+            "Who in this room would you trust with your life?",
+            "What's the most illegal thing you've ever done?",
+            "Have you ever cheated on a test? How?",
+            "What's the biggest lie you've ever told?",
+            "What's the meanest thing you've ever said to someone?",
+            "Have you ever ghosted someone? Why?",
+            "What's your biggest fear in a relationship?",
+            "What's the most money you've ever found and kept?",
+            "Have you ever stolen anything? What?",
+            "What's a weird habit you have that nobody knows about?",
+            "What's the most awkward kiss you've ever had?",
+            "Have you ever fake-laughed at a joke?",
+            "What's the longest you've gone without showering?",
+            "What's the most childish thing you still do?",
+            "Have you ever creeped on someone's social media?",
+            "What's the worst advice you've ever given?",
+            "Have you ever pretended to like a gift?",
+            "What's something you're secretly proud of?",
+            "What's the most trouble you've ever been in at school/work?",
+            "Have you ever had a crush on a friend's partner?",
+            "What's the most boring thing about you?",
+            "Have you ever lied about your age?",
+            "What's the most embarrassing purchase you've made?",
+            "Have you ever eavesdropped on a conversation?",
+            "What's a fear you have that seems irrational?",
+            "What's the worst song you secretly love?",
+            "Have you ever regretted breaking up with someone?",
+            "What's the most useless talent you have?",
+            "Have you ever cried during a movie? Which one?",
+            "What's the most awkward thing you've said to a crush?",
+            "Have you ever made a fake social media account?",
+            "What's the biggest risk you've ever taken?",
+            "Have you ever hurt someone and not apologized?",
+            "What's a weird food combination you enjoy?",
+            "Have you ever stalked someone online?",
+            "What's the most expensive thing you've broken?",
+            "Have you ever cheated in a game?",
+            "What's the worst thing you've ever done for money?",
+            "Have you ever been jealous of a friend?",
+            "What's the most inappropriate thing you've laughed at?",
+            "Have you ever lied to get out of plans?",
+            "What's the worst haircut you've ever had?",
+            "Have you ever kissed someone and regretted it?",
+            "What's the most embarrassing nickname you've had?",
+            "Have you ever sent a text to the wrong person?",
+            "What's the most awkward family moment you've experienced?",
+            "Have you ever pretended to understand something you didn't?",
+            "What's the worst thing you've ever done while drunk?",
+            "Have you ever lied to a teacher or boss?",
+            "What's a guilty pleasure you have?",
+            "Have you ever been caught doing something you shouldn't?",
+            "What's the most embarrassing thing your parents have seen you do?",
+            "Have you ever had a dream that came true?",
+            "What's the worst thing you've ever eaten?",
+            "Have you ever lied about being sick?",
+            "What's the most impulsive thing you've ever done?",
+            "What's the worst thing you've ever done to a sibling?",
+            "Have you ever had a crush on a teacher?",
+            "What's the most embarrassing ringtone you've had?",
+            "Have you ever broken something and blamed someone else?",
+            "What's the worst thing you've ever said to a partner?",
+            "Have you ever shoplifted anything small?",
+            "What's the most childish thing you still get upset about?",
+            "Have you ever intentionally hurt someone's feelings?",
+            "What's the most embarrassing thing your pet has seen you do?",
+            "Have you ever been in a physical fight? What happened?",
+            "What's the weirdest thing you've ever collected?",
+            "Have you ever lied to get a job or promotion?",
+            "What's the worst thing you've ever done when angry?",
+            "Have you ever broken a promise? Which one?",
+            "What's the most embarrassing memory from high school?",
+            "Have you ever had a crush on a friend's ex?",
+            "What's the worst fashion choice you've ever made?",
+            "Have you ever cheated in a relationship?",
+            "What's the most scared you've ever been?",
+            "Have you ever pretended to know someone you didn't?",
+            "What's the worst thing you've ever done to a friend?",
+            "Have you ever lied to avoid a conflict?",
+            "What's the most embarrassing thing you've done for attention?",
+            "Have you ever gotten revenge on someone?",
+            "What's the worst thing you've ever smelled?",
+            "Have you ever had a nightmare that felt real?",
+            "What's the most boring movie you've ever watched fully?",
+            "Have you ever lied about your location?",
+            "What's the worst thing you've ever done at a party?",
+            "Have you ever been caught in a lie? What was it?",
+            "What's the most embarrassing thing you've ever worn?",
+            "Have you ever had a fake online identity?",
+            "What's the worst thing you've ever laughed at?",
+            "Have you ever ghosted someone you cared about?",
+            "What's the most embarrassing thing you've said to a waiter?",
+            "Have you ever lied to get out of a date?",
+            "What's the worst gift you've ever given?",
+            "Have you ever been jealous of a sibling?",
+            "What's the most embarrassing thing you've ever put online?",
+            "Have you ever pretended to be someone else?",
+            "What's the worst thing you've ever done to a parent?",
+            "Have you ever had a secret relationship?",
+            "What's the most embarrassing thing you've ever done on vacation?",
+            "Have you ever lied to impress someone?",
+            "What's the worst thing you've ever overheard?",
+            "Have you ever had a crush on a fictional character?",
+            "What's the most embarrassing thing you've ever bought?",
+            "Have you ever forgotten someone's name mid-conversation?",
+            "What's the worst thing you've ever done while driving?",
+            "Have you ever blamed a pet for something you did?"
+        ];
+
+        const DARES_EN = [
+            "Do your best impression of a celebrity for 30 seconds.",
+            "Speak in a British accent for the next 3 rounds.",
+            "Let someone draw a moustache on your face with a marker.",
+            "Do 20 push-ups right now.",
+            "Sing the chorus of your favorite song loudly.",
+            "Act like a chicken for 1 minute.",
+            "Call a friend and tell them you love them in a silly voice.",
+            "Do a dramatic reading of the last text you sent.",
+            "Imitate someone in the room (they choose who).",
+            "Do a handstand against the wall for 10 seconds.",
+            "Speak only in questions for the next 2 minutes.",
+            "Let someone give you a new hairstyle using water/gel.",
+            "Do your best robot dance for 30 seconds.",
+            "Read the last message in your inbox out loud.",
+            "Act like a waiter and serve drinks to everyone.",
+            "Do a cartwheel (or attempt one).",
+            "Talk with an accent of someone's choice for 3 minutes.",
+            "Let someone tickle you for 15 seconds (without reacting).",
+            "Do 10 squats while singing a song.",
+            "Imitate a famous person until someone guesses who.",
+            "Swap an item of clothing with someone for 2 rounds.",
+            "Do a dramatic monologue from a movie you love.",
+            "Eat a spoonful of something spicy/sour (if available).",
+            "Walk like a zombie for 1 minute.",
+            "Compliment everyone in the room individually.",
+            "Do the worm dance (or your best attempt).",
+            "Speak in a whisper for the next 5 minutes.",
+            "Act like a cat for 30 seconds.",
+            "Let someone blindfold you and lead you around.",
+            "Do a silly walk across the room and back.",
+            "Imitate a robot while answering the next question.",
+            "Let someone take a funny photo of you and post it.",
+            "Do 15 jumping jacks while counting backwards.",
+            "Act like a newscaster reporting on the current situation.",
+            "Let someone draw a unibrow on you.",
+            "Do your best opera singing for 20 seconds.",
+            "Talk only using song lyrics for 2 minutes.",
+            "Act like a monkey for 30 seconds.",
+            "Do a dramatic fake cry scene.",
+            "Let someone write a word on your forehead with marker.",
+            "Do a 30-second stand-up comedy routine.",
+            "Walk backwards for 2 minutes.",
+            "Imitate a sports commentator describing a mundane task.",
+            "Let someone give you a funny 'tattoo' with pen.",
+            "Do a headstand (or attempt).",
+            "Speak in a high-pitched voice for 3 minutes.",
+            "Act out a scene from your favorite movie (others guess).",
+            "Do 10 lunges while reciting the alphabet backwards.",
+            "Let someone draw a beard on you with marker.",
+            "Imitate a dinosaur for 30 seconds.",
+            "Do a dramatic reading of a grocery list (make it epic).",
+            "Act like you're on a reality TV show for 1 minute.",
+            "Let someone give you a new name and only respond to it.",
+            "Do a slow-motion walk across the room.",
+            "Imitate a famous actor's voice for 3 rounds.",
+            "Let someone tickle your feet for 10 seconds.",
+            "Do a 30-second interpretive dance.",
+            "Speak only in rhyme for the next 2 minutes.",
+            "Act like a magician performing a trick (with imaginary props).",
+            "Let someone apply lipstick or chapstick on you (if available).",
+            "Imitate a baby for 1 minute.",
+            "Do a dramatic reading of a social media post.",
+            "Act like a superhero (choose one) for 2 minutes.",
+            "Let someone give you a 'new identity' and act it out.",
+            "Do 20 sit-ups without stopping.",
+            "Speak like a pirate for 3 rounds.",
+            "Act out a commercial for a random object in the room.",
+            "Do a yoga pose and hold it for 30 seconds.",
+            "Imitate a cat (meowing and all) for 1 minute.",
+            "Let someone put makeup on you (if available).",
+            "Do a dramatic scene from a soap opera.",
+            "Talk in third person for 2 minutes.",
+            "Do 10 push-ups while spelling your name out loud.",
+            "Act like a robot that's out of battery.",
+            "Let someone draw something silly on your hand.",
+            "Do a 30-second dance to a song you don't know.",
+            "Imitate a fish out of water for 20 seconds.",
+            "Let someone record you saying something silly.",
+            "Do a slow-motion fight scene with an imaginary opponent.",
+            "Act like a grandparent for 2 minutes.",
+            "Let someone stack items on your head.",
+            "Do a dramatic slow walk while lip-syncing.",
+            "Imitate a dog (barking and all) for 1 minute.",
+            "Let someone decide your new 'signature walk'.",
+            "Do 15 jumping jacks while singing Happy Birthday.",
+            "Act like a mirror for someone (copy their movements).",
+            "Do a handstand against a wall for 15 seconds.",
+            "Let someone write a 'message' on your arm with marker.",
+            "Do a dramatic interpretation of the weather forecast.",
+            "Act like you're in a music video for 1 minute.",
+            "Imitate a llama for 30 seconds.",
+            "Let someone give you a 'motivational speech'.",
+            "Do a 30-second stand-up comedy routine about the room.",
+            "Act like a news reporter describing a mundane event.",
+            "Let someone make you a paper hat and wear it.",
+            "Do a slow-motion reenactment of a recent event.",
+            "Imitate a bird (cawing and all) for 30 seconds.",
+            "Let someone 'interview' you as a celebrity.",
+            "Do a dramatic reading of a text from your phone.",
+            "Act like a genie granting wishes for 2 minutes.",
+            "Let someone give you a new 'catchphrase' and use it.",
+            "Do 10 squats while reciting the alphabet.",
+            "Imitate a horse galloping across the room.",
+            "Let someone choose your 'voice' for 3 minutes.",
+            "Do a dramatic reenactment of your morning routine.",
+            "Act like a tourist in your own home for 2 minutes.",
+            "Let someone 'direct' you in a scene.",
+            "Do a 30-second silent film performance.",
+            "Imitate a cartoon character for 1 minute.",
+            "Let someone give you a 'new identity' (name and job)."
+        ];
+
+        // Arabic translations
+        const TRUTHS_AR = [
+            "ما هو أكثر شيء محرج قمت به في مكان عام؟",
+            "هل سبق لك أن كذبت على صديقك المفضل؟ ماذا قلت؟",
+            "ما هو أسوأ موعد غرامي كنت فيه؟",
+            "ما هو السر الذي لم تخبره لأي شخص؟",
+            "من في هذه الغرفة تثق به بحياتك؟",
+            "ما هو أكثر شيء غير قانوني قمت به؟",
+            "هل سبق لك أن غششت في اختبار؟ كيف؟",
+            "ما هي أكبر كذبة قلتها في حياتك؟",
+            "ما هو أقسى شيء قلته لشخص ما؟",
+            "هل سبق لك أن تجاهلت شخصاً؟ لماذا؟",
+            "ما هو أكبر خوف لديك في العلاقات؟",
+            "ما هو أكبر مبلغ وجدته واحتفظت به؟",
+            "هل سبق لك أن سرقت شيئاً؟ ماذا؟",
+            "ما هي عادة غريبة لديك لا يعرفها أحد؟",
+            "ما هي أكثر قبلة محرجة كانت لديك؟",
+            "هل سبق لك أن ضحكت بشكل مزيف على نكتة؟",
+            "ما هي أطول مدة بدون استحمام؟",
+            "ما هو أكثر شيء طفولي لا تزال تفعله؟",
+            "هل سبق لك أن تجسست على حسابات شخص ما؟",
+            "ما هي أسوأ نصيحة قدمتها؟",
+            "هل سبق لك أن تظاهرت بإعجابك بهدية؟",
+            "ما هو الشيء الذي تفخر به سراً؟",
+            "ما هي أكبر مشكلة واجهتها في المدرسة/العمل؟",
+            "هل سبق لك أن أعجبت بشريك صديقك؟",
+            "ما هو أكثر شيء ممل فيك؟",
+            "هل سبق لك أن كذبت بشأن عمرك؟",
+            "ما هو أكثر شيء محرج اشتريته؟",
+            "هل سبق لك أن تنصتت على محادثة؟",
+            "ما هو خوف لديك يبدو غير منطقي؟",
+            "ما هي أسوأ أغنية تحبها سراً؟",
+            "هل ندمت على إنهاء علاقة مع شخص؟",
+            "ما هي أكثر موهبة عديمة الفائدة لديك؟",
+            "هل بكيت أثناء مشاهدة فيلم؟ أي فيلم؟",
+            "ما هو أكثر شيء محرج قلته لشخص تعجب به؟",
+            "هل سبق لك أن أنشأت حساباً وهمياً؟",
+            "ما هي أكبر مخاطرة خضتها؟",
+            "هل سبق لك أن آذيت شخصاً ولم تعتذر؟",
+            "ما هي تركيبة طعام غريبة تحبها؟",
+            "هل سبق لك أن تتبعت شخصاً عبر الإنترنت؟",
+            "ما هو أغلى شيء كسرته؟",
+            "هل سبق لك أن غششت في لعبة؟",
+            "ما هو أسوأ شيء فعلته من أجل المال؟",
+            "هل شعرت بالغيرة من صديق؟",
+            "ما هو أكثر شيء غير لائق ضحكت عليه؟",
+            "هل كذبت للخروج من خطط؟",
+            "ما هي أسوأ قصة شعر كانت لديك؟",
+            "هل قبلت شخصاً وندمت على ذلك؟",
+            "ما هو أكثر لقب محرج كان لديك؟",
+            "هل أرسلت رسالة إلى شخص خطأ؟",
+            "ما هو أكثر موقف عائلي محرج مررت به؟",
+            "هل تظاهرت بفهم شيء لم تفهمه؟",
+            "ما هو أسوأ شيء فعلته وأنت ثمل؟",
+            "هل كذبت على معلم أو مدير؟",
+            "ما هي متعة مذنبة لديك؟",
+            "هل تم القبض عليك وأنت تفعل شيئاً ممنوعاً؟",
+            "ما هو أكثر شيء محرج رآه والديك تفعله؟",
+            "هل حلمت بحلم تحقق؟",
+            "ما هو أسوأ شيء أكلته؟",
+            "هل كذبت بشأن مرضك؟",
+            "ما هو أكثر شيء اندفاعي قمت به؟",
+            "ما هو أسوأ شيء فعلته لأخيك؟",
+            "هل أعجبت بمدرس؟",
+            "ما هي أكثر نغمة رنين محرجة كانت لديك؟",
+            "هل كسرت شيئاً وألقيت اللوم على شخص آخر؟",
+            "ما هو أسوأ شيء قلته لشريكك؟",
+            "هل سبق لك أن سرقت شيئاً صغيراً؟",
+            "ما هو أكثر شيء طفولي لا تزال تغضب منه؟",
+            "هل جرحت مشاعر شخص عن قصد؟",
+            "ما هو أكثر شيء محرج رآه حيوانك الأليف تفعله؟",
+            "هل خضت معركة جسدية؟ ماذا حدث؟",
+            "ما هو أغرب شيء جمعته؟",
+            "هل كذبت للحصول على وظيفة أو ترقية؟",
+            "ما هو أسوأ شيء فعلته وأنت غاضب؟",
+            "هل كسرت وعداً؟ أي وعد؟",
+            "ما هي أكثر ذكرى محرجة من المدرسة الثانوية؟",
+            "هل أعجبت بصديق سابق لصديقك؟",
+            "ما هو أسوأ اختيار للأزياء قمت به؟",
+            "هل غششت في علاقة؟",
+            "ما هو أكثر وقت شعرت فيه بالخوف؟",
+            "هل تظاهرت بمعرفة شخص لا تعرفه؟",
+            "ما هو أسوأ شيء فعلته لصديق؟",
+            "هل كذبت لتجنب صراع؟",
+            "ما هو أكثر شيء محرج فعلته لجذب الانتباه؟",
+            "هل انتقمت من شخص؟",
+            "ما هو أسوأ شيء شممته؟",
+            "هل كان لديك كابوس شعرت أنه حقيقي؟",
+            "ما هو أكثر فيلم ممل شاهدته بالكامل؟",
+            "هل كذبت بشأن موقعك؟",
+            "ما هو أسوأ شيء فعلته في حفلة؟",
+            "هل تم القبض عليك في كذبة؟ ماذا كانت؟",
+            "ما هو أكثر شيء محرج ارتديته؟",
+            "هل كان لديك هوية وهمية على الإنترنت؟",
+            "ما هو أسوأ شيء ضحكت عليه؟",
+            "هل تجاهلت شخصاً تهتم به؟",
+            "ما هو أكثر شيء محرج قلته للنادل؟",
+            "هل كذبت للخروج من موعد؟",
+            "ما هي أسوأ هدية قدمتها؟",
+            "هل شعرت بالغيرة من أخيك؟",
+            "ما هو أكثر شيء محرج نشرته على الإنترنت؟",
+            "هل تظاهرت بأنك شخص آخر؟",
+            "ما هو أسوأ شيء فعلته لأحد والديك؟",
+            "هل كانت لديك علاقة سرية؟",
+            "ما هو أكثر شيء محرج فعلته في الإجازة؟",
+            "هل كذبت لإبهار شخص؟",
+            "ما هو أسوأ شيء سمعته عن غير قصد؟",
+            "هل أعجبت بشخصية خيالية؟",
+            "ما هو أكثر شيء محرج اشتريته؟",
+            "هل نسيت اسم شخص في منتصف المحادثة؟",
+            "ما هو أسوأ شيء فعلته أثناء القيادة؟",
+            "هل ألقيت اللوم على حيوانك الأليف لشيء فعلته؟"
+        ];
+
+        const DARES_AR = [
+            "قم بتقليد شخص مشهور لمدة 30 ثانية.",
+            "تحدث بلكنة بريطانية للجولات الثلاث القادمة.",
+            "دع شخصاً يرسم شارباً على وجهك بقلم.",
+            "قم بـ 20 ضغطة عسكرية الآن.",
+            "غني بصوت عالٍ جوقة أغنيتك المفضلة.",
+            "تظاهر بأنك دجاجة لمدة دقيقة.",
+            "اتصل بصديق وأخبره أنك تحبه بصوت مضحك.",
+            "قم بقراءة درامية لآخر رسالة أرسلتها.",
+            "قم بتقليد شخص في الغرفة (يختارون من).",
+            "قف على يديك لمدة 10 ثوانٍ.",
+            "تحدث فقط بالأسئلة للدقيقتين القادمتين.",
+            "دع شخصاً يمنحك تسريحة شعر جديدة باستخدام الماء/الجيل.",
+            "ارقص رقصة الروبوت لأفضل ما لديك لمدة 30 ثانية.",
+            "اقرأ آخر رسالة في صندوق الوارد الخاص بك بصوت عالٍ.",
+            "تظاهر بأنك نادل وقدم المشروبات للجميع.",
+            "قف على يديك (أو حاول).",
+            "تحدث بلكنة من اختيار شخص لمدة 3 دقائق.",
+            "دع شخصاً يدغدغك لمدة 15 ثانية (دون رد فعل).",
+            "قم بـ 10 تمارين قرفصاء أثناء الغناء.",
+            "قم بتقليد شخص مشهور حتى يخمنه أحد.",
+            "تبادل قطعة ملابس مع شخص لمدة جولتين.",
+            "قدم مونولوج درامي من فيلم تحبه.",
+            "تناول ملعقة من شيء حار/حامض (إذا كان متوفراً).",
+            "امش مثل الزومبي لمدة دقيقة.",
+            "امدح كل شخص في الغرفة على حدة.",
+            "ارقص رقصة الدودة (أفضل محاولة).",
+            "تحدث بصوت هامس للخمس دقائق القادمة.",
+            "تظاهر بأنك قط لمدة 30 ثانية.",
+            "دع شخصاً يعصب عينيك ويقودك.",
+            "قم بمشية مضحكة عبر الغرفة والعودة.",
+            "قم بتقليد روبوت أثناء الإجابة على السؤال التالي.",
+            "دع شخصاً يلتقط صورة مضحكة لك وينشرها.",
+            "قم بـ 15 قفزة أثناء العد التنازلي.",
+            "تظاهر بأنك مذيع أخبار يغطي الوضع الحالي.",
+            "دع شخصاً يرسم حاجباً واحداً لك.",
+            "قم بأفضل غناء أوبرا لمدة 20 ثانية.",
+            "تحدث فقط باستخدام كلمات الأغاني لمدة دقيقتين.",
+            "تظاهر بأنك قرد لمدة 30 ثانية.",
+            "قم بمشهد بكاء درامي مزيف.",
+            "دع شخصاً يكتب كلمة على جبهتك بقلم.",
+            "قم بروتين كوميدي لمدة 30 ثانية.",
+            "امش للخلف لمدة دقيقتين.",
+            "قم بتقليد معلق رياضي يصف مهمة عادية.",
+            "دع شخصاً يمنحك 'وشماً' مضحكاً بقلم.",
+            "قم بالوقوف على رأسك (أو حاول).",
+            "تحدث بصوت عالٍ لمدة 3 دقائق.",
+            "مثل مشهداً من فيلمك المفضل (يخمن الآخرون).",
+            "قم بـ 10 اندفاعات أثناء ترديد الأبجدية بشكل عكسي.",
+            "دع شخصاً يرسم لحية لك بقلم.",
+            "قم بتقليد ديناصور لمدة 30 ثانية.",
+            "قم بقراءة درامية لقائمة البقالة (اجعلها ملحمية).",
+            "تظاهر بأنك في برنامج تلفزيون واقعي لمدة دقيقة.",
+            "دع شخصاً يعطيك اسماً جديداً ولا تستجيب إلا له.",
+            "قم بمشية بطيئة الحركة عبر الغرفة.",
+            "قم بتقليد صوت ممثل مشهور لمدة 3 جولات.",
+            "دع شخصاً يدغدغ قدميك لمدة 10 ثوانٍ.",
+            "قم برقصة تفسيرية لمدة 30 ثانية.",
+            "تحدث فقط بالقافية للدقيقتين القادمتين.",
+            "تظاهر بأنك ساحر تؤدي خدعة (بدعائم وهمية).",
+            "دع شخصاً يضع أحمر شفاه أو مرطب شفاه عليك (إذا كان متوفراً).",
+            "قم بتقليد طفل لمدة دقيقة.",
+            "قم بقراءة درامية لمنشور على وسائل التواصل الاجتماعي.",
+            "تظاهر بأنك بطل خارق (اختر واحداً) لمدة دقيقتين.",
+            "دع شخصاً يمنحك 'هوية جديدة' وقم بتمثيلها.",
+            "قم بـ 20 تمرين جلوس دون توقف.",
+            "تحدث مثل القراصنة لمدة 3 جولات.",
+            "قم بتمثيل إعلان لشيء عشوائي في الغرفة.",
+            "قم بوضعية يوجا واثبت عليها لمدة 30 ثانية.",
+            "قم بتقليد قط (مواء وكل شيء) لمدة دقيقة.",
+            "دع شخصاً يضع مكياجاً عليك (إذا كان متوفراً).",
+            "قم بمشهد درامي من مسلسل.",
+            "تحدث بصيغة الغائب لمدة دقيقتين.",
+            "قم بـ 10 تمارين ضغط أثناء نطق اسمك بصوت عالٍ.",
+            "تظاهر بأنك روبوت نفدت بطاريته.",
+            "دع شخصاً يرسم شيئاً مضحكاً على يدك.",
+            "قم برقصة لمدة 30 ثانية على أغنية لا تعرفها.",
+            "قم بتقليد سمكة خارج الماء لمدة 20 ثانية.",
+            "دع شخصاً يسجلك وأنت تقول شيئاً مضحكاً.",
+            "قم بمشهد قتال بطيء الحركة مع خصم وهمي.",
+            "تظاهر بأنك جد/جدة لمدة دقيقتين.",
+            "دع شخصاً يكوم أشياء على رأسك.",
+            "قم بمشية درامية بطيئة أثناء التزامن الشفوي.",
+            "قم بتقليد كلب (نباح وكل شيء) لمدة دقيقة.",
+            "دع شخصاً يقرر 'مشيتك المميزة' الجديدة.",
+            "قم بـ 15 قفزة أثناء غناء أغنية عيد الميلاد.",
+            "تظاهر بأنك مرآة لشخص (انسخ حركاته).",
+            "قم بالوقوف على يديك ضد الحائط لمدة 15 ثانية.",
+            "دع شخصاً يكتب 'رسالة' على ذراعك بقلم.",
+            "قم بتفسير درامي لتوقعات الطقس.",
+            "تظاهر بأنك في فيديو موسيقي لمدة دقيقة.",
+            "قم بتقليد حيوان اللاما لمدة 30 ثانية.",
+            "دع شخصاً يلقي 'خطاباً تحفيزياً' لك.",
+            "قم بروتين كوميدي لمدة 30 ثانية عن الغرفة.",
+            "تظاهر بأنك مراسل أخبار يصف حدثاً عادياً.",
+            "دع شخصاً يصنع لك قبعة ورقية وارتدها.",
+            "قم بإعادة تمثيل بطيئة الحركة لحدث حديث.",
+            "قم بتقليد طائر (نعيق وكل شيء) لمدة 30 ثانية.",
+            "دع شخصاً 'يقابلك' كشخص مشهور.",
+            "قم بقراءة درامية لنص من هاتفك.",
+            "تظاهر بأنك جني يحقق الأمنيات لمدة دقيقتين.",
+            "دع شخصاً يمنحك 'عبارة مميزة' جديدة واستخدمها.",
+            "قم بـ 10 تمارين قرفصاء أثناء ترديد الأبجدية.",
+            "قم بتقليد حصان يعدو عبر الغرفة.",
+            "دع شخصاً يختار 'صوتك' لمدة 3 دقائق.",
+            "قم بإعادة تمثيل درامي لروتينك الصباحي.",
+            "تظاهر بأنك سائح في منزلك لمدة دقيقتين.",
+            "دع شخصاً 'يخرجك' في مشهد.",
+            "قم بأداء فيلم صامت لمدة 30 ثانية.",
+            "قم بتقليد شخصية كرتونية لمدة دقيقة.",
+            "دع شخصاً يمنحك 'هوية جديدة' (اسم ومهنة)."
+        ];
+
+        // Combine all prompts
+        const ALL_TRUTHS_EN = [...TRUTHS_EN];
+        const ALL_DARES_EN = [...DARES_EN];
+        const ALL_TRUTHS_AR = [...TRUTHS_AR];
+        const ALL_DARES_AR = [...DARES_AR];
+
+        // Current language state
+        let currentLang = 'ar'; // 'ar' or 'en'
+
+        // Shuffle function (Fisher–Yates)
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // ─── STATE ──────────────────────────────────────────────────────
+        let truthHistory = [];
+        let dareHistory = [];
+        let totalUsed = 0;
+
+        // Pre-shuffle copies
+        let truthPool = shuffleArray([...ALL_TRUTHS_AR]);
+        let darePool = shuffleArray([...ALL_DARES_AR]);
+
+        // DOM refs
+        const promptText = document.getElementById('promptText');
+        const typeBadge = document.getElementById('typeBadge');
+        const promptNumber = document.getElementById('promptNumber');
+        const counterDisplay = document.getElementById('counterDisplay');
+        const promptCard = document.getElementById('promptCard');
+        const titleMain = document.getElementById('titleMain');
+        const subBadge = document.getElementById('subBadge');
+        const truthBtn = document.getElementById('truthBtn');
+        const dareBtn = document.getElementById('dareBtn');
+        const randomBtn = document.getElementById('randomBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const langAr = document.getElementById('langAr');
+        const langEn = document.getElementById('langEn');
+
+        // ─── HELPERS ────────────────────────────────────────────────────
+        function getCurrentTruths() {
+            return currentLang === 'ar' ? ALL_TRUTHS_AR : ALL_TRUTHS_EN;
+        }
+
+        function getCurrentDares() {
+            return currentLang === 'ar' ? ALL_DARES_AR : ALL_DARES_EN;
+        }
+
+        function getTruthPool() {
+            return currentLang === 'ar' ? truthPool : truthPoolEn;
+        }
+
+        function getDarePool() {
+            return currentLang === 'ar' ? darePool : darePoolEn;
+        }
+
+        // Separate pools for each language
+        let truthPoolEn = shuffleArray([...ALL_TRUTHS_EN]);
+        let darePoolEn = shuffleArray([...ALL_DARES_EN]);
+
+        function updateCounter() {
+            const total = truthHistory.length + dareHistory.length;
+            if (currentLang === 'ar') {
+                counterDisplay.innerHTML = `<strong>${total}</strong> مستخدم · ${truthHistory.length}T ${dareHistory.length}J`;
+            } else {
+                counterDisplay.innerHTML = `<strong>${total}</strong> used · ${truthHistory.length}T ${dareHistory.length}D`;
+            }
+        }
+
+        function getNextTruth() {
+            const pool = currentLang === 'ar' ? truthPool : truthPoolEn;
+            const allTruths = getCurrentTruths();
+            
+            if (pool.length === 0) {
+                const remaining = allTruths.filter(t => !truthHistory.includes(t));
+                const newPool = shuffleArray(remaining.length > 0 ? remaining : [...allTruths]);
+                if (currentLang === 'ar') {
+                    truthPool = newPool;
+                } else {
+                    truthPoolEn = newPool;
+                }
+                if (newPool.length === 0) {
+                    truthHistory = [];
+                    if (currentLang === 'ar') {
+                        truthPool = shuffleArray([...allTruths]);
+                    } else {
+                        truthPoolEn = shuffleArray([...allTruths]);
+                    }
+                }
+            }
+            
+            const currentPool = currentLang === 'ar' ? truthPool : truthPoolEn;
+            const prompt = currentPool.pop();
+            truthHistory.push(prompt);
+            totalUsed++;
+            updateCounter();
+            return prompt;
+        }
+
+        function getNextDare() {
+            const pool = currentLang === 'ar' ? darePool : darePoolEn;
+            const allDares = getCurrentDares();
+            
+            if (pool.length === 0) {
+                const remaining = allDares.filter(d => !dareHistory.includes(d));
+                const newPool = shuffleArray(remaining.length > 0 ? remaining : [...allDares]);
+                if (currentLang === 'ar') {
+                    darePool = newPool;
+                } else {
+                    darePoolEn = newPool;
+                }
+                if (newPool.length === 0) {
+                    dareHistory = [];
+                    if (currentLang === 'ar') {
+                        darePool = shuffleArray([...allDares]);
+                    } else {
+                        darePoolEn = shuffleArray([...allDares]);
+                    }
+                }
+            }
+            
+            const currentPool = currentLang === 'ar' ? darePool : darePoolEn;
+            const prompt = currentPool.pop();
+            dareHistory.push(prompt);
+            totalUsed++;
+            updateCounter();
+            return prompt;
+        }
+
+        function getRandomPrompt() {
+            if (Math.random() < 0.5) {
+                return { type: currentLang === 'ar' ? 'الحقيقة' : 'Truth', text: getNextTruth() };
+            } else {
+                return { type: currentLang === 'ar' ? 'الجرأة' : 'Dare', text: getNextDare() };
+            }
+        }
+
+        // ─── DISPLAY ────────────────────────────────────────────────────
+        function displayPrompt(type, text) {
+            typeBadge.textContent = type.toUpperCase();
+            promptText.innerHTML = text;
+            const total = truthHistory.length + dareHistory.length;
+            if (currentLang === 'ar') {
+                promptNumber.textContent = `# ${total} · ${truthHistory.length}T ${dareHistory.length}J`;
+            } else {
+                promptNumber.textContent = `# ${total} · ${truthHistory.length}T ${dareHistory.length}D`;
+            }
+            // subtle card flash
+            const isTruth = type === 'الحقيقة' || type === 'Truth';
+            promptCard.style.transition = 'background 0.1s';
+            promptCard.style.background = isTruth
+                ? 'rgba(70, 60, 160, 0.25)'
+                : 'rgba(160, 60, 100, 0.25)';
+            setTimeout(() => {
+                promptCard.style.background = 'rgba(10, 8, 28, 0.6)';
+            }, 180);
+        }
+
+        // ─── ACTIONS ────────────────────────────────────────────────────
+        function showTruth() {
+            const text = getNextTruth();
+            const type = currentLang === 'ar' ? 'الحقيقة' : 'Truth';
+            displayPrompt(type, text);
+        }
+
+        function showDare() {
+            const text = getNextDare();
+            const type = currentLang === 'ar' ? 'الجرأة' : 'Dare';
+            displayPrompt(type, text);
+        }
+
+        function showRandom() {
+            const { type, text } = getRandomPrompt();
+            displayPrompt(type, text);
+        }
+
+        function resetHistory() {
+            truthHistory = [];
+            dareHistory = [];
+            totalUsed = 0;
+            
+            const allTruths = getCurrentTruths();
+            const allDares = getCurrentDares();
+            
+            if (currentLang === 'ar') {
+                truthPool = shuffleArray([...allTruths]);
+                darePool = shuffleArray([...allDares]);
+            } else {
+                truthPoolEn = shuffleArray([...allTruths]);
+                darePoolEn = shuffleArray([...allDares]);
+            }
+            
+            updateCounter();
+            
+            if (currentLang === 'ar') {
+                promptText.innerHTML = '✨ تم إعادة التعيين · جاهز للعب';
+                typeBadge.textContent = '✦ إعادة تعيين';
+                promptNumber.textContent = '# 0';
+            } else {
+                promptText.innerHTML = '✨ Reset · ready to play';
+                typeBadge.textContent = '✦ reset';
+                promptNumber.textContent = '# 0';
+            }
+            promptCard.style.background = 'rgba(10, 8, 28, 0.6)';
+        }
+
+        // ─── LANGUAGE SWITCH ────────────────────────────────────────────
+        function switchLanguage(lang) {
+            if (lang === currentLang) return;
+            
+            // Save current state
+            const currentTruthHistory = [...truthHistory];
+            const currentDareHistory = [...dareHistory];
+            
+            // Switch language
+            currentLang = lang;
+            
+            // Update UI direction
+            document.body.className = lang === 'ar' ? 'lang-ar' : 'lang-en';
+            
+            // Update language buttons
+            langAr.classList.toggle('active', lang === 'ar');
+            langEn.classList.toggle('active', lang === 'en');
+            
+            // Update title and badges
+            if (lang === 'ar') {
+                titleMain.textContent = '⚡ الحقيقة · الجرأة';
+                subBadge.textContent = '🔥 200+ سؤال';
+                truthBtn.innerHTML = '🔮 الحقيقة';
+                dareBtn.innerHTML = '⚡ الجرأة';
+                randomBtn.innerHTML = '🎲 عشوائي';
+                resetBtn.textContent = '⟳ إعادة تعيين';
+                typeBadge.textContent = '✦ جاهز';
+                promptText.innerHTML = 'اختر <strong style="color:#f5c542;">الحقيقة</strong> أو <strong style="color:#ff8a9e;">الجرأة</strong>';
+            } else {
+                titleMain.textContent = '⚡ TRUTH · DARE';
+                subBadge.textContent = '🔥 200+ prompts';
+                truthBtn.innerHTML = '🔮 Truth';
+                dareBtn.innerHTML = '⚡ Dare';
+                randomBtn.innerHTML = '🎲 Random';
+                resetBtn.textContent = '⟳ reset';
+                typeBadge.textContent = '✦ ready';
+                promptText.innerHTML = 'Tap <strong style="color:#f5c542;">Truth</strong> or <strong style="color:#ff8a9e;">Dare</strong>';
+            }
+            
+            // Restore history (filter out prompts not in current language)
+            const allTruths = getCurrentTruths();
+            const allDares = getCurrentDares();
+            
+            truthHistory = currentTruthHistory.filter(t => allTruths.includes(t));
+            dareHistory = currentDareHistory.filter(d => allDares.includes(d));
+            
+            // Rebuild pools
+            const usedTruths = truthHistory;
+            const usedDares = dareHistory;
+            
+            const remainingTruths = allTruths.filter(t => !usedTruths.includes(t));
+            const remainingDares = allDares.filter(d => !usedDares.includes(d));
+            
+            if (lang === 'ar') {
+                truthPool = shuffleArray(remainingTruths.length > 0 ? remainingTruths : [...allTruths]);
+                darePool = shuffleArray(remainingDares.length > 0 ? remainingDares : [...allDares]);
+            } else {
+                truthPoolEn = shuffleArray(remainingTruths.length > 0 ? remainingTruths : [...allTruths]);
+                darePoolEn = shuffleArray(remainingDares.length > 0 ? remainingDares : [...allDares]);
+            }
+            
+            updateCounter();
+            
+            // Show first prompt or status
+            if (truthHistory.length > 0 || dareHistory.length > 0) {
+                const lastTruth = truthHistory[truthHistory.length - 1];
+                const lastDare = dareHistory[dareHistory.length - 1];
+                if (lastTruth && (!lastDare || truthHistory.length >= dareHistory.length)) {
+                    const type = lang === 'ar' ? 'الحقيقة' : 'Truth';
+                    displayPrompt(type, lastTruth);
+                } else if (lastDare) {
+                    const type = lang === 'ar' ? 'الجرأة' : 'Dare';
+                    displayPrompt(type, lastDare);
+                } else {
+                    if (lang === 'ar') {
+                        promptText.innerHTML = 'اختر <strong style="color:#f5c542;">الحقيقة</strong> أو <strong style="color:#ff8a9e;">الجرأة</strong>';
+                        typeBadge.textContent = '✦ جاهز';
+                    } else {
+                        promptText.innerHTML = 'Tap <strong style="color:#f5c542;">Truth</strong> or <strong style="color:#ff8a9e;">Dare</strong>';
+                        typeBadge.textContent = '✦ ready';
+                    }
+                }
+            }
+        }
+
+        // ─── KEYBOARD SHORTCUTS ────────────────────────────────────────
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 't' || e.key === 'T') {
+                e.preventDefault();
+                showTruth();
+            } else if (e.key === 'd' || e.key === 'D') {
+                e.preventDefault();
+                showDare();
+            } else if (e.key === 'r' || e.key === 'R') {
+                e.preventDefault();
+                showRandom();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                resetHistory();
+            }
+        });
+
+        // ─── INIT ──────────────────────────────────────────────────────
+        function init() {
+            // Set default language (Arabic)
+            currentLang = 'ar';
+            document.body.className = 'lang-ar';
+            langAr.classList.add('active');
+            langEn.classList.remove('active');
+            
+            // Seed with random prompt
+            const { type, text } = getRandomPrompt();
+            displayPrompt(type, text);
+            updateCounter();
+
+            // Event listeners
+            truthBtn.addEventListener('click', showTruth);
+            dareBtn.addEventListener('click', showDare);
+            randomBtn.addEventListener('click', showRandom);
+            resetBtn.addEventListener('click', resetHistory);
+            
+            langAr.addEventListener('click', () => switchLanguage('ar'));
+            langEn.addEventListener('click', () => switchLanguage('en'));
+
+            // Touch feedback for mobile
+            [truthBtn, dareBtn, randomBtn].forEach(btn => {
+                btn.addEventListener('touchstart', () => {
+                    btn.style.transform = 'scale(0.94)';
+                }, { passive: true });
+                btn.addEventListener('touchend', () => {
+                    btn.style.transform = '';
+                }, { passive: true });
+            });
+        }
+
+        init();
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ناجي السحر – روجلايت صعب</title>
+    <style>
+        :root { --bg:#050510; --panel:#10101a; --gold:#e0b040; --hp:#e04050; --xp:#40b0e0; --text:#d0d0e0; --accent:#a080f0; --warning:#ff6040; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#000; display:flex; justify-content:center; align-items:center; height:100vh; width:100vw; overflow:hidden; font-family:'Segoe UI',sans-serif; touch-action:none; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+        #game-container { position:relative; width:100vw; height:100vh; max-width:500px; max-height:900px; aspect-ratio:9/16; overflow:hidden; background:#06060e; border:2px solid #2a2a40; border-radius:12px; }
+        canvas { display:block; width:100%; height:100%; }
+        #ui-overlay { position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:10; }
+        #ui-overlay>* { pointer-events:auto; }
+        #top-hud { position:absolute; top:6px; left:6px; right:6px; display:flex; flex-direction:column; gap:4px; z-index:12; }
+        .bar-panel { background:rgba(10,10,20,0.85); backdrop-filter:blur(6px); border-radius:10px; padding:6px 10px; display:flex; align-items:center; gap:8px; border:1px solid #303055; }
+        .bar-icon { font-size:15px; width:22px; text-align:center; }
+        .bar-fill-outer { flex:1; height:14px; background:#1a1a2a; border-radius:8px; overflow:hidden; position:relative; border:1px solid #404060; }
+        .bar-fill { height:100%; border-radius:7px; transition:width 0.2s; position:absolute; top:0; left:0; }
+        .bar-fill.hp { background:linear-gradient(90deg,#c02030,#f04050); box-shadow:0 0 8px #f04050aa; }
+        .bar-fill.xp { background:linear-gradient(90deg,#1050a0,#40a0f0); }
+        .bar-text { position:absolute; top:0; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:#fff; text-shadow:0 1px 3px #000; }
+        .info-row { display:flex; justify-content:space-between; padding:2px 10px; background:rgba(10,10,20,0.7); border-radius:8px; font-size:10px; color:#ddd; }
+        #level-badge { background:#1a1a30; border:2px solid #a080f0; border-radius:12px; padding:2px 12px; color:#d0c0ff; font-weight:bold; font-size:13px; }
+        #timer-display,#kill-display { background:#1a1a24; border:1px solid #445; border-radius:8px; padding:2px 8px; font-weight:bold; font-size:11px; color:#ffcc80; }
+        #pause-btn,#music-toggle { position:absolute; top:8px; width:32px; height:32px; border-radius:50%; background:rgba(20,20,35,0.9); border:1px solid #555; color:#ccc; font-size:14px; cursor:pointer; z-index:20; display:flex; align-items:center; justify-content:center; }
+        #pause-btn { right:8px; } #music-toggle { left:50px; }
+        #spell-bar { position:absolute; bottom:14px; left:10px; right:10px; display:flex; gap:6px; flex-wrap:wrap; justify-content:center; z-index:12; }
+        .spell-icon { width:38px; height:38px; border-radius:10px; border:2px solid #444; background:rgba(20,20,35,0.9); display:flex; align-items:center; justify-content:center; font-size:20px; position:relative; }
+        .spell-icon.active { border-color:#c0a0ff; box-shadow:0 0 8px #c0a0ff88; }
+        .spell-icon .cd-overlay { position:absolute; bottom:0; left:0; right:0; background:#000a; border-radius:0 0 8px 8px; transition:height 0.1s; pointer-events:none; }
+        .spell-level { position:absolute; top:-5px; right:-5px; background:#e0a020; color:#000; font-size:9px; font-weight:bold; border-radius:8px; padding:1px 5px; }
+        .overlay { position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.87); backdrop-filter:blur(10px); z-index:50; display:none; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:20px; }
+        .overlay.show { display:flex; }
+        .overlay h2 { color:#e0d0ff; font-size:22px; text-shadow:0 0 20px #a080f088; }
+        .choice-btn { width:100%; max-width:320px; padding:12px 16px; background:#1a1a2e; border:2px solid #3a3a55; border-radius:14px; color:#ddd; cursor:pointer; text-align:right; font-size:13px; transition:all 0.15s; }
+        .choice-btn:hover { border-color:#a080f0; background:#222245; color:#fff; transform:translateY(-1px); box-shadow:0 4px 16px #a080f044; }
+        .choice-title { font-weight:bold; font-size:15px; color:#e0c0ff; display:block; }
+        .choice-desc { font-size:11px; color:#aaa; margin-top:3px; }
+        .choice-rarity { font-size:10px; color:#e0a020; margin-top:2px; display:block; }
+        .rarity-legendary { color:#ff9000 !important; }
+        .rarity-awakening { color:#ff40ff !important; }
+        .action-btn { padding:10px 24px; background:#2a1a30; border:2px solid #a080f0; border-radius:20px; color:#e0d0ff; cursor:pointer; font-size:14px; transition:all 0.15s; }
+        .action-btn:hover { background:#3a2a40; box-shadow:0 0 16px #a080f066; }
+        #reroll-count { color:#faa; font-size:11px; }
+        #achievement-popup { position:absolute; top:-80px; left:50%; transform:translateX(-50%); background:rgba(20,10,30,0.95); border:2px solid #ffd040; border-radius:16px; padding:12px 20px; color:#ffd080; font-size:13px; font-weight:bold; text-align:center; z-index:30; pointer-events:none; transition:top 0.4s; display:flex; align-items:center; gap:8px; white-space:nowrap; box-shadow:0 0 24px #ffd04066; }
+        #achievement-popup.show { top:20px; }
+        #start-screen { position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(160deg,#07071a,#0d0520); z-index:70; display:flex; flex-direction:column; align-items:stretch; overflow:hidden; }
+        #menu-hero { flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px 16px 12px; background:linear-gradient(180deg,#0d0025 0%,transparent 100%); }
+        #menu-hero h1 { color:#e0d0ff; font-size:22px; letter-spacing:2px; text-shadow:0 0 28px #a080f0cc; margin:0; }
+        #menu-hero .hero-sub { font-size:10px; color:#6050a0; letter-spacing:3px; margin-top:3px; text-transform:uppercase; }
+        #menu-gold-bar { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:8px; }
+        #menu-gold-pill { background:#1a140a; border:1px solid #604020; border-radius:20px; padding:4px 14px; color:#d4a840; font-size:13px; font-weight:bold; }
+        #menu-nav { flex-shrink:0; display:flex; background:#0a0a14; border-top:1px solid #1a1a2e; border-bottom:1px solid #1a1a2e; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+        #menu-nav::-webkit-scrollbar { display:none; }
+        .mnav-btn { flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 14px; color:#555; font-size:9px; letter-spacing:.5px; text-transform:uppercase; cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; white-space:nowrap; background:none; border-left:none; border-right:none; border-top:none; }
+        .mnav-btn .mnav-icon { font-size:18px; line-height:1; }
+        .mnav-btn.active { color:#c0a0ff; border-bottom-color:#a080f0; }
+        .mnav-btn:active { background:rgba(160,128,240,.08); }
+        #menu-content { flex:1; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding:0 0 16px; }
+        .menu-panel { padding:12px 14px; display:none; }
+        .menu-panel.active-panel { display:block; }
+        .section-label { font-size:10px; color:#5040a0; letter-spacing:2px; text-transform:uppercase; margin:10px 0 6px; font-weight:bold; }
+        .class-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+        .class-card { padding:10px 6px; background:#111122; border:1.5px solid #222235; border-radius:14px; color:#bbb; cursor:pointer; text-align:center; font-size:10px; transition:all .15s; -webkit-tap-highlight-color:transparent; }
+        .class-card.selected { border-color:#a080f0; background:#1e1a38; color:#fff; box-shadow:0 0 14px #a080f055; }
+        .class-card .emoji { font-size:28px; display:block; margin-bottom:4px; }
+        .class-card .class-name { font-weight:bold; font-size:11px; }
+        .class-desc { font-size:9px; color:#666; margin-top:2px; }
+        .diff-row { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:0; }
+        .diff-btn { padding:8px 4px; background:#111122; border:1.5px solid #222235; border-radius:10px; color:#888; cursor:pointer; font-size:11px; text-align:center; transition:all .15s; font-family:inherit; -webkit-tap-highlight-color:transparent; }
+        .diff-btn.active { border-color:#a080f0; background:#1e1a38; color:#e0d0ff; }
+        #diff-desc { font-size:10px; color:#666; text-align:center; min-height:14px; margin:4px 0; }
+        #start-btn { width:100%; padding:16px; background:linear-gradient(135deg,#3a1a50,#6030a0); border:1.5px solid #a080f0; border-radius:14px; color:#e8d8ff; cursor:pointer; font-size:18px; font-weight:bold; letter-spacing:1px; transition:all .15s; margin-top:4px; -webkit-tap-highlight-color:transparent; }
+        #start-btn:active { transform:scale(0.98); background:linear-gradient(135deg,#4a2060,#7040b0); }
+        .perm-upgrade-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .perm-btn-card { padding:10px 8px; background:#111122; border:1.5px solid #222235; border-radius:12px; color:#bbb; font-size:10px; cursor:pointer; transition:all .15s; text-align:center; -webkit-tap-highlight-color:transparent; }
+        .perm-btn-card:active { border-color:#d4a840; background:#1a1810; transform:scale(.97); }
+        .perm-btn-card .perm-icon { font-size:22px; display:block; margin-bottom:4px; }
+        .perm-btn-card .perm-name { font-weight:bold; color:#e0c080; font-size:11px; }
+        .perm-btn-card .perm-lvl { font-size:9px; color:#666; margin:2px 0; }
+        .perm-btn-card .cost { color:#d4a840; font-weight:bold; }
+        #ach-summary { font-size:12px; color:#a080f0; text-align:center; padding:8px 4px 4px; font-weight:bold; }
+        #achievements-list { font-size:10px; max-height:none; overflow:visible; }
+        .ach-cat-header { font-size:10px; font-weight:bold; color:#7060a0; padding:10px 4px 4px; letter-spacing:1px; text-transform:uppercase; border-top:1px solid #1a1a2e; margin-top:4px; }
+        .ach-cat-header:first-child { border-top:none; margin-top:0; }
+        .ach-entry { padding:8px 10px; margin:4px 0; background:#0e0e1e; border-radius:10px; color:#ffd080; display:flex; align-items:center; gap:8px; border:1px solid #1e1e30; }
+        .ach-entry.locked { color:#333; background:#090910; border-color:#111118; }
+        .ach-entry .ach-name { font-weight:bold; font-size:11px; }
+        .ach-entry .ach-ddesc { font-size:9px; color:#666; }
+        .ach-entry.locked .ach-name { color:#2a2a40; }
+        .ach-entry.locked .ach-ddesc { color:#1a1a28; }
+        .ach-prog { font-size:9px; color:#7060a0; margin-left:auto; white-space:nowrap; }
+        .ach-secret { color:#4a3060 !important; background:#080810 !important; border-color:#120e20 !important; }
+        #daily-bonus { background:#0e1808; border:1px solid #304010; border-radius:10px; padding:10px 12px; margin:4px 0 10px; font-size:11px; color:#90c030; text-align:center; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+        .challenge-card { background:#0e0e1e; border:1px solid #1e1e30; border-radius:12px; padding:10px 12px; margin:6px 0; }
+        .challenge-name { font-size:12px; font-weight:bold; color:#d0c0ff; }
+        .challenge-desc { font-size:10px; color:#666; margin-top:3px; }
+        .challenge-reward { font-size:10px; color:#d4a840; margin-top:4px; }
+        .challenge-done .challenge-name { color:#80c040; }
+        .challenge-done { border-color:#2a3a10; }
+        #run-history { display:flex; flex-direction:column; gap:6px; }
+        .run-record { background:#0e0e1e; border-radius:10px; padding:10px 12px; font-size:10px; color:#888; border-left:3px solid #222; }
+        .run-record.run-best { border-left-color:#d4a840; }
+        #alltime-stats { margin-top:10px; font-size:10px; color:#555; background:#0a0a14; border-radius:10px; padding:10px 12px; }
+        .arc-tabs { display:flex; gap:6px; margin-bottom:10px; }
+        .arc-tab { flex:1; padding:8px 4px; background:#111122; border:1.5px solid #222235; border-radius:10px; color:#888; font-size:11px; cursor:pointer; text-align:center; transition:all .15s; -webkit-tap-highlight-color:transparent; }
+        .arc-tab.active { border-color:#a080f0; background:#1e1a38; color:#c0a0ff; }
+        .skin-upload { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #111118; flex-wrap:wrap; }
+        .skin-upload span.skin-label { width:70px; font-size:11px; color:#aaa; }
+        .skin-upload img.skin-preview-img, .skin-preview-emoji { width:32px; height:32px; border-radius:50%; border:1.5px solid #333; object-fit:cover; flex-shrink:0; }
+        .skin-preview-emoji { display:flex; align-items:center; justify-content:center; font-size:17px; background:#15151f; }
+        .skin-upload button { background:#1a1a2e; border:1px solid #333; border-radius:8px; color:#bbb; padding:6px 12px; font-size:11px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+        .skin-controls { display:flex; align-items:center; gap:6px; flex-wrap:wrap; flex:1; }
+        .skin-emoji-input { width:46px; padding:6px 4px; background:#1a1a2e; border:1px solid #333; border-radius:8px; color:#fff; font-size:16px; text-align:center; -webkit-tap-highlight-color:transparent; }
+        .skin-clear-btn { background:#2a1818 !important; border-color:#553333 !important; color:#e08080 !important; }
+        .settings-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; }
+        .settings-row .joy-label { min-width:110px; }
+        .settings-hint { font-size:9px; color:#444; text-align:center; margin-top:8px; }
+        .menu-tabs { display:none; }
+        .menu-tab { display:none; }
+        #gold-display { display:none; }
+        #wave-display { background:#1a1a24; border:1px solid #445; border-radius:8px; padding:2px 8px; font-weight:bold; font-size:11px; color:#c0a0ff; }
+        #status-effects { position:absolute; top:110px; left:6px; display:flex; flex-direction:column; gap:3px; z-index:12; pointer-events:none; }
+        .status-badge { background:rgba(10,10,20,0.85); border-radius:6px; padding:2px 6px; font-size:10px; border:1px solid #444; }
+        #score-display { background:#1a1a24; border:1px solid #445; border-radius:8px; padding:2px 8px; font-weight:bold; font-size:11px; color:#e0c080; }
+        #fps-counter { position:absolute; bottom:225px; right:12px; font-size:9px; color:#333; z-index:12; pointer-events:none; }
+        .diff-btn { padding:6px 14px; background:#1a1a28; border:1px solid #333; border-radius:20px; color:#ccc; cursor:pointer; font-size:12px; transition:all 0.15s; font-family:'Segoe UI',sans-serif; }
+        .diff-btn.active { border-color:#a080f0; background:#222240; color:#fff; box-shadow:0 0 10px #a080f044; }
+        .diff-btn:hover { border-color:#6050a0; color:#ddd; }
+        #boss-healthbar { position:absolute; top:80px; left:10%; width:80%; z-index:14; display:none; }
+        #boss-healthbar .boss-name { font-size:10px; color:#ff4040; text-align:center; margin-bottom:2px; font-weight:bold; letter-spacing:1px; text-shadow:0 0 8px #ff404088; }
+        #boss-healthbar .boss-bar-outer { height:8px; background:#1a0a0a; border-radius:5px; border:1px solid #601010; overflow:hidden; }
+        #boss-healthbar .boss-bar-fill { height:100%; background:linear-gradient(90deg,#a00,#f04040); border-radius:5px; transition:width 0.15s; }
+        .perm-upgrade-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:4px; }
+        .perm-btn-card { padding:8px; background:#111; border:1px solid #333; border-radius:10px; color:#bbb; font-size:10px; cursor:pointer; transition:all 0.15s; text-align:center; }
+        .perm-btn-card:hover { border-color:#d4a840; background:#1a1810; }
+        .perm-btn-card .perm-icon { font-size:20px; display:block; margin-bottom:3px; }
+        .perm-btn-card .perm-name { font-weight:bold; color:#e0c080; }
+        .perm-btn-card .perm-lvl { font-size:9px; color:#888; }
+        .perm-btn-card .cost { color:#d4a840; font-weight:bold; }
+        #run-history { max-height:140px; overflow-y:auto; }
+        .run-record { background:#111; border-radius:6px; padding:4px 8px; margin:2px 0; font-size:10px; color:#888; border-left:2px solid #333; }
+        .run-record .run-best { border-left-color:#d4a840; color:#bba060; }
+        #challenge-panel { padding:4px; }
+        .challenge-card { background:#12121e; border:1px solid #2a2a40; border-radius:8px; padding:8px; margin:4px 0; }
+        .challenge-name { font-size:11px; font-weight:bold; color:#e0c0ff; }
+        .challenge-desc { font-size:10px; color:#888; margin-top:2px; }
+        .challenge-reward { font-size:10px; color:#d4a840; margin-top:3px; }
+        .challenge-prog { font-size:9px; color:#80c0ff; float:right; }
+        .challenge-done { border-color:#4a6020; }
+        .challenge-done .challenge-name { color:#a0d040; }
+        #minimap { position:absolute; bottom:70px; left:10px; width:70px; height:70px; border-radius:50%; border:2px solid #445; background:rgba(0,0,0,0.7); overflow:hidden; z-index:13; box-shadow:0 0 10px #000; }
+        #minimap canvas { width:100%; height:100%; border-radius:50%; }
+        #achievements-list { font-size:10px; color:#aaa; max-height:220px; overflow-y:auto; text-align:right; }
+        .ach-entry { padding:4px 10px; margin:2px 0; background:#1a1a24; border-radius:8px; color:#ffd080; display:flex; align-items:center; gap:6px; }
+        .ach-entry.locked { color:#444; background:#111116; }
+        .ach-entry .ach-name { font-weight:bold; font-size:10px; }
+        .ach-entry .ach-ddesc { font-size:9px; color:#888; }
+        .ach-entry.locked .ach-name { color:#333; }
+        .ach-entry.locked .ach-ddesc { color:#222; }
+        .ach-cat-header { font-size:10px; font-weight:bold; color:#a080f0; padding:6px 4px 2px; letter-spacing:1px; text-transform:uppercase; }
+        .ach-prog { font-size:9px; color:#80c0ff; margin-left:auto; white-space:nowrap; }
+        #ach-summary { font-size:11px; color:#a080f0; text-align:center; padding:4px; margin-bottom:4px; }
+        #daily-bonus { background:#1a200a; border:1px solid #4a6020; border-radius:8px; padding:6px 10px; margin:4px 0; font-size:10px; color:#a0d040; text-align:center; cursor:pointer; }
+        #daily-bonus:hover { border-color:#80c040; }
+        .ach-secret { color:#604080 !important; background:#100a18 !important; }
+        #joystick-container { position:absolute; z-index:25; pointer-events:auto; display:flex; align-items:center; justify-content:center; touch-action:none; transition:bottom 0.2s,left 0.2s,right 0.2s; }
+        #joystick-base { border-radius:50%; background:rgba(20,20,40,0.65); border:2px solid rgba(160,140,220,0.5); position:relative; backdrop-filter:blur(4px); transition:width 0.2s,height 0.2s,opacity 0.2s; }
+        #joystick-thumb { border-radius:50%; background:rgba(200,180,255,0.85); border:2px solid #c0a0ff; position:absolute; box-shadow:0 0 12px #c0a0ff88; transition:background 0.2s,border-color 0.2s; }
+        #joy-settings-btn { position:absolute; z-index:26; width:26px; height:26px; border-radius:50%; background:rgba(20,20,40,0.8); border:1px solid #555; color:#aaa; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; pointer-events:auto; }
+        #joy-panel { position:absolute; bottom:0; left:0; right:0; background:rgba(8,8,20,0.97); backdrop-filter:blur(12px); border-top:1px solid #2a2a40; border-radius:14px 14px 0 0; padding:16px; z-index:60; display:none; flex-direction:column; gap:10px; pointer-events:auto; max-height:70vh; overflow-y:auto; }
+        #joy-panel.open { display:flex; }
+        #joy-panel h3 { color:#c0a0ff; font-size:14px; text-align:center; letter-spacing:1px; margin-bottom:2px; }
+        .joy-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+        .joy-label { font-size:11px; color:#aaa; min-width:90px; }
+        .joy-slider { flex:1; -webkit-appearance:none; height:5px; border-radius:3px; background:#2a2a40; outline:none; }
+        .joy-slider::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#a080f0; border:2px solid #c0a0ff; cursor:pointer; }
+        .joy-val { font-size:11px; color:#c0a0ff; min-width:36px; text-align:right; }
+        .joy-pos-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
+        .joy-pos-btn { padding:6px; background:#1a1a28; border:1px solid #333; border-radius:8px; color:#bbb; font-size:10px; cursor:pointer; text-align:center; transition:all 0.12s; }
+        .joy-pos-btn.active { border-color:#a080f0; background:#222240; color:#fff; }
+        .joy-color-row { display:flex; gap:6px; flex-wrap:wrap; }
+        .joy-color-dot { width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:all 0.12s; }
+        .joy-color-dot.active { border-color:#fff; transform:scale(1.2); }
+        .joy-close { padding:8px; background:#1a1a2e; border:1px solid #3a3a55; border-radius:10px; color:#ccc; cursor:pointer; font-size:12px; text-align:center; }
+        .joy-toggle-row { display:flex; gap:6px; }
+        .joy-toggle-btn { flex:1; padding:6px; background:#1a1a28; border:1px solid #333; border-radius:8px; color:#bbb; font-size:10px; cursor:pointer; text-align:center; transition:all 0.12s; }
+        .joy-toggle-btn.active { border-color:#a080f0; background:#222240; color:#fff; }
+        .set-toggle-btn { flex:1; padding:6px; background:#1a1a28; border:1px solid #333; border-radius:8px; color:#bbb; font-size:10px; cursor:pointer; text-align:center; transition:all 0.12s; }
+        .set-toggle-btn.active { border-color:#a080f0; background:#222240; color:#fff; }
+        #kill-streak { position:absolute; top:110px; right:10px; color:#ff8040; font-size:12px; font-weight:bold; text-shadow:0 0 10px #ff804099; z-index:12; pointer-events:none; opacity:0; transition:opacity 0.3s; }
+        #kill-streak.show { opacity:1; }
+        .stat-line { display:block; margin:4px 0; color:#ccc; font-size:13px; }
+        .stat-line b { color:#e0c0ff; }
+        #gameover-stats { text-align:center; }
+        .arc-tabs { display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; justify-content:center; }
+        .arc-tab { padding:5px 12px; background:#1a1a28; border:1px solid #333; border-radius:16px; color:#bbb; cursor:pointer; font-size:11px; transition:all 0.15s; }
+        .arc-tab.active { border-color:#a080f0; background:#222240; color:#fff; }
+        #arc-content { max-height:310px; overflow-y:auto; padding:2px 4px; }
+        .arc-card { display:flex; align-items:center; gap:10px; background:#12121e; border:1px solid #2a2a40; border-radius:10px; padding:8px 10px; margin-bottom:6px; transition:border-color 0.15s; }
+        .arc-card:hover { border-color:#6040a0; }
+        .arc-icon { font-size:22px; min-width:28px; text-align:center; }
+        .arc-info { flex:1; }
+        .arc-name { font-size:12px; font-weight:bold; color:#e0c0ff; }
+        .arc-desc { font-size:10px; color:#888; margin-top:2px; line-height:1.4; }
+        .arc-tag { display:inline-block; font-size:9px; padding:1px 6px; border-radius:8px; margin-top:3px; margin-right:3px; }
+        .arc-tag.dmg  { background:#3a1a1a; color:#ff8080; }
+        .arc-tag.ctrl { background:#1a1a3a; color:#80a0ff; }
+        .arc-tag.util { background:#1a2a1a; color:#80c080; }
+        .arc-tag.aoe  { background:#2a1a3a; color:#c080ff; }
+        .arc-tag.orbit{ background:#1a2a2a; color:#80e0e0; }
+        .arc-tag.rare { background:#2a2010; color:#e0a020; }
+        .arc-tag.mini { background:#2a1010; color:#ff6060; }
+        .arc-col { min-width:4px; border-radius:4px; align-self:stretch; margin-right:2px; }
+        .syn-card { background:#12121e; border:1px solid #3a1a5a; border-radius:10px; padding:8px 10px; margin-bottom:6px; }
+        .syn-head { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+        .syn-icon { font-size:18px; }
+        .syn-name { font-size:12px; font-weight:bold; color:#e040ff; }
+        .syn-needs { font-size:10px; color:#888; }
+        .syn-effect { font-size:10px; color:#ccc; line-height:1.4; }
+    </style>
+</head>
+<body>
+<div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui-overlay">
+        <div id="top-hud">
+            <div class="bar-panel"><span class="bar-icon">❤️</span><div class="bar-fill-outer"><div class="bar-fill hp" id="hp-fill" style="width:100%"></div><span class="bar-text" id="hp-text">80/80</span></div></div>
+            <div class="bar-panel"><span class="bar-icon">⭐</span><div class="bar-fill-outer"><div class="bar-fill xp" id="xp-fill" style="width:0%"></div><span class="bar-text" id="xp-text">0/60</span></div></div>
+            <div class="info-row"><span id="level-badge">مستوى 1</span><span id="timer-display">⏱ 0:00</span><span id="kill-display">💀 0</span><span id="score-display">🏅 0</span><span id="wave-display">م1</span></div>
+        </div>
+        <div id="status-effects"></div>
+        <div id="boss-healthbar"><div class="boss-name" id="boss-hp-name">زعيم</div><div class="boss-bar-outer"><div class="boss-bar-fill" id="boss-hp-fill" style="width:100%"></div></div></div>
+        <div id="spell-bar"></div>
+        <button id="pause-btn">⏸</button>
+        <button id="music-toggle">🎵</button>
+        <div id="minimap"><canvas id="minimapCanvas" width="70" height="70"></canvas></div>
+        <div id="achievement-popup"><span class="ach-icon"></span><span class="ach-text"></span></div>
+        <div id="kill-streak"></div>
+        <div id="fps-counter"></div>
+        <button id="joy-settings-btn" title="تخصيص عصا التحكم">⚙️</button>
+        <div id="joystick-container">
+            <div id="joystick-base"><div id="joystick-thumb"></div></div>
+        </div>
+        <div id="joy-panel">
+            <h3>🕹️ إعدادات عصا التحكم</h3>
+            <div class="joy-row"><span class="joy-label">الحجم</span><input class="joy-slider" type="range" id="joy-size" min="60" max="220" value="100" step="4"><span class="joy-val" id="joy-size-val">100</span></div>
+            <div class="joy-row"><span class="joy-label">حجم المقبض</span><input class="joy-slider" type="range" id="joy-thumb-size" min="20" max="90" value="40" step="2"><span class="joy-val" id="joy-thumb-val">40</span></div>
+            <div class="joy-row"><span class="joy-label">الشفافية</span><input class="joy-slider" type="range" id="joy-opacity" min="10" max="100" value="70" step="5"><span class="joy-val" id="joy-opacity-val">70%</span></div>
+            <div class="joy-row"><span class="joy-label">الحساسية</span><input class="joy-slider" type="range" id="joy-sens" min="200" max="900" value="500" step="50"><span class="joy-val" id="joy-sens-val">متوسط</span></div>
+            <div class="joy-row"><span class="joy-label">الموضع</span>
+                <div class="joy-pos-grid">
+                    <button class="joy-pos-btn" data-pos="bl">↙ أسفل يسار</button>
+                    <button class="joy-pos-btn" data-pos="bc">↓ أسفل</button>
+                    <button class="joy-pos-btn active" data-pos="br">↘ أسفل يمين</button>
+                    <button class="joy-pos-btn" data-pos="ml">← منتصف يسار</button>
+                    <button class="joy-pos-btn" data-pos="mc">منتصف</button>
+                    <button class="joy-pos-btn" data-pos="mr">→ منتصف يمين</button>
+                </div>
+            </div>
+            <div class="joy-row"><span class="joy-label">لون المقبض</span>
+                <div class="joy-color-row" id="joy-colors">
+                    <div class="joy-color-dot active" data-color="#c0a0ff" style="background:#c0a0ff"></div>
+                    <div class="joy-color-dot" data-color="#ff8080" style="background:#ff8080"></div>
+                    <div class="joy-color-dot" data-color="#80ff80" style="background:#80ff80"></div>
+                    <div class="joy-color-dot" data-color="#80d0ff" style="background:#80d0ff"></div>
+                    <div class="joy-color-dot" data-color="#ffd080" style="background:#ffd080"></div>
+                    <div class="joy-color-dot" data-color="#ff80d0" style="background:#ff80d0"></div>
+                    <div class="joy-color-dot" data-color="#ffffff" style="background:#ffffff"></div>
+                    <div class="joy-color-dot" data-color="#ff6040" style="background:#ff6040"></div>
+                </div>
+            </div>
+            <div class="joy-row"><span class="joy-label">الوضع</span>
+                <div class="joy-toggle-row">
+                    <button class="joy-toggle-btn active" data-mode="fixed">ثابت</button>
+                    <button class="joy-toggle-btn" data-mode="float">عائم</button>
+                    <button class="joy-toggle-btn" data-mode="hidden">مخفي</button>
+                </div>
+            </div>
+            <button class="joy-close" onclick="document.getElementById('joy-panel').classList.remove('open')">✕ إغلاق</button>
+        </div>
+        <div class="overlay" id="levelup-overlay"><h2>🎯 اختر تطويراً</h2><div id="levelup-choices"></div><span id="reroll-count">إعادة المحاولة: 2</span><button class="action-btn" id="reroll-btn">🔄 أعد المحاولة</button></div>
+        <div class="overlay" id="chest-overlay"><h2>📦 صندوق كنز!</h2><div id="chest-choices"></div></div>
+        <div class="overlay" id="game-over-overlay"><h2>💀 انتهت اللعبة</h2><div id="gameover-stats"></div><button class="action-btn" id="restart-btn">🔁 حاول مجدداً</button></div>
+        <div id="start-screen">
+            <div id="menu-hero">
+                <h1>⚔️ ناجي السحر</h1>
+                <div class="hero-sub">روجلايت صعب</div>
+                <div id="menu-gold-bar"><div id="menu-gold-pill">💰 <span id="menu-gold-val">0</span></div></div>
+            </div>
+            <nav id="menu-nav">
+                <button class="mnav-btn active" data-panel="play"><span class="mnav-icon">⚔️</span>لعب</button>
+                <button class="mnav-btn" data-panel="upgrades"><span class="mnav-icon">⬆️</span>ترقيات</button>
+                <button class="mnav-btn" data-panel="achievements"><span class="mnav-icon">🏆</span>إنجازات</button>
+                <button class="mnav-btn" data-panel="challenges"><span class="mnav-icon">🎯</span>يومي</button>
+                <button class="mnav-btn" data-panel="history"><span class="mnav-icon">📊</span>سجل</button>
+                <button class="mnav-btn" data-panel="arcapedia"><span class="mnav-icon">📖</span>الموسوعة</button>
+                <button class="mnav-btn" data-panel="skins"><span class="mnav-icon">🎨</span>جلود</button>
+                <button class="mnav-btn" data-panel="settings"><span class="mnav-icon">⚙️</span>إعدادات</button>
+            </nav>
+            <div id="menu-content">
+                <!-- اللعب -->
+                <div class="menu-panel active-panel" id="menu-panel-play">
+                    <div class="section-label">اختر فئة</div>
+                    <div class="class-grid" id="class-select">
+                        <div class="class-card selected" data-class="wizard"><span class="emoji">🧙</span><div class="class-name">ساحر</div><div class="class-desc">سهم سحري · إطلاق سريع</div></div>
+                        <div class="class-card" data-class="pyromancer"><span class="emoji">🔥</span><div class="class-name">ناري</div><div class="class-desc">كرة نارية · انفجار منطقة</div></div>
+                        <div class="class-card" data-class="frost"><span class="emoji">❄️</span><div class="class-name">جليدي</div><div class="class-desc">انفجار جليدي · يبطئ الكل</div></div>
+                        <div class="class-card" data-class="summoner"><span class="emoji">👻</span><div class="class-name">مستدعي</div><div class="class-desc">أرواح مدارية · ضرر مستمر</div></div>
+                        <div class="class-card" data-class="necro"><span class="emoji">💀</span><div class="class-name">نكرومانسر</div><div class="class-desc">أموات · استدعاء</div></div>
+                        <div class="class-card" data-class="berserker"><span class="emoji">⚔️</span><div class="class-name">بربري</div><div class="class-desc">عاصفة نصل · غضب</div></div>
+                    </div>
+                    <div class="section-label">الصعوبة</div>
+                    <div class="diff-row">
+                        <button class="diff-btn active" id="diff-normal" data-diff="normal">🟢 عادي</button>
+                        <button class="diff-btn" id="diff-hard" data-diff="hard">🔥 صعب</button>
+                        <button class="diff-btn" id="diff-nightmare" data-diff="nightmare">💀 كابوس</button>
+                    </div>
+                    <div id="diff-desc">صعوبة قياسية</div>
+                    <span id="gold-display" style="display:none">💰 الذهب: 0</span>
+                    <button id="start-btn">▶ ابدأ المعركة</button>
+                </div>
+                <!-- الترقيات الدائمة -->
+                <div class="menu-panel" id="menu-panel-upgrades">
+                    <div class="section-label">الترقيات الدائمة</div>
+                    <div class="perm-upgrade-grid">
+                        <button class="perm-btn-card" data-upgrade="attack"><span class="perm-icon">⚔️</span><span class="perm-name">الهجوم</span><div class="perm-lvl" id="plvl-attack">مستوى 0/8</div><div>التكلفة: <span class="cost" id="pcost-attack">150</span>💰</div></button>
+                        <button class="perm-btn-card" data-upgrade="hp"><span class="perm-icon">❤️</span><span class="perm-name">الصحة القصوى</span><div class="perm-lvl" id="plvl-hp">مستوى 0/8</div><div>التكلفة: <span class="cost" id="pcost-hp">150</span>💰</div></button>
+                        <button class="perm-btn-card" data-upgrade="cdr"><span class="perm-icon">⏱</span><span class="perm-name">تقليل التهدئة</span><div class="perm-lvl" id="plvl-cdr">مستوى 0/8</div><div>التكلفة: <span class="cost" id="pcost-cdr">200</span>💰</div></button>
+                        <button class="perm-btn-card" data-upgrade="speed"><span class="perm-icon">👟</span><span class="perm-name">السرعة</span><div class="perm-lvl" id="plvl-speed">مستوى 0/8</div><div>التكلفة: <span class="cost" id="pcost-speed">150</span>💰</div></button>
+                        <button class="perm-btn-card" data-upgrade="crit"><span class="perm-icon">💥</span><span class="perm-name">نسبة الضربة الحاسمة</span><div class="perm-lvl" id="plvl-crit">مستوى 0/8</div><div>التكلفة: <span class="cost" id="pcost-crit">220</span>💰</div></button>
+                        <button class="perm-btn-card" data-upgrade="xpboost"><span class="perm-icon">⭐</span><span class="perm-name">تعزيز الخبرة</span><div class="perm-lvl" id="plvl-xpboost">مستوى 0/5</div><div>التكلفة: <span class="cost" id="pcost-xpboost">250</span>💰</div></button>
+                        <button class="perm-btn-card" data-upgrade="dashcd"><span class="perm-icon">💨</span><span class="perm-name">تهدئة الاندفاع</span><div class="perm-lvl" id="plvl-dashcd">مستوى 0/5</div><div>التكلفة: <span class="cost" id="pcost-dashcd">180</span>💰</div></button>
+                        <button class="perm-btn-card" data-upgrade="rerolls"><span class="perm-icon">🔄</span><span class="perm-name">إعادة المحاولة</span><div class="perm-lvl" id="plvl-rerolls">مستوى 0/4</div><div>التكلفة: <span class="cost" id="pcost-rerolls">300</span>💰</div></button>
+                    </div>
+                    <div style="font-size:9px;color:#333;text-align:center;margin-top:10px;">الترقيات تبقى بين الجولات</div>
+                </div>
+                <!-- الإنجازات -->
+                <div class="menu-panel" id="menu-panel-achievements">
+                    <div id="ach-summary">🏆 جار التحميل...</div>
+                    <div id="achievements-list"></div>
+                </div>
+                <!-- التحديات اليومية -->
+                <div class="menu-panel" id="menu-panel-challenges">
+                    <div class="section-label">التحديات اليومية</div>
+                    <div id="daily-bonus" onclick="claimDailyBonus()">🎁 استلم مكافأة الدخول اليومية (+25 💰)</div>
+                    <div id="challenge-panel"></div>
+                </div>
+                <!-- السجل -->
+                <div class="menu-panel" id="menu-panel-history">
+                    <div class="section-label">سجل الجولات</div>
+                    <div id="run-history"></div>
+                    <div id="alltime-stats"></div>
+                </div>
+                <!-- الموسوعة -->
+                <div class="menu-panel" id="menu-panel-arcapedia">
+                    <div class="section-label">الموسوعة</div>
+                    <div class="arc-tabs">
+                        <button class="arc-tab active" data-arc="spells">🔮 التعاويذ</button>
+                        <button class="arc-tab" data-arc="enemies">👹 الأعداء</button>
+                        <button class="arc-tab" data-arc="synergies">✨ التآزرات</button>
+                    </div>
+                    <div id="arc-content"></div>
+                </div>
+                <!-- الجلود -->
+                <div class="menu-panel" id="menu-panel-skins">
+                    <div class="section-label">جلود مخصصة (PNG / إيموجي)</div>
+                    <div id="skins-container"></div>
+                </div>
+                <!-- الإعدادات -->
+                <div class="menu-panel" id="menu-panel-settings">
+                    <div class="section-label">🔊 الصوت</div>
+                    <div class="settings-row"><span class="joy-label">مستوى الصوت</span><input class="joy-slider" type="range" id="set-volume" min="0" max="100" value="70" step="5"><span class="joy-val" id="set-volume-val">70%</span></div>
+                    <div class="settings-row"><span class="joy-label">الموسيقى</span>
+                        <div class="joy-toggle-row">
+                            <button class="set-toggle-btn active" id="set-music-on">🎵 تشغيل</button>
+                            <button class="set-toggle-btn" id="set-music-off">🔇 إيقاف</button>
+                        </div>
+                    </div>
+                    <div class="section-label">🕹️ عصا التحكم</div>
+                    <div class="settings-row"><span class="joy-label">الحجم</span><input class="joy-slider" type="range" id="set-joy-size" min="60" max="220" value="100" step="4"><span class="joy-val" id="set-joy-size-val">100</span></div>
+                    <div class="settings-hint">خيارات إضافية لعصا التحكم (اللون، الموضع، الحساسية...) متاحة عبر زر ⚙️ أثناء اللعب.</div>
+                </div>
+            </div>
+            <div class="menu-tabs" style="display:none">
+                <div class="menu-tab active" data-tab="play"></div>
+                <div class="menu-tab" data-tab="upgrades"></div>
+                <div class="menu-tab" data-tab="arcapedia"></div>
+                <div class="menu-tab" data-tab="skins"></div>
+                <div class="menu-tab" data-tab="achievements"></div>
+                <div class="menu-tab" data-tab="challenges"></div>
+                <div class="menu-tab" data-tab="history"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+(function() {
+    // ── الموسيقى والصوت ──
+    let musicEnabled = true, audioCtx = null, musicNodes = [];
+    let masterVolume = parseFloat(localStorage.getItem('surv_volume')||'0.7'); if(isNaN(masterVolume)) masterVolume=0.7;
+    let musicMasterGain = null;
+    function initAudio() { if(!audioCtx) { try { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e) { musicEnabled=false; } } if(audioCtx?.state==='suspended') audioCtx.resume(); }
+    function startMusic() {
+        if(!musicEnabled||!audioCtx) return; stopMusic();
+        const now = audioCtx.currentTime, master = audioCtx.createGain(); master.gain.value = 0.04*masterVolume; master.connect(audioCtx.destination);
+        musicMasterGain = master; musicNodes.push(master);
+        const bass = audioCtx.createOscillator(); bass.type='sine'; bass.frequency.setValueAtTime(55,now); const bg = audioCtx.createGain(); bg.gain.value=0.5; bass.connect(bg); bg.connect(master); bass.start(now); musicNodes.push(bass);
+        const pad = audioCtx.createOscillator(); pad.type='triangle'; pad.frequency.setValueAtTime(220,now); const pg = audioCtx.createGain(); pg.gain.value=0.25; pad.connect(pg); pg.connect(master); pad.start(now); musicNodes.push(pad);
+        const hi = audioCtx.createOscillator(); hi.type='sine'; hi.frequency.setValueAtTime(880,now); const hg = audioCtx.createGain(); hg.gain.value=0.08; hi.connect(hg); hg.connect(master); hi.start(now); musicNodes.push(hi);
+    }
+    function stopMusic() { musicNodes.forEach(n=>{ try{n.stop()}catch(e){} try{n.disconnect()}catch(e){} }); musicNodes=[]; musicMasterGain=null; }
+    function toggleMusic() { musicEnabled=!musicEnabled; document.getElementById('music-toggle').textContent=musicEnabled?'🎵':'🔇'; if(musicEnabled){initAudio(); if(state===GAME_STATES.PLAYING) startMusic();} else stopMusic(); }
+    document.getElementById('music-toggle').addEventListener('click', toggleMusic);
+
+    function playSFX(type) {
+        if(!audioCtx||masterVolume<=0) return;
+        try {
+            const now = audioCtx.currentTime;
+            const mkOsc=(freq,otype,dur,vol,freqEnd)=>{
+                const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+                o.type=otype||'sine'; o.frequency.setValueAtTime(freq,now);
+                if(freqEnd) o.frequency.exponentialRampToValueAtTime(freqEnd,now+dur);
+                const v=(vol||0.1)*masterVolume;
+                g.gain.setValueAtTime(v,now); g.gain.exponentialRampToValueAtTime(0.0001,now+(dur||0.15));
+                o.connect(g); g.connect(audioCtx.destination); o.start(now); o.stop(now+(dur||0.15)+0.05);
+            };
+            const delay=(fn,ms)=>setTimeout(fn,ms);
+            if(type==='hit'){       mkOsc(280,'sawtooth',0.07,0.09,100); }
+            if(type==='hit_crit'){  mkOsc(500,'square',0.06,0.14,200); mkOsc(250,'sine',0.1,0.08,80); }
+            if(type==='kill'){      mkOsc(350,'triangle',0.12,0.10,180); }
+            if(type==='kill_elite'){mkOsc(500,'triangle',0.18,0.15,220); delay(()=>mkOsc(750,'sine',0.1,0.07,400),80);}
+            if(type==='kill_boss'){ mkOsc(150,'sawtooth',0.35,0.18,60); delay(()=>mkOsc(600,'triangle',0.2,0.14,300),100); delay(()=>mkOsc(900,'sine',0.15,0.1,500),200); }
+            if(type==='levelup'){   mkOsc(523,'triangle',0.12,0.14); delay(()=>mkOsc(659,'triangle',0.12,0.14),120); delay(()=>mkOsc(784,'triangle',0.2,0.16),240); }
+            if(type==='chest'){     mkOsc(600,'sine',0.1,0.12); delay(()=>mkOsc(800,'sine',0.1,0.12),100); delay(()=>mkOsc(1000,'sine',0.18,0.12),200); }
+            if(type==='dash'){      mkOsc(400,'sine',0.08,0.08,600); }
+            if(type==='player_hit'){mkOsc(180,'sawtooth',0.14,0.16,80); }
+            if(type==='miniboss'){  mkOsc(120,'sawtooth',0.4,0.2,60); delay(()=>mkOsc(400,'square',0.25,0.12,200),60); }
+            if(type==='synergy'){   mkOsc(440,'sine',0.1,0.1); delay(()=>mkOsc(660,'triangle',0.1,0.12),100); delay(()=>mkOsc(880,'sine',0.2,0.14),200); delay(()=>mkOsc(1320,'triangle',0.25,0.10),300); }
+        } catch(e){}
+    }
+
+    // ── الإنجازات ──
+    let achievements = JSON.parse(localStorage.getItem('surv_ach')||'{}');
+    let roundAch = {};
+    let bestRun = JSON.parse(localStorage.getItem('surv_best')||'{}');
+    let runHistory = JSON.parse(localStorage.getItem('surv_history')||'[]');
+    let allTimeStats = JSON.parse(localStorage.getItem('surv_alltime')||'{"totalKills":0,"totalTime":0,"totalRuns":0,"totalGold":0}');
+    let dailyChallenges = JSON.parse(localStorage.getItem('surv_daily')||'{}');
+
+    const ACH_DEFS = [
+        {id:'surv1',cat:'⏱ النجاة',name:'الدم الأول',desc:'النجاة دقيقة واحدة',icon:'🩸',check:()=>gameTime>=60},
+        {id:'surv5',cat:'⏱ النجاة',name:'الناجي',desc:'النجاة 5 دقائق',icon:'⏱️',check:()=>gameTime>=300},
+        {id:'surv10',cat:'⏱ النجاة',name:'المحارب القديم',desc:'النجاة 10 دقائق',icon:'🛡️',check:()=>gameTime>=600},
+        {id:'surv15',cat:'⏱ النجاة',name:'النخبة',desc:'النجاة 15 دقيقة',icon:'⭐',check:()=>gameTime>=900},
+        {id:'surv20',cat:'⏱ النجاة',name:'الأسطورة',desc:'النجاة 20 دقيقة',icon:'👑',check:()=>gameTime>=1200},
+        {id:'surv30',cat:'⏱ النجاة',name:'الخالد',desc:'النجاة 30 دقيقة',icon:'🔱',check:()=>gameTime>=1800},
+        {id:'kills10',cat:'💀 القتلى',name:'الخطوات الأولى',desc:'قتل 10 أعداء',icon:'🗡️',check:()=>totalKills>=10},
+        {id:'kills75',cat:'💀 القتلى',name:'الذابح',desc:'قتل 75 عدواً',icon:'💀',check:()=>totalKills>=75},
+        {id:'kills150',cat:'💀 القتلى',name:'الحاصد',desc:'قتل 150 عدواً',icon:'💀',check:()=>totalKills>=150},
+        {id:'kills300',cat:'💀 القتلى',name:'الجلاد',desc:'قتل 300 عدو',icon:'⚔️',check:()=>totalKills>=300},
+        {id:'kills500',cat:'💀 القتلى',name:'عقوبة الإعدام',desc:'قتل 500 عدو',icon:'☠️',check:()=>totalKills>=500},
+        {id:'kills1000',cat:'💀 القتلى',name:'المدمر',desc:'قتل 1000 عدو',icon:'💥',check:()=>totalKills>=1000},
+        {id:'lvl5',cat:'📈 المستويات',name:'المتدرب',desc:'الوصول للمستوى 5',icon:'📖',check:()=>player.level>=5},
+        {id:'lvl10',cat:'📈 المستويات',name:'ساحر مبتدئ',desc:'الوصول للمستوى 10',icon:'📈',check:()=>player.level>=10},
+        {id:'lvl25',cat:'📈 المستويات',name:'الماهر',desc:'الوصول للمستوى 25',icon:'🔮',check:()=>player.level>=25},
+        {id:'lvl50',cat:'📈 المستويات',name:'أرشميج',desc:'الوصول للمستوى 50',icon:'✨',check:()=>player.level>=50},
+        {id:'lvl75',cat:'📈 المستويات',name:'الساحر الأكبر',desc:'الوصول للمستوى 75',icon:'🌟',check:()=>player.level>=75},
+        {id:'lvl100',cat:'📈 المستويات',name:'المتعالي',desc:'الوصول للمستوى 100',icon:'🏆',check:()=>player.level>=100},
+        {id:'boss1',cat:'👑 الزعماء',name:'قاتل الزعماء',desc:'قتل أول زعيم',icon:'👑',check:()=>bossKills>=1},
+        {id:'boss3',cat:'👑 الزعماء',name:'صائد الزعماء',desc:'قتل 3 زعماء في جولة',icon:'🗡️',check:()=>bossKills>=3},
+        {id:'boss5',cat:'👑 الزعماء',name:'مُفني الزعماء',desc:'قتل 5 زعماء في جولة',icon:'⚔️',check:()=>bossKills>=5},
+        {id:'miniboss5',cat:'👑 الزعماء',name:'نقمة الصغار',desc:'قتل 5 زعماء صغار في جولة',icon:'💥',check:()=>typeof miniBossKills!=='undefined'&&miniBossKills>=5},
+        {id:'streak5',cat:'🔥 التسلسلات',name:'سلسلة ساخنة',desc:'تسلسل 20 قتلة',icon:'🔥',check:()=>killStreak>=20},
+        {id:'streak10',cat:'🔥 التسلسلات',name:'مشتعل',desc:'تسلسل 60 قتلة',icon:'🔥',check:()=>killStreak>=60},
+        {id:'streak20',cat:'🔥 التسلسلات',name:'لا يُوقف',desc:'تسلسل 100 قتلة',icon:'⚡',check:()=>killStreak>=100},
+        {id:'streak50',cat:'🔥 التسلسلات',name:'عدو غوكو',desc:'تسلسل 200 قتلة',icon:'🌟',check:()=>killStreak>=200},
+        {id:'near_death',cat:'❤️ الصحة',name:'حافة الموت',desc:'النجاة 5 ثوانٍ بصحة منخفضة',icon:'💔',check:()=>player._nearDeath>=5},
+        {id:'near_death2',cat:'❤️ الصحة',name:'التشبث بالحياة',desc:'النجاة 15 ثانية بصحة منخفضة',icon:'💔',check:()=>player._nearDeath>=15},
+        {id:'phoenix',cat:'❤️ الصحة',name:'العنقاء',desc:'تفعيل إحياء العنقاء',icon:'🔥',check:()=>typeof _phoenixTriggered!=='undefined'&&_phoenixTriggered},
+        {id:'fullhp',cat:'❤️ الصحة',name:'لا يُمس',desc:'النجاة 3 دقائق بصحة كاملة',icon:'💚',check:()=>typeof fullHpTimer!=='undefined'&&fullHpTimer>=180},
+        {id:'spells3',cat:'🔮 التعاويذ',name:'رابط التعاويذ',desc:'امتلاك 3 تعاويذ',icon:'🔮',check:()=>player.spells.length>=3},
+        {id:'spells6',cat:'🔮 التعاويذ',name:'الترسانة الكبرى',desc:'امتلاك 6 تعاويذ',icon:'✨',check:()=>player.spells.length>=6},
+        {id:'spells_max',cat:'🔮 التعاويذ',name:'سيد التعاويذ',desc:'ترقية تعويذة للمستوى 7',icon:'🌟',check:()=>player.spells.some(s=>s.level>=7)},
+        {id:'awakening1',cat:'🔮 التعاويذ',name:'الصحوة',desc:'صحوة تعويذة لأول مرة',icon:'💫',check:()=>player.spells.some(s=>s.awakening)},
+        {id:'awakening3',cat:'🔮 التعاويذ',name:'الصحوة الكاملة',desc:'صحوة 3 تعاويذ في جولة',icon:'🔱',check:()=>player.spells.filter(s=>s.awakening).length>=3},
+        {id:'syn1',cat:'✨ التآزرات',name:'المحفز',desc:'فتح أول تآزر',icon:'✨',check:()=>activeSynergies.length>=1},
+        {id:'syn3',cat:'✨ التآزرات',name:'تفاعل متسلسل',desc:'فتح 3 تآزرات في جولة',icon:'🔗',check:()=>activeSynergies.length>=3},
+        {id:'syn_all',cat:'✨ التآزرات',name:'سيد التآزرات',desc:'فتح 7 تآزرات في جولة',icon:'🌈',check:()=>activeSynergies.length>=7},
+        {id:'artifact1',cat:'📦 القطع الأثرية',name:'جامع',desc:'جمع 3 قطع أثرية',icon:'📦',check:()=>player.artifacts.length>=3},
+        {id:'artifact5',cat:'📦 القطع الأثرية',name:'مكتنز',desc:'جمع 5 قطع أثرية',icon:'💎',check:()=>player.artifacts.length>=5},
+        {id:'legendary',cat:'📦 القطع الأثرية',name:'غنيمة أسطورية',desc:'الحصول على قطعة أثرية أسطورية',icon:'🏆',check:()=>player.artifacts.some(a=>a.rarity==='Legendary')},
+        {id:'gold100',cat:'💰 الذهب',name:'صائد العملات',desc:'كسب 100 ذهب في جولة',icon:'💰',check:()=>goldEarned>=100},
+        {id:'gold500',cat:'💰 الذهب',name:'صائد الكنوز',desc:'كسب 500 ذهب في جولة',icon:'💰',check:()=>goldEarned>=500},
+        {id:'gold1000',cat:'💰 الذهب',name:'ثري',desc:'كسب 1000 ذهب إجمالاً',icon:'💎',check:()=>allTimeStats.totalGold+goldEarned>=1000},
+        {id:'perm_max1',cat:'💰 الذهب',name:'أول ترقية',desc:'شراء أي ترقية دائمة',icon:'⬆️',check:()=>Object.values(permUp).some(v=>v>0)},
+        {id:'perm_max5',cat:'💰 الذهب',name:'مستثمر القوة',desc:'إيصال ترقيتين للحد الأقصى',icon:'💪',check:()=>Object.values(permUp).filter(v=>v>=8).length>=2},
+        {id:'class_wizard',cat:'🎭 الفئات',name:'حكمة الساحر',desc:'النجاة 10 دقائق كساحر',icon:'🧙',check:()=>selectedClass==='wizard'&&gameTime>=600},
+        {id:'class_pyro',cat:'🎭 الفئات',name:'حكمة الناري',desc:'النجاة 10 دقائق كناري',icon:'🔥',check:()=>selectedClass==='pyromancer'&&gameTime>=600},
+        {id:'class_frost',cat:'🎭 الفئات',name:'حكمة الجليدي',desc:'النجاة 10 دقائق كجليدي',icon:'❄️',check:()=>selectedClass==='frost'&&gameTime>=600},
+        {id:'class_summ',cat:'🎭 الفئات',name:'حكمة المستدعي',desc:'النجاة 10 دقائق كمستدعي',icon:'👻',check:()=>selectedClass==='summoner'&&gameTime>=600},
+        {id:'class_necro',cat:'🎭 الفئات',name:'حكمة النكرومانسر',desc:'النجاة 10 دقائق كنكرومانسر',icon:'💀',check:()=>selectedClass==='necro'&&gameTime>=600},
+        {id:'class_berserk',cat:'🎭 الفئات',name:'حكمة البربري',desc:'النجاة 10 دقائق كبربري',icon:'⚔️',check:()=>selectedClass==='berserker'&&gameTime>=600},
+        {id:'all_classes',cat:'🎭 الفئات',name:'متعدد المواهب',desc:'الفوز بجولة مع 4 فئات مختلفة',icon:'🌈',check:()=>Object.keys(JSON.parse(localStorage.getItem('surv_classwins')||'{}')).length>=4},
+        {id:'hard_clear',cat:'🔥 الصعوبة',name:'المتصلب',desc:'النجاة 10 دقائق في صعوبة صعب',icon:'🔥',check:()=>typeof difficulty!=='undefined'&&difficulty==='hard'&&gameTime>=600},
+        {id:'nightmare_clear',cat:'🔥 الصعوبة',name:'عداء الكابوس',desc:'النجاة 5 دقائق في صعوبة كابوس',icon:'💀',check:()=>typeof difficulty!=='undefined'&&difficulty==='nightmare'&&gameTime>=300},
+        {id:'secret_dash',cat:'🔐 سري',name:'الضباب',desc:'???',icon:'❓',check:()=>typeof dashCount!=='undefined'&&dashCount>=100,secret:true},
+        {id:'secret_chest',cat:'🔐 سري',name:'مكتنز الصناديق',desc:'???',icon:'❓',check:()=>typeof chestsOpened!=='undefined'&&chestsOpened>=10,secret:true},
+        {id:'secret_nohit',cat:'🔐 سري',name:'غير ملوث',desc:'???',icon:'❓',check:()=>typeof damageTaken!=='undefined'&&damageTaken===0&&gameTime>=120,secret:true},
+        {id:'secret_30kills1min',cat:'🔐 سري',name:'القتل السريع',desc:'???',icon:'❓',check:()=>typeof firstMinKills!=='undefined'&&firstMinKills>=30,secret:true},
+    ];
+    let _phoenixTriggered=false, fullHpTimer=0, miniBossKills=0, dashCount=0, chestsOpened=0, damageTaken=0, firstMinKills=0;
+
+    function checkAch() {
+        ACH_DEFS.forEach(a=>{
+            if(achievements[a.id]||roundAch[a.id]) return;
+            try { if(a.check()){ achievements[a.id]=Date.now(); roundAch[a.id]=true; localStorage.setItem('surv_ach',JSON.stringify(achievements)); showAchPopup(a); } } catch(e){}
+        });
+    }
+    function showAchPopup(a) {
+        const pop = document.getElementById('achievement-popup');
+        pop.querySelector('.ach-icon').textContent=a.icon;
+        pop.querySelector('.ach-text').textContent=(a.secret?'🔐 سري: ':'🏆 ')+a.name+': '+(a.secret&&!achievements[a.id]?'???':a.desc);
+        pop.classList.add('show');
+        setTimeout(()=>pop.classList.remove('show'),3200);
+    }
+    function renderAchList() {
+        const c = document.getElementById('achievements-list');
+        c.innerHTML='';
+        const unlocked=ACH_DEFS.filter(a=>achievements[a.id]).length;
+        document.getElementById('ach-summary').textContent=`🏆 ${unlocked} / ${ACH_DEFS.length} مفتوحة`;
+        const cats=[...new Set(ACH_DEFS.map(a=>a.cat))];
+        cats.forEach(cat=>{
+            const header=document.createElement('div'); header.className='ach-cat-header'; header.textContent=cat; c.appendChild(header);
+            ACH_DEFS.filter(a=>a.cat===cat).forEach(a=>{
+                const d=document.createElement('div');
+                const isUnlocked=!!achievements[a.id];
+                const isSecret=a.secret&&!isUnlocked;
+                d.className='ach-entry'+(isUnlocked?'':' locked')+(isSecret?' ach-secret':'');
+                const nameText=isSecret?'???':a.name;
+                const descText=isSecret?'إنجاز سري':a.desc;
+                d.innerHTML=`<span>${isUnlocked?'✅':isSecret?'🔐':'🔒'}</span><span style="font-size:14px">${a.icon}</span><div><div class="ach-name">${nameText}</div><div class="ach-ddesc">${descText}</div></div>${isUnlocked?`<span class="ach-prog">${new Date(achievements[a.id]).toLocaleDateString()}</span>`:''}`;
+                c.appendChild(d);
+            });
+        });
+    }
+
+    // ── الصعوبة ──
+    let difficulty = 'normal';
+    const DIFF_MODS = {
+        normal:    {hpMult:1,   dmgMult:1,    speedMult:1,   xpMult:1,   goldMult:1,   label:'قياسي — متوازن لجميع اللاعبين'},
+        hard:      {hpMult:1.6, dmgMult:1.45, speedMult:1.25, xpMult:1.4, goldMult:1.6, label:'صعب — الأعداء أقوى وأسرع. +60% ذهب!'},
+        nightmare: {hpMult:2.8, dmgMult:2.0,  speedMult:1.55, xpMult:1.8, goldMult:2.5, label:'كابوس — صعوبة وحشية. +150% ذهب!'}
+    };
+    function setDiff(d) {
+        difficulty = d;
+        document.querySelectorAll('.diff-btn').forEach(b => b.classList.toggle('active', b.dataset.diff === d));
+        const desc = document.getElementById('diff-desc');
+        if(desc) desc.textContent = DIFF_MODS[d].label;
+    }
+    document.querySelectorAll('.diff-btn').forEach(b => b.addEventListener('click', () => setDiff(b.dataset.diff)));
+
+    // ── النقاط ──
+    let runScore = 0;
+    function addScore(pts) { runScore += pts; }
+
+    // ── سجل الجولات ──
+    function saveRunHistory() {
+        const run = { date:new Date().toLocaleDateString(), time:formatTime(gameTime), kills:totalKills, level:player.level, gold:goldEarned, score:runScore, class:selectedClass, diff:difficulty, wave:currentWave };
+        runHistory.unshift(run); if(runHistory.length > 10) runHistory.pop();
+        localStorage.setItem('surv_history', JSON.stringify(runHistory));
+        allTimeStats.totalKills += totalKills; allTimeStats.totalTime += gameTime; allTimeStats.totalRuns++; allTimeStats.totalGold += goldEarned;
+        localStorage.setItem('surv_alltime', JSON.stringify(allTimeStats));
+        if(gameTime >= 600) { let cw = JSON.parse(localStorage.getItem('surv_classwins')||'{}'); cw[selectedClass] = (cw[selectedClass]||0)+1; localStorage.setItem('surv_classwins', JSON.stringify(cw)); }
+    }
+    function renderHistory() {
+        const c = document.getElementById('run-history'); c.innerHTML='';
+        if(!runHistory.length) { c.innerHTML='<div style="color:#444;text-align:center;font-size:11px;padding:10px;">لا توجد جولات بعد. ابدأ اللعب!</div>'; return; }
+        const best = runHistory.reduce((a,b)=>b.score>a.score?b:a, runHistory[0]);
+        runHistory.forEach((r,i)=>{ const d=document.createElement('div'); const isBest=r===best; d.className='run-record'+(isBest?' run-best':''); d.innerHTML=`<b>${r.date}</b> &nbsp;${r.class} &nbsp;${r.diff}${isBest?' ⭐':''}<br>⏱${r.time} · 💀${r.kills} · مستوى${r.level} · 🏅${r.score}`; c.appendChild(d); });
+        const s = document.getElementById('alltime-stats');
+        s.innerHTML=`<b>الإجمالي:</b> ${allTimeStats.totalRuns} جولة · ${allTimeStats.totalKills} قتلة · ${formatTime(allTimeStats.totalTime)} لعب · ${allTimeStats.totalGold}💰 ذهب`;
+    }
+
+    // ── التحديات اليومية ──
+    const DAILY_POOL = [
+        {id:'d_kills200',name:'مجزرة جماعية',desc:'قتل 200 عدو',reward:150,check:()=>totalKills>=200},
+        {id:'d_surv15',name:'المسافة الطويلة',desc:'النجاة 15 دقيقة',reward:200,check:()=>gameTime>=900},
+        {id:'d_boss3',name:'اندفاع الزعماء',desc:'قتل 3 زعماء',reward:180,check:()=>bossKills>=3},
+        {id:'d_streak25',name:'آلة القتل',desc:'الوصول لتسلسل 25 قتلة',reward:160,check:()=>killStreak>=25},
+        {id:'d_level30',name:'تعزيز القوة',desc:'الوصول للمستوى 30 في جولة',reward:120,check:()=>player.level>=30},
+        {id:'d_hard',name:'بطل الوضع الصعب',desc:'النجاة 8 دقائق في صعوبة صعب',reward:250,check:()=>difficulty==='hard'&&gameTime>=480},
+        {id:'d_synergy3',name:'المتآزر',desc:'فتح 3 تآزرات',reward:180,check:()=>activeSynergies.length>=3},
+        {id:'d_nospell',name:'الإتقان السحري',desc:'ترقية تعويذة للمستوى 7',reward:140,check:()=>player.spells.some(s=>s.level>=7)},
+        {id:'d_artifact3',name:'الجامع',desc:'جمع 3 قطع أثرية في جولة',reward:130,check:()=>player.artifacts.length>=3},
+    ];
+    function getTodayChallenges() {
+        const today = new Date().toDateString();
+        if(dailyChallenges.date !== today) { const shuffled = [...DAILY_POOL].sort(()=>Math.random()-0.5); dailyChallenges = {date:today, challenges:shuffled.slice(0,3).map(c=>c.id), done:{}}; localStorage.setItem('surv_daily', JSON.stringify(dailyChallenges)); }
+        return dailyChallenges;
+    }
+    function renderChallenges() {
+        const dc = getTodayChallenges(); const c = document.getElementById('challenge-panel'); c.innerHTML='';
+        dc.challenges.forEach(cid=>{ const ch = DAILY_POOL.find(x=>x.id===cid); if(!ch) return; const done = dc.done[cid]; const d=document.createElement('div'); d.className='challenge-card'+(done?' challenge-done':''); d.innerHTML=`<div class="challenge-name">${done?'✅ ':'🎯 '}${ch.name}</div><div class="challenge-desc">${ch.desc}</div><div class="challenge-reward">المكافأة: +${ch.reward} 💰${done?' (تم الاستلام)':''}</div>`; c.appendChild(d); });
+        const dailyEl = document.getElementById('daily-bonus'); const claimed = dailyChallenges.dailyClaimed===new Date().toDateString();
+        dailyEl.textContent = claimed?'✅ مكافأة الدخول اليومية مستلمة':'🎁 استلم مكافأة الدخول اليومية (+25 💰)';
+        dailyEl.style.opacity = claimed?'0.5':'1';
+    }
+    function checkDailyChallenges() {
+        if(state!==GAME_STATES.PLAYING) return;
+        const dc = getTodayChallenges();
+        dc.challenges.forEach(cid=>{ if(dc.done[cid]) return; const ch = DAILY_POOL.find(x=>x.id===cid); if(!ch) return; try { if(ch.check()){ dc.done[cid]=true; permGold+=ch.reward; localStorage.setItem('surv_gold',permGold); localStorage.setItem('surv_daily',JSON.stringify(dailyChallenges)); addFloat(player.x,player.y-60,'🎯 تحدٍ: +'+ch.reward+'💰','#a0d040',14); } } catch(e){} });
+    }
+    function claimDailyBonus() {
+        const today = new Date().toDateString(); getTodayChallenges();
+        if(dailyChallenges.dailyClaimed===today) return;
+        dailyChallenges.dailyClaimed=today; permGold+=25; localStorage.setItem('surv_gold',permGold); localStorage.setItem('surv_daily',JSON.stringify(dailyChallenges));
+        updatePermButtons(); renderChallenges();
+    }
+    window.claimDailyBonus = claimDailyBonus;
+
+    const ARC_SPELLS=[
+        {icon:'🔮',name:'سهم سحري',color:'#b0a0ff',tags:['dmg'],desc:'سهم سحري سريع يستهدف أقرب عدو'},
+        {icon:'🔥',name:'كرة نارية',color:'#ff8040',tags:['dmg','aoe'],desc:'قذيفة تنفجر بمنطقة تأثير عند الإصابة'},
+        {icon:'❄️',name:'انفجار جليدي',color:'#80d8ff',tags:['ctrl','aoe'],desc:'انفجار جليدي يبطئ جميع الأعداء القريبين'},
+        {icon:'👻',name:'أرواح مدارية',color:'#d0e0ff',tags:['orbit'],desc:'أرواح تدور حولك وتسبب ضرراً عند التلامس'},
+        {icon:'🕳️',name:'صدع الفراغ',color:'#8000ff',tags:['dmg','aoe'],desc:'منطقة تسبب ضرراً كبيراً مع مرور الوقت'},
+        {icon:'🔗',name:'صاعقة متسلسلة',color:'#b0e0ff',tags:['dmg'],desc:'صاعقة ترتد بين 4 أعداء'},
+        {icon:'💫',name:'انفجار سحري',color:'#e080ff',tags:['ctrl','aoe'],desc:'انفجار هائل بطيء يجمد كل المصابين'},
+        {icon:'☄️',name:'نيزك',color:'#ff6020',tags:['dmg','aoe'],desc:'تأثير هائل بمنطقة انفجار كبيرة'},
+        {icon:'☠️',name:'سحابة السم',color:'#40c040',tags:['util','aoe'],desc:'تبقى وتحرق الأعداء مع الوقت'},
+        {icon:'🌀',name:'عاصفة النصل',color:'#c0c0ff',tags:['orbit'],desc:'4 شفرات سريعة تدور حولك'},
+        {icon:'⏰',name:'التشوه الزمني',color:'#00d4ff',tags:['ctrl','aoe'],desc:'يبطئ كل الأعداء بشدة لمدة 4 ثوانٍ'},
+        {icon:'💀',name:'شعاع الموت',color:'#ff2080',tags:['dmg'],desc:'شعاع خارق يخترق كل الأعداء في خط مستقيم'},
+        {icon:'🌑',name:'بئر الجاذبية',color:'#6000a0',tags:['ctrl','dmg'],desc:'يسحب الأعداء ثم ينفجر بقوة'},
+        {icon:'🕳️',name:'ثقب أسود',color:'#220044',tags:['dmg','aoe'],desc:'يسحب جميع الأعداء وينفجر بضرر هائل'},
+        {icon:'🌨️',name:'عاصفة ثلجية',color:'#a0e8ff',tags:['ctrl','aoe'],desc:'عاصفة جليدية مستمرة تبطئ وتجمد'},
+        {icon:'💜',name:'شفط الروح',color:'#c050ff',tags:['util','dmg'],desc:'يربط الأعداء ويسحب صحتهم ويشفيك'},
+        {icon:'💠',name:'لغز متفجر',color:'#40a0ff',tags:['dmg'],desc:'لغز ينفجر عندما يدوس عليه العدو'},
+        {icon:'💢',name:'موجة صدمة',color:'#ffe060',tags:['ctrl','aoe'],desc:'حلقة متوسعة ترتد وتصعق الأعداء'},
+        {icon:'🌋',name:'الجحيم',color:'#ff4010',tags:['dmg','aoe'],desc:'عمود ناري مستمر يحرق كل شيء أمامك'},
+    ];
+    const ARC_ENEMIES=[
+        {icon:'👻',name:'شبح',color:'#e06060',tags:['dmg'],desc:'يطارد بلا كلل، سرعة متوسطة'},
+        {icon:'🗿',name:'غولم',color:'#b04040',tags:['rare'],desc:'بطيء لكن صلب، مقاومة 35% ضرر'},
+        {icon:'🐺',name:'ذئب',color:'#ff9050',tags:['dmg'],desc:'سريع جداً، يموت بضربات قليلة'},
+        {icon:'🏹',name:'رامي',color:'#e0a040',tags:['ctrl'],desc:'هجوم بعيد المدى من مسافة'},
+        {icon:'💜',name:'نخبة',color:'#e050e0',tags:['rare'],desc:'مطارد محسّن، صحة وضرر مرتفعان'},
+        {icon:'🧙',name:'ليتش',color:'#a040ff',tags:['ctrl'],desc:'ثلاثي الإطلاق، يبقى على مسافة'},
+        {icon:'💣',name:'مفجر',color:'#ff5000',tags:['dmg'],desc:'يندفع وينفجر عند التلامس'},
+        {icon:'🧛',name:'مصاص دماء',color:'#9020c0',tags:['util'],desc:'يسرق الصحة، يتحرك بشكل غير متوقع'},
+        {icon:'🛡️',name:'حارس',color:'#40c0a0',tags:['rare'],desc:'درع متجدد، صحة عالية جداً'},
+        {icon:'✨',name:'شبح صغير',color:'#80ffcc',tags:['dmg'],desc:'يسرب حولك بلا رحمة'},
+        {icon:'💀',name:'نكرومانسر',color:'#60a020',tags:['ctrl'],desc:'يستدعي الأشباح، يطلق من مسافة'},
+        {icon:'⚔️',name:'أمير الحرب',color:'#ff4040',tags:['mini'],desc:'زعيم صغير، مقاوم وقوي جداً'},
+        {icon:'👑',name:'ملك الليتش',color:'#cc00ff',tags:['mini'],desc:'زعيم صغير، يطلق 5 طلقات ويستدعي'},
+        {icon:'🪨',name:'عملاق الحجر',color:'#8080a0',tags:['mini'],desc:'زعيم صغير، درع 200HP يتجدد'},
+        {icon:'🌑',name:'ملك الظل',color:'#4000a0',tags:['mini'],desc:'زعيم صغير، سرعة وضرر نخبة'},
+    ];
+    const ARC_SYNERGIES=[
+        {icon:'💨',name:'انفجار البخار',color:'#ff8040',needs:'🔥+❄️',desc:'مضاعفة حجم وضرر منطقة التأثير'},
+        {icon:'🌨️',name:'جليد الرعد',color:'#80d8ff',needs:'🔗+❄️',desc:'الصاعقة المتسلسلة تصعق الأعداء 2 ثانية'},
+        {icon:'🟣',name:'طاعون الفراغ',color:'#8000ff',needs:'🕳️+☠️',desc:'منطقة الطاعون تنتشر للأعداء المجاورين'},
+        {icon:'🌪️',name:'عاصفة الأرواح',color:'#c0c0ff',needs:'👻+🌀',desc:'الأرواح المدارية تسبب ضرراً 2.5×'},
+        {icon:'💫',name:'الموت السحري',color:'#e080ff',needs:'💫+💀',desc:'الانفجار السحري يطلق 8 أشعة موت'},
+        {icon:'🌠',name:'جاذبية النيزك',color:'#ff6020',needs:'🌑+☄️',desc:'5 نيازك تتساقط داخل بئر الجاذبية'},
+        {icon:'⚡',name:'الارتباك الزمني',color:'#00d4ff',needs:'⏰+🔮',desc:'السهام السحرية تخترق، سرعة 3×'},
+    ];
+
+    let currentArcTab='spells';
+    function renderArcapedia(tab){
+        currentArcTab=tab||currentArcTab;
+        document.querySelectorAll('.arc-tab').forEach(t=>t.classList.toggle('active',t.dataset.arc===currentArcTab));
+        const c=document.getElementById('arc-content'); c.innerHTML='';
+        if(currentArcTab==='spells'){
+            ARC_SPELLS.forEach(s=>{ const d=document.createElement('div'); d.className='arc-card'; const tagsHtml=s.tags.map(t=>`<span class="arc-tag ${t}">${t==='dmg'?'ضرر':t==='ctrl'?'تحكم':t==='util'?'دعم':t==='aoe'?'منطقة':t==='orbit'?'مدار':t}</span>`).join(''); d.innerHTML=`<div class="arc-col" style="background:${s.color}"></div><div class="arc-icon">${s.icon}</div><div class="arc-info"><div class="arc-name">${s.name}</div><div class="arc-desc">${s.desc}</div>${tagsHtml}</div>`; c.appendChild(d); });
+        } else if(currentArcTab==='enemies'){
+            ARC_ENEMIES.forEach(e=>{ const d=document.createElement('div'); d.className='arc-card'; const tagsHtml=e.tags.map(t=>`<span class="arc-tag ${t}">${t==='dmg'?'ضرر':t==='ctrl'?'تحكم':t==='util'?'دعم':t==='rare'?'نادر':t==='mini'?'زعيم صغير':t}</span>`).join(''); d.innerHTML=`<div class="arc-col" style="background:${e.color}"></div><div class="arc-icon">${e.icon}</div><div class="arc-info"><div class="arc-name">${e.name}</div><div class="arc-desc">${e.desc}</div>${tagsHtml}</div>`; c.appendChild(d); });
+        } else if(currentArcTab==='synergies'){
+            ARC_SYNERGIES.forEach(s=>{ const d=document.createElement('div'); d.className='syn-card'; d.innerHTML=`<div class="syn-head"><span class="syn-icon">${s.icon}</span><span class="syn-name">${s.name}</span><span class="syn-needs" style="margin-left:auto">${s.needs}</span></div><div class="syn-effect">${s.desc}</div>`; d.style.borderColor=s.color+'66'; c.appendChild(d); });
+        }
+    }
+
+    // ── المحرك ──
+    const WORLD=2400, container=document.getElementById('game-container');
+    const canvas=document.getElementById('gameCanvas'), ctx=canvas.getContext('2d');
+    const miniC=document.getElementById('minimapCanvas').getContext('2d');
+    let W,H,scale;
+    function resize(){ const r=container.getBoundingClientRect(); W=r.width; H=r.height; canvas.width=W*(devicePixelRatio||1); canvas.height=H*(devicePixelRatio||1); scale=canvas.width/W; ctx.setTransform(scale,0,0,scale,0,0); }
+    resize(); window.addEventListener('resize',resize);
+
+    const GAME_STATES = {START:'start',PLAYING:'playing',PAUSED:'paused',LEVELUP:'levelup',CHEST:'chest',GAMEOVER:'gameover'};
+    let state = GAME_STATES.START, gameTime=0, totalKills=0, goldEarned=0, killStreak=0, streakTimer=0, streakDispTimer=0, bossKills=0;
+    let currentWave = 1;
+    let permGold = parseInt(localStorage.getItem('surv_gold')||'0');
+    let permUp = JSON.parse(localStorage.getItem('surv_up')||'{"attack":0,"hp":0,"cdr":0,"speed":0,"crit":0,"xpboost":0,"dashcd":0,"rerolls":0}');
+    let selectedClass='wizard', rerolls=2, pendingLvl=0;
+
+    // ── زخارف الخريطة ──
+    let mapDecos=[];
+    function generateMap(){
+        mapDecos=[];
+        for(let i=0;i<28;i++) mapDecos.push({type:'pillar',x:200+Math.random()*(WORLD-400),y:200+Math.random()*(WORLD-400),r:14+Math.random()*10});
+        for(let i=0;i<18;i++) mapDecos.push({type:'crystal',x:100+Math.random()*(WORLD-200),y:100+Math.random()*(WORLD-200),r:6+Math.random()*8,col:['#6040c0','#4080ff','#c040a0','#40c0a0'][i%4],phase:Math.random()*Math.PI*2});
+        for(let i=0;i<12;i++) mapDecos.push({type:'pool',x:200+Math.random()*(WORLD-400),y:200+Math.random()*(WORLD-400),r:28+Math.random()*38});
+        for(let i=0;i<40;i++) mapDecos.push({type:'debris',x:Math.random()*WORLD,y:Math.random()*WORLD,r:3+Math.random()*6,ang:Math.random()*Math.PI});
+        for(let i=0;i<18;i++) mapDecos.push({type:'torch',x:100+Math.random()*(WORLD-200),y:100+Math.random()*(WORLD-200),phase:Math.random()*Math.PI*2});
+        for(let i=0;i<55;i++){
+            let s=Math.floor(Math.random()*4);
+            let x=s===0?20+Math.random()*(WORLD-40):s===1?Math.random()*55:s===2?WORLD-20-Math.random()*(WORLD-40):WORLD-55+Math.random()*55;
+            let y=s===0?Math.random()*55:s===1?20+Math.random()*(WORLD-40):s===2?WORLD-55+Math.random()*55:20+Math.random()*(WORLD-40);
+            mapDecos.push({type:'wall',x,y,r:18+Math.random()*14});
+        }
+    }
+
+    let skinImgs={player:null,ghost:null,golem:null,wolf:null,archer:null,boss:null,elite:null,lich:null,bomber:null,vampire:null,sentinel:null};
+    let skinEmojis={player:null,ghost:null,golem:null,wolf:null,archer:null,boss:null,elite:null,lich:null,bomber:null,vampire:null,sentinel:null};
+    function loadSkins(){
+        try{ const s=JSON.parse(localStorage.getItem('surv_skins')||'{}'); for(let k in s){ if(s[k]){ const img=new Image(); img.src=s[k]; skinImgs[k]=img; } } }catch(e){}
+        try{ const se=JSON.parse(localStorage.getItem('surv_skin_emojis')||'{}'); for(let k in se){ if(se[k]) skinEmojis[k]=se[k]; } }catch(e){}
+    }
+    function saveSkins(){ const d={}; for(let k in skinImgs){ if(skinImgs[k]&&skinImgs[k].src) d[k]=skinImgs[k].src; } localStorage.setItem('surv_skins',JSON.stringify(d)); }
+    function saveSkinEmojis(){ const d={}; for(let k in skinEmojis){ if(skinEmojis[k]) d[k]=skinEmojis[k]; } localStorage.setItem('surv_skin_emojis',JSON.stringify(d)); }
+
+    let player;
+    function resetPlayer(){
+        player={x:WORLD/2,y:WORLD/2,radius:14,speed:170,hp:80,maxHp:80,level:1,xp:0,xpToNext:60,
+            attack:85+(permUp.attack||0)*2.5,critRate:2+(permUp.crit||0)*0.5,critDmg:180,
+            cdr:(permUp.cdr||0)*1.0,pickup:55,duration:90,size:95,dmgRed:0,
+            spells:[],passives:{},artifacts:[],invTimer:0,targetX:WORLD/2,targetY:WORLD/2,moving:false,
+            dashCD:3,dashTimer:0,dashActive:false,dashSpd:600,_phoenix:false,_regen:false,_nearDeath:0,
+            _vampiric:false,_berserker:false,_mirror:false,_thundercloak:false,
+            _xpBonus:1,_goldBonus:1,_chainReact:false,glowAngle:0};
+        player.maxHp=80+(permUp.hp||0)*4; player.hp=player.maxHp;
+        player.speed=170+(permUp.speed||0)*1.5;
+        if(selectedClass==='wizard'){  player.cdr+=8; player.attack+=10; player.spells.push(makeSpell('magic_bolt')); }
+        if(selectedClass==='pyromancer'){ player.attack+=20; player.critRate+=5; player.spells.push(makeSpell('fireball')); }
+        if(selectedClass==='frost'){   player.maxHp+=30; player.hp+=30; player.dmgRed+=8; player.spells.push(makeSpell('frost_nova')); }
+        if(selectedClass==='summoner'){ player.pickup+=30; player.speed+=15; player.spells.push(makeSpell('spirit_orbits')); }
+        if(selectedClass==='necro'){   player.attack+=15; player.spells.push(makeSpell('poison_cloud')); player.spells.push(makeSpell('chain_lightning')); }
+        if(selectedClass==='berserker'){ player.attack+=25; player.speed+=20; player.critRate+=8; player._berserker=true; player.spells.push(makeSpell('blade_storm')); }
+        const dm = DIFF_MODS[difficulty]||DIFF_MODS.normal;
+        player._xpBonus = (player._xpBonus||1) * dm.xpMult;
+        player._goldBonus = (player._goldBonus||1) * dm.goldMult;
+        player.dashCD = Math.max(0.8, 3 - (permUp.dashcd||0)*0.3);
+        player._xpBonus = (player._xpBonus||1) * (1+(permUp.xpboost||0)*0.08);
+    }
+
+    const SPELLS={
+        magic_bolt:{id:'magic_bolt',name:'سهم سحري',icon:'🔮',desc:'سهم سحري سريع',maxLvl:10,baseDmg:20,cd:1.3,count:1,speed:380,size:90,type:'projectile',color:'#b0a0ff'},
+        fireball:{id:'fireball',name:'كرة نارية',icon:'🔥',desc:'قذيفة تنفجر بمنطقة تأثير',maxLvl:10,baseDmg:38,cd:2.2,count:1,speed:290,size:140,type:'projectile_aoe',color:'#ff8040'},
+        frost_nova:{id:'frost_nova',name:'انفجار جليدي',icon:'❄️',desc:'انفجار جليدي يجمد حولك',maxLvl:10,baseDmg:28,cd:4.2,size:180,dur:0.45,type:'nova',color:'#80d8ff'},
+        spirit_orbits:{id:'spirit_orbits',name:'أرواح مدارية',icon:'👻',desc:'أرواح تدور حولك',maxLvl:10,baseDmg:16,cd:0.05,count:2,size:80,type:'orbit',color:'#d0e0ff'},
+        void_rift:{id:'void_rift',name:'صدع الفراغ',icon:'🕳️',desc:'منطقة فراغ تسبب ضرراً كبيراً',maxLvl:10,baseDmg:65,cd:7,size:200,dur:2,type:'placed_aoe',color:'#8000ff'},
+        chain_lightning:{id:'chain_lightning',name:'صاعقة متسلسلة',icon:'🔗',desc:'صاعقة ترتد بين 4 أعداء',maxLvl:10,baseDmg:32,cd:2.3,size:50,type:'chain',color:'#b0e0ff'},
+        arcane_nova:{id:'arcane_nova',name:'انفجار سحري',icon:'💫',desc:'انفجار هائل بطيء التوسع',maxLvl:10,baseDmg:45,cd:5.5,size:260,dur:0.7,type:'nova',color:'#e080ff'},
+        meteor:{id:'meteor',name:'نيزك',icon:'☄️',desc:'تأثير هائل بتأخير',maxLvl:10,baseDmg:90,cd:6.5,count:1,speed:220,size:160,type:'projectile_aoe',color:'#ff6020'},
+        poison_cloud:{id:'poison_cloud',name:'سحابة السم',icon:'☠️',desc:'منطقة سامة تحرق الأعداء',maxLvl:10,baseDmg:12,cd:3.5,size:160,dur:3.5,type:'placed_aoe',color:'#40c040',poison:true},
+        blade_storm:{id:'blade_storm',name:'عاصفة النصل',icon:'🌀',desc:'4 شفرات تدور بسرعة',maxLvl:10,baseDmg:22,cd:0.04,count:4,size:100,type:'orbit',color:'#c0c0ff'},
+        time_warp:{id:'time_warp',name:'التشوه الزمني',icon:'⏰',desc:'يبطئ جميع الأعداء القريبين',maxLvl:10,baseDmg:15,cd:6,size:300,dur:2.5,type:'nova',color:'#00d4ff',timeWarp:true},
+        death_ray:{id:'death_ray',name:'شعاع الموت',icon:'💀',desc:'شعاع يخترق كل الأعداء في خط',maxLvl:10,baseDmg:55,cd:4,count:1,speed:700,size:70,type:'beam',color:'#ff2080'},
+        gravity_well:{id:'gravity_well',name:'بئر الجاذبية',icon:'🌑',desc:'يسحب الأعداء ثم ينفجر',maxLvl:10,baseDmg:80,cd:8,size:220,dur:2.8,type:'gravity',color:'#6000a0'},
+        black_hole:{id:'black_hole',name:'ثقب أسود',icon:'🕳️',desc:'يسحب جميع الأعداء وينفجر بضرر هائل',maxLvl:10,baseDmg:140,cd:14,size:320,dur:4,type:'blackhole',color:'#220044'},
+        blizzard:{id:'blizzard',name:'عاصفة ثلجية',icon:'🌨️',desc:'عاصفة جليدية مستمرة تبطئ وتجمد',maxLvl:10,baseDmg:18,cd:8,size:280,dur:5,type:'sustained_aoe',color:'#a0e8ff',chill:true},
+        soul_drain:{id:'soul_drain',name:'شفط الروح',icon:'💜',desc:'يربط الأعداء ويسحب صحتهم ويشفيك',maxLvl:7,baseDmg:20,cd:5,size:200,dur:3,type:'drain',color:'#c050ff'},
+        rune_mine:{id:'rune_mine',name:'لغز متفجر',icon:'💠',desc:'يزرع لغماً يتفجر عند الدوس عليه',maxLvl:7,baseDmg:110,cd:4,size:130,dur:30,type:'mine',color:'#40a0ff'},
+        shockwave:{id:'shockwave',name:'موجة صدمة',icon:'💢',desc:'حلقة متوسعة تصعق الأعداء',maxLvl:7,baseDmg:35,cd:3.5,size:240,dur:0.5,type:'shockwave',color:'#ffe060'},
+        inferno:{id:'inferno',name:'الجحيم',icon:'🌋',desc:'عمود ناري يحرق أمامك',maxLvl:7,baseDmg:28,cd:7,size:180,dur:3,type:'inferno',color:'#ff4010'},
+    };
+
+    // ── نظام التآزر ──
+    const SYNERGIES=[
+        {id:'steam_burst',name:'انفجار البخار',icon:'💨',desc:'كرة نارية + انفجار جليدي = انفجار بخار (منطقة ×2، إبطاء)',needs:['fireball','frost_nova'],active:false},
+        {id:'thunder_ice',name:'جليد الرعد',icon:'🌨️',desc:'صاعقة + جليد = تجمد 2 ثانية',needs:['chain_lightning','frost_nova'],active:false},
+        {id:'void_plague',name:'طاعون الفراغ',icon:'🟣',desc:'صدع الفراغ + سحابة السم = طاعون ينتشر',needs:['void_rift','poison_cloud'],active:false},
+        {id:'soul_storm',name:'عاصفة الأرواح',icon:'🌪️',desc:'أرواح مدارية + عاصفة النصل = ضرر ×2.5',needs:['spirit_orbits','blade_storm'],active:false},
+        {id:'arcane_death',name:'الموت السحري',icon:'💫',desc:'انفجار سحري + شعاع الموت = 8 أشعة',needs:['arcane_nova','death_ray'],active:false},
+        {id:'gravity_meteor',name:'جاذبية النيزك',icon:'🌠',desc:'بئر الجاذبية + نيزك = 5 نيازك في البئر',needs:['gravity_well','meteor'],active:false},
+        {id:'time_bolt',name:'الارتباك الزمني',icon:'⚡',desc:'التشوه الزمني + سهم سحري = يخترق، سرعة ×3',needs:['time_warp','magic_bolt'],active:false},
+    ];
+    let activeSynergies=[], synergyNotifTimer=0, lastSynergyName='';
+
+    function checkSynergies(){
+        const owned=new Set(player.spells.map(s=>s.id));
+        let newFound=false;
+        SYNERGIES.forEach(syn=>{ if(syn.active) return; if(syn.needs.every(id=>owned.has(id))){ syn.active=true; activeSynergies.push(syn.id); newFound=true; lastSynergyName=syn.name; playSFX('synergy'); } });
+        if(newFound){ synergyNotifTimer=3.5; }
+    }
+    function makeSpell(id){ const d=SPELLS[id]; return {...d,level:1,cdRem:0,orbitAngle:Math.random()*Math.PI*2,awakening:null}; }
+    function spellDmg(s){ let d=s.baseDmg*(1+(s.level-1)*0.2)*(player.attack/100); if(s.awakening==='power') d*=1.4; if(s.awakening==='fury') d*=1.2; return Math.round(d); }
+    function spellCD(s){ let cd=s.cd*(1-player.cdr/100); if(s.awakening==='rapid') cd*=0.55; if(s.awakening==='fury') cd*=0.8; return Math.max(0.2,cd); }
+    resetPlayer(); generateMap();
+
+    let projectiles=[],aoes=[],orbSpirits=[],particles=[],floatingTexts=[],healthPickups=[],enemies=[],eId=0;
+
+    const E_TYPES={
+        ghost:{name:'شبح',r:11,spd:125,hp:30,dmg:10,xp:6,color:'#e06060',beh:'chase',imgKey:'ghost'},
+        golem:{name:'غولم',r:20,spd:60,hp:190,dmg:26,xp:18,color:'#b04040',beh:'chase',resist:true,imgKey:'golem'},
+        wolf:{name:'ذئب',r:10,spd:230,hp:22,dmg:12,xp:8,color:'#ff9050',beh:'chase',imgKey:'wolf'},
+        archer:{name:'رامي',r:13,spd:50,hp:60,dmg:16,xp:14,color:'#e0a040',beh:'ranged',range:400,shootCD:1.9,imgKey:'archer'},
+        boss:{name:'زعيم',r:34,spd:70,hp:1200,dmg:38,xp:80,color:'#ff2020',beh:'boss',resist:true,imgKey:'boss'},
+        elite:{name:'نخبة',r:24,spd:85,hp:320,dmg:22,xp:28,color:'#e050e0',beh:'chase',elite:true,imgKey:'elite'},
+        lich:{name:'ليتش',r:15,spd:68,hp:140,dmg:20,xp:22,color:'#a040ff',beh:'ranged',range:450,shootCD:1.1,multiShot:3,imgKey:'lich'},
+        bomber:{name:'مفجر',r:16,spd:165,hp:45,dmg:50,xp:20,color:'#ff5000',beh:'bomber',explodeRange:65,imgKey:'bomber'},
+        vampire:{name:'مصاص دماء',r:12,spd:190,hp:80,dmg:15,xp:18,color:'#9020c0',beh:'vampire',lifeSteal:true,imgKey:'vampire'},
+        sentinel:{name:'حارس',r:22,spd:35,hp:360,dmg:30,xp:35,color:'#40c0a0',beh:'sentinel',shieldHP:90,imgKey:'sentinel'},
+        wisp:{name:'شبح صغير',r:8,spd:210,hp:18,dmg:8,xp:5,color:'#80ffcc',beh:'swarm',imgKey:'ghost'},
+        necromancer:{name:'نكرومانسر',r:18,spd:55,hp:200,dmg:18,xp:40,color:'#60a020',beh:'necro',range:380,shootCD:2.2,summonCD:4,imgKey:'lich'},
+        mb_warlord:{name:'أمير الحرب',r:28,spd:100,hp:700,dmg:32,xp:55,color:'#ff4040',beh:'boss',resist:true,imgKey:'boss',isMini:true,loot:2},
+        mb_lich_king:{name:'ملك الليتش',r:26,spd:60,hp:600,dmg:28,xp:55,color:'#cc00ff',beh:'necro',range:500,shootCD:0.8,multiShot:5,summonCD:3,imgKey:'lich',isMini:true,loot:2},
+        mb_titan:{name:'عملاق الحجر',r:32,spd:45,hp:900,dmg:45,xp:60,color:'#8080a0',beh:'sentinel',shieldHP:200,imgKey:'golem',isMini:true,loot:2},
+        mb_shadow:{name:'ملك الظل',r:22,spd:200,hp:500,dmg:25,xp:55,color:'#4000a0',beh:'chase',elite:true,imgKey:'vampire',isMini:true,loot:2},
+    };
+    let miniBossTimer=120, miniBossCount=0;
+    const MINI_BOSS_POOL=['mb_warlord','mb_lich_king','mb_titan','mb_shadow'];
+
+    function spawnEnemy(type,x,y){
+        const d=E_TYPES[type]; if(!d) return null;
+        const dm = DIFF_MODS[difficulty]||DIFF_MODS.normal;
+        let hm=(1+gameTime/55)*dm.hpMult, dmod=(1+gameTime/110)*dm.dmgMult, sm=(1+gameTime/350)*dm.speedMult;
+        const e={id:eId++,type,x,y,radius:d.r,speed:d.spd*sm,hp:Math.round(d.hp*hm),maxHp:Math.round(d.hp*hm),
+            dmg:Math.round(d.dmg*dmod),xp:d.xp,color:d.color,beh:d.beh,range:d.range||0,
+            shootCD:d.shootCD||0,shootTimer:Math.random()*2,resist:d.resist||false,elite:d.elite||false,
+            stun:0,slow:0,burn:0,burnDmg:0,flashTimer:0,imgKey:d.imgKey,
+            multiShot:d.multiShot||1,explodeRange:d.explodeRange||0,lifeSteal:d.lifeSteal||false,
+            shieldHP:d.shieldHP||0,maxShieldHP:d.shieldHP||0,summonCD:d.summonCD||0,summonTimer:Math.random()*3,
+            orbitAngle:Math.random()*Math.PI*2,isMini:d.isMini||false,loot:d.loot||0};
+        enemies.push(e); return e;
+    }
+    function spawnNearEdge(type){ const a=Math.random()*Math.PI*2, d=WORLD/2+180+Math.random()*300; return spawnEnemy(type,WORLD/2+Math.cos(a)*d,WORLD/2+Math.sin(a)*d); }
+
+    let xpOrbs=[],chests=[];
+    const ARTIFACTS=[
+        {id:'uranium',name:'نواة اليورانيوم',rarity:'Rare',desc:'الهجوم +20%',eff:()=>player.attack+=20},
+        {id:'gaia',name:'درع غايا',rarity:'Rare',desc:'الصحة القصوى +25%',eff:()=>{player.maxHp=Math.round(player.maxHp*1.25);player.hp=Math.round(player.hp*1.25);}},
+        {id:'ballista',name:'المنجنيق',rarity:'Legendary',desc:'جميع التعاويذ تطلق قذيفة إضافية',eff:()=>player.spells.forEach(s=>{if(s.count)s.count++;})},
+        {id:'phoenix',name:'ريشة العنقاء',rarity:'Legendary',desc:'إحياء مرة واحدة بـ40% صحة',eff:()=>{player._phoenix=true;}},
+        {id:'regen',name:'طوطم الشفاء',rarity:'Epic',desc:'تجديد صحة بطيء',eff:()=>{player._regen=true;}},
+        {id:'vampiric',name:'خاتم مصاص الدماء',rarity:'Epic',desc:'شفاء 3 صحة لكل قتيل',eff:()=>{player._vampiric=true;}},
+        {id:'berserker',name:'قناع البربري',rarity:'Rare',desc:'سرعة وهجوم مرتفعان تحت 30% صحة',eff:()=>{player._berserker=true;}},
+        {id:'magnet',name:'مغناطيس الأرواح',rarity:'Rare',desc:'مدى جمع الخبرة مضاعف',eff:()=>{player.pickup*=2;}},
+        {id:'mirror',name:'درع المرايا',rarity:'Epic',desc:'10% فرصة لعكس القذائف',eff:()=>{player._mirror=true;}},
+        {id:'thundercloak',name:'عباءة الرعد',rarity:'Legendary',desc:'إطلاق صاعقة عند الاندفاع',eff:()=>{player._thundercloak=true;}},
+        {id:'grimoire',name:'الكتاب القديم',rarity:'Epic',desc:'جميع التعاويذ تبدأ بمستويين أعلى',eff:()=>player.spells.forEach(s=>{s.level=Math.min(s.maxLvl,s.level+2);s.baseDmg=Math.round(s.baseDmg*1.18*1.18);})},
+        {id:'timepiece',name:'ساعة الفراغ',rarity:'Legendary',desc:'تهدئة +25%، حجم التعاويذ +20%',eff:()=>{player.cdr+=25;player.spells.forEach(s=>s.size=Math.round(s.size*1.2));}},
+        {id:'lichstone',name:'حجر الليتش',rarity:'Epic',desc:'ضرر حاسم +60%',eff:()=>player.critDmg+=60},
+        {id:'ironheart',name:'القلب الحديدي',rarity:'Rare',desc:'تقليل الضرر +15%',eff:()=>player.dmgRed=Math.min(70,player.dmgRed+15)},
+        {id:'soulharvest',name:'حصاد الأرواح',rarity:'Epic',desc:'خبرة القتل +50%، ذهب +30%',eff:()=>{player._xpBonus=1.5;player._goldBonus=1.3;}},
+        {id:'chainreact',name:'مفاعل التسلسل',rarity:'Legendary',desc:'القتل خلال 2 ثانية يصعق الأعداء القريبين',eff:()=>{player._chainReact=true;}},
+    ];
+
+    let waveTimer=0,bossFlags=[false,false,false,false,false],warningActive=false;
+    function updateWaves(dt){
+        waveTimer+=dt;
+        currentWave = 1+Math.floor(gameTime/60);
+        miniBossTimer-=dt;
+        if(miniBossTimer<=0 && gameTime>60){
+            miniBossTimer=120;
+            let mbType=MINI_BOSS_POOL[miniBossCount%MINI_BOSS_POOL.length]; miniBossCount++;
+            let ang=Math.random()*Math.PI*2, dist=320;
+            let mb=spawnEnemy(mbType,player.x+Math.cos(ang)*dist,player.y+Math.sin(ang)*dist);
+            if(mb){ playSFX('miniboss'); addFloat(player.x,player.y-50,'⚠️ '+E_TYPES[mbType].name+'!','#ff4040',16); }
+        }
+        let sr=0.7+gameTime/40; if(gameTime>400)sr*=1.4; if(gameTime>700)sr*=1.7; if(gameTime>1000)sr*=2.0;
+        if(Math.random()<sr*dt && enemies.length<280){
+            let r=Math.random(), t='ghost';
+            if(gameTime>60&&r<0.25) t='wolf';
+            if(gameTime>120&&r<0.15) t='golem';
+            if(gameTime>180&&r<0.12) t='archer';
+            if(gameTime>240&&r<0.10) t='wisp';
+            if(gameTime>300&&r<0.09) t='vampire';
+            if(gameTime>360&&r<0.07) t='lich';
+            if(gameTime>420&&r<0.06) t='bomber';
+            if(gameTime>480&&r<0.05) t='sentinel';
+            if(gameTime>540&&r<0.04) t='necromancer';
+            if(gameTime>450&&Math.random()<0.22) t='elite';
+            spawnNearEdge(t);
+        }
+        [300,540,780,1020,1300].forEach((bt,i)=>{if(gameTime>=bt&&!bossFlags[i]){bossFlags[i]=true;let b=spawnEnemy('boss',player.x+(Math.random()-0.5)*600,player.y+(Math.random()-0.5)*600);for(let j=0;j<12;j++)spawnEnemy(j%2===0?'wolf':'ghost',b.x+(Math.random()-0.5)*200,b.y+(Math.random()-0.5)*200);}});
+        let nb=[300,540,780,1020,1300].find((bt,i)=>!bossFlags[i]);
+        if(nb&&gameTime>nb-25){warningActive=true;}else warningActive=false;
+        if(Math.random()<0.007*dt&&chests.length<3){let cx=player.x+(Math.random()-0.5)*900,cy=player.y+(Math.random()-0.5)*900;chests.push({x:cx,y:cy,radius:18,age:0,life:40,color:'#b09070'});}
+        if(Math.random()<0.0015*dt&&healthPickups.length<5){let hx=player.x+(Math.random()-0.5)*700,hy=player.y+(Math.random()-0.5)*700;healthPickups.push({x:hx,y:hy,radius:10,life:25,color:'#ff6080'});}
+    }
+
+    function grantXP(amt){player.xp+=amt;while(player.xp>=player.xpToNext&&player.level<100){player.xp-=player.xpToNext;player.level++;player.xpToNext=Math.round(60*Math.pow(1.14,player.level-1));pendingLvl++;player.maxHp+=4;player.hp=Math.min(player.hp+4,player.maxHp);player.attack+=2;}if(pendingLvl>0&&state===GAME_STATES.PLAYING)triggerLevelUp();updateUI();}
+    function triggerLevelUp(){if(pendingLvl<=0)return;state=GAME_STATES.LEVELUP;playSFX('levelup');showLevelUp();}
+    function showLevelUp(){
+        document.getElementById('levelup-overlay').classList.add('show');
+        document.getElementById('reroll-count').textContent='إعادة المحاولة: '+rerolls;
+        const choices=document.getElementById('levelup-choices');choices.innerHTML='';
+        let opts=genLevelOpts();
+        opts.forEach(o=>{
+            let btn=document.createElement('button');btn.className='choice-btn';
+            let rc=o.rarity==='Legendary'?'rarity-legendary':o.rarity==='Awakening'?'rarity-awakening':'';
+            btn.innerHTML=`<span class="choice-title">${o.icon} ${o.title}</span><span class="choice-desc">${o.desc}</span>${o.rarity?`<span class="choice-rarity ${rc}">${o.rarity==='Legendary'?'أسطوري':o.rarity==='Awakening'?'صحوة':o.rarity}</span>`:''}`;
+            btn.onclick=()=>{o.action();player.invTimer=2;pendingLvl--;document.getElementById('levelup-overlay').classList.remove('show');checkSynergies();if(pendingLvl>0)setTimeout(triggerLevelUp,200);else state=GAME_STATES.PLAYING;updateUI();};
+            choices.appendChild(btn);
+        });
+        document.getElementById('reroll-btn').onclick=()=>{if(rerolls>0){rerolls--;showLevelUp();}};
+    }
+    function genLevelOpts(){
+        let opts=[];
+        let owned=new Set(player.spells.map(s=>s.id)),unowned=Object.keys(SPELLS).filter(id=>!owned.has(id));
+        if(unowned.length&&player.spells.length<8){let id=unowned[Math.floor(Math.random()*unowned.length)],d=SPELLS[id];opts.push({title:d.name,icon:d.icon,desc:d.desc,action:()=>player.spells.push(makeSpell(id))});}
+        let upg=player.spells.filter(s=>s.level<s.maxLvl);
+        if(upg.length){let s=upg[Math.floor(Math.random()*upg.length)];opts.push({title:'ترقية '+s.name,icon:s.icon,desc:`مستوى ${s.level}→${s.level+1}: ضرر +18%`,action:()=>{s.level++;s.baseDmg=Math.round(s.baseDmg*1.18);}});}
+        let passives=[
+            {id:'intelligence',name:'الذكاء',icon:'🧠',desc:'الهجوم +8',act:()=>player.attack+=8},
+            {id:'fastcasting',name:'الإطلاق السريع',icon:'⏱️',desc:'تهدئة +5',act:()=>player.cdr+=5},
+            {id:'vitality',name:'الحيوية',icon:'❤️',desc:'الصحة القصوى +12%',act:()=>{player.maxHp=Math.round(player.maxHp*1.12);player.hp=Math.round(player.hp*1.12);}},
+            {id:'haste',name:'السرعة',icon:'👟',desc:'سرعة +12',act:()=>player.speed+=12},
+            {id:'snipe',name:'القنص',icon:'💥',desc:'نسبة الضربة الحاسمة +5%',act:()=>player.critRate+=5},
+            {id:'recycling',name:'الجذب',icon:'🧲',desc:'مدى الجمع +30%',act:()=>player.pickup+=16},
+            {id:'resistance',name:'المقاومة',icon:'🛡️',desc:'تقليل الضرر +5%',act:()=>player.dmgRed=Math.min(60,player.dmgRed+5)},
+            {id:'multicast',name:'الإطلاق المتعدد',icon:'✨',desc:'جميع تعاويذ القذائف +1 طلقة',act:()=>player.spells.forEach(s=>{if(s.count)s.count++;})},
+            {id:'crescendo',name:'الذروة',icon:'🎵',desc:'ضرر حاسم +25%',act:()=>player.critDmg+=25},
+            {id:'warlust',name:'شهوة الحرب',icon:'⚔️',desc:'هجوم +5% لكل تعويذة',act:()=>player.attack+=5*player.spells.length},
+            {id:'runic',name:'الجلد الروني',icon:'🔷',desc:'تقليل الضرر +8%',act:()=>player.dmgRed=Math.min(70,player.dmgRed+8)},
+            {id:'overcharge',name:'الشحن الزائد',icon:'⚡',desc:'حجم التعاويذ +15%',act:()=>player.spells.forEach(s=>s.size=Math.round(s.size*1.15))},
+        ];
+        let avail=passives.filter(p=>(player.passives[p.id]||0)<8);
+        if(avail.length){let p=avail[Math.floor(Math.random()*avail.length)];player.passives[p.id]=(player.passives[p.id]||0)+1;opts.push({title:p.name,icon:p.icon,desc:p.desc,action:p.act});}
+        let maxed=player.spells.filter(s=>s.level>=s.maxLvl&&!s.awakening);
+        if(maxed.length){let s=maxed[Math.floor(Math.random()*maxed.length)];
+            opts.push({title:'صحوة: القوة',icon:'🌟',desc:'ضرر +40%',rarity:'Awakening',action:()=>s.awakening='power'});
+            opts.push({title:'صحوة: السرعة',icon:'⚡',desc:'تهدئة ×0.55، ضرر ×0.8',rarity:'Awakening',action:()=>{s.awakening='rapid';s.baseDmg=Math.round(s.baseDmg*0.8);}});
+            opts.push({title:'صحوة: الغضب',icon:'🔱',desc:'ضرر +20%، تهدئة -20%',rarity:'Awakening',action:()=>s.awakening='fury'});
+        }
+        return opts.sort(()=>Math.random()-0.5).slice(0,3);
+    }
+
+    function openChest(ch){
+        chestsOpened++;
+        state=GAME_STATES.CHEST;playSFX('chest');document.getElementById('chest-overlay').classList.add('show');
+        let pool=ARTIFACTS.filter(a=>!player.artifacts.find(pa=>pa.id===a.id)||a.id==='uranium'||a.id==='gaia');
+        let choices=document.getElementById('chest-choices');choices.innerHTML='';
+        const picked = pool.sort(()=>Math.random()-0.5).slice(0,3);
+        picked.forEach(a=>{
+            let btn=document.createElement('button');btn.className='choice-btn';
+            let rc=a.rarity==='Legendary'?'rarity-legendary':'';
+            btn.innerHTML=`<span class="choice-title">${a.name}</span><span class="choice-desc">${a.desc}</span><span class="choice-rarity ${rc}">${a.rarity==='Legendary'?'أسطوري':a.rarity==='Epic'?'ملحمي':a.rarity==='Rare'?'نادر':a.rarity}</span>`;
+            btn.onclick=()=>{a.eff();player.artifacts.push(a);document.getElementById('chest-overlay').classList.remove('show');state=GAME_STATES.PLAYING;};
+            choices.appendChild(btn);
+        });
+    }
+
+    function spawnParticles(x,y,col,count,speed,life){
+        for(let i=0;i<count;i++){let ang=Math.random()*Math.PI*2,spd=(0.3+Math.random()*0.7)*speed;particles.push({x,y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,color:col,life,maxLife:life});}
+    }
+    function addFloat(x,y,txt,col,size){floatingTexts.push({x,y,txt,col:col||'#fff',size:size||13,vy:-55,life:0.85,maxLife:0.85});}
+
+    function cast(s){
+        let dmg=spellDmg(s),cnt=(s.count||1)+Math.floor((s.level-1)*0.4);
+        if(activeSynergies.includes('time_bolt')&&s.id==='magic_bolt'){ cnt+=2; }
+        if(activeSynergies.includes('soul_storm')&&s.id==='spirit_orbits') dmg=Math.round(dmg*2.5);
+        if(s.type==='projectile'||s.type==='projectile_aoe'){
+            let t=findNearest(player.x,player.y,600)||{x:player.x+100,y:player.y};
+            let spd=s.speed*(activeSynergies.includes('time_bolt')&&s.id==='magic_bolt'?3:1);
+            for(let i=0;i<cnt;i++){let ang=Math.atan2(t.y-player.y,t.x-player.x)+(i-cnt/2)*0.28;projectiles.push({x:player.x,y:player.y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,spell:s,dmg,age:0,hit:new Set(),pierce:activeSynergies.includes('time_bolt')&&s.id==='magic_bolt'});}
+            spawnParticles(player.x,player.y,s.color,5,130,0.3);
+        }
+        if(s.type==='nova'||s.type==='placed_aoe'){
+            let d2=dmg, dur2=s.dur||0.5, sz2=s.size;
+            if(activeSynergies.includes('steam_burst')&&(s.id==='fireball'||s.id==='frost_nova')){ d2=Math.round(d2*2); sz2*=1.5; }
+            let a={x:player.x,y:player.y,spell:{...s,size:sz2},dmg:d2,age:0,dur:dur2,hit:new Set()};
+            if(s.poison) a.poison=true;
+            if(s.timeWarp) a.timeWarp=true;
+            if(activeSynergies.includes('void_plague')&&(s.id==='void_rift'||s.id==='poison_cloud')) a.spreading=true;
+            aoes.push(a);
+            spawnParticles(player.x,player.y,s.color,14,220,0.55);
+        }
+        if(s.type==='chain'){
+            let t=findNearest(player.x,player.y,450);
+            if(t){
+                let chain=[t],last=t;
+                let chainLen=4+(activeSynergies.includes('thunder_ice')?2:0);
+                for(let c=1;c<chainLen;c++){let n=findNearest(last.x,last.y,230,new Set(chain.map(e=>e.id)));if(n){chain.push(n);last=n;}}
+                chain.forEach((e,i)=>{ dealDmg(e,Math.round(dmg*(1-i*0.2))); if(activeSynergies.includes('thunder_ice')) e.stun=Math.max(e.stun,2); spawnParticles(e.x,e.y,s.color,4,100,0.25); });
+            }
+        }
+        if(s.type==='beam'){
+            let t=findNearest(player.x,player.y,700)||{x:player.x+1,y:player.y};
+            let ang=Math.atan2(t.y-player.y,t.x-player.x);
+            for(let i=0;i<cnt;i++){ let a2=ang+(i-cnt/2)*0.15; projectiles.push({x:player.x,y:player.y,vx:Math.cos(a2)*s.speed,vy:Math.sin(a2)*s.speed,spell:s,dmg,age:0,hit:new Set(),pierce:true,beam:true}); }
+            if(activeSynergies.includes('arcane_death')&&s.id==='death_ray'){ for(let i=0;i<8;i++){ let a2=i/8*Math.PI*2; projectiles.push({x:player.x,y:player.y,vx:Math.cos(a2)*s.speed,vy:Math.sin(a2)*s.speed,spell:s,dmg:Math.round(dmg*0.7),age:0,hit:new Set(),pierce:true}); } }
+            spawnParticles(player.x,player.y,s.color,10,180,0.4);
+        }
+        if(s.type==='gravity'){
+            let g={x:player.x,y:player.y,spell:s,dmg,age:0,dur:s.dur,hit:new Set(),gravity:true,pullStrength:200};
+            if(activeSynergies.includes('gravity_meteor')){ for(let i=0;i<5;i++) setTimeout(()=>{ let ang2=Math.random()*Math.PI*2,dist2=50+Math.random()*80; aoes.push({x:g.x+Math.cos(ang2)*dist2,y:g.y+Math.sin(ang2)*dist2,spell:{id:'meteor_exp',size:140,color:'#ff6020',type:'projectile_aoe'},dmg:Math.round(dmg*0.8),age:0,dur:0.4,hit:new Set()}); spawnParticles(g.x+Math.cos(ang2)*dist2,g.y+Math.sin(ang2)*dist2,'#ff6020',12,200,0.5); },300+i*350); }
+            aoes.push(g); spawnParticles(player.x,player.y,s.color,18,180,0.6);
+        }
+        if(s.type==='blackhole'){
+            let bh={x:player.x,y:player.y,spell:s,dmg,age:0,dur:s.dur,hit:new Set(),gravity:true,pullStrength:380,blackhole:true};
+            aoes.push(bh); spawnParticles(player.x,player.y,s.color,24,260,0.8); playSFX('miniboss');
+            setTimeout(()=>{ if(state===GAME_STATES.PLAYING){ aoes.push({x:bh.x,y:bh.y,spell:{...s,size:s.size*1.6,color:'#ff00ff'},dmg:Math.round(dmg*2),age:0,dur:0.5,hit:new Set()}); spawnParticles(bh.x,bh.y,'#ff00ff',40,400,0.8); } },s.dur*1000-200);
+        }
+        if(s.type==='sustained_aoe'){
+            let bliz={x:player.x,y:player.y,spell:s,dmg:Math.round(dmg*0.35),age:0,dur:s.dur,hit:new Set(),sustained:true,tickTimer:0,tickRate:0.28,chill:s.chill||false};
+            aoes.push(bliz); spawnParticles(player.x,player.y,s.color,20,200,0.7);
+        }
+        if(s.type==='drain'){
+            let targets=enemies.filter(e=>Math.hypot(e.x-player.x,e.y-player.y)<s.size*0.55).slice(0,4+(s.level-1));
+            targets.forEach(e=>{ let tickDmg=Math.round(dmg*0.18); let ticks=Math.round(s.dur/0.3); for(let t=0;t<ticks;t++){ setTimeout(()=>{ if(enemies.includes(e)&&state===GAME_STATES.PLAYING){ dealDmg(e,tickDmg); player.hp=Math.min(player.maxHp,player.hp+Math.round(tickDmg*0.35)); spawnParticles(e.x,e.y,s.color,3,80,0.25); spawnParticles(player.x,player.y,'#ff80ff',2,60,0.25); } },t*300); } });
+            spawnParticles(player.x,player.y,s.color,12,140,0.5);
+            if(targets.length) addFloat(player.x,player.y-30,'🩸 شفط '+targets.length,'#c050ff',13);
+        }
+        if(s.type==='mine'){
+            let mineCount=1+Math.floor(s.level/3);
+            for(let m=0;m<mineCount;m++){ let ang=Math.random()*Math.PI*2, dist=40+Math.random()*100; let mx=player.x+Math.cos(ang)*dist, my=player.y+Math.sin(ang)*dist; aoes.push({x:mx,y:my,spell:s,dmg,age:0,dur:s.dur,hit:new Set(),mine:true,triggered:false,armed:0.5}); }
+            spawnParticles(player.x,player.y,s.color,8,120,0.4);
+        }
+        if(s.type==='shockwave'){
+            let sw={x:player.x,y:player.y,spell:s,dmg,age:0,dur:s.dur,hit:new Set(),shockwave:true,ring:true,prevR:0};
+            aoes.push(sw); spawnParticles(player.x,player.y,s.color,16,220,0.45);
+        }
+        if(s.type==='inferno'){
+            let t2=findNearest(player.x,player.y,600)||{x:player.x,y:player.y-1};
+            let ang2=Math.atan2(t2.y-player.y,t2.x-player.x);
+            let inf={x:player.x,y:player.y,spell:s,dmg:Math.round(dmg*0.25),age:0,dur:s.dur,hit:new Set(),inferno:true,ang:ang2,tickTimer:0,tickRate:0.12};
+            aoes.push(inf); spawnParticles(player.x,player.y,s.color,14,200,0.5);
+        }
+    }
+
+    function dealDmg(e,dmg){
+        if(e.shieldHP>0){e.shieldHP=Math.max(0,e.shieldHP-dmg);spawnParticles(e.x,e.y,'#40c0a0',3,80,0.2);return;}
+        let d=dmg, isCrit=Math.random()*100<player.critRate;
+        if(isCrit) d=Math.round(d*player.critDmg/100);
+        if(e.resist) d=Math.round(d*0.65);
+        e.hp-=d; e.flashTimer=0.08;
+        playSFX(isCrit?'hit_crit':'hit');
+        addFloat(e.x,e.y-e.radius,(isCrit?'💥':'')+d,isCrit?'#ffdd00':'#ffbbbb',isCrit?15:12);
+        if(e.hp<=0) killEnemy(e);
+    }
+
+    function killEnemy(e){
+        let idx=enemies.indexOf(e);if(idx>=0)enemies.splice(idx,1);
+        totalKills++; killStreak++; streakTimer=4;
+        if(e.beh==='boss') bossKills++;
+        if(e.isMini) miniBossKills++;
+        if(gameTime<60) firstMinKills++;
+        if(e.isMini||e.beh==='boss') playSFX(e.beh==='boss'?'kill_boss':'kill_elite');
+        else playSFX('kill');
+        let pts = Math.round((e.xp * 10) * (1 + killStreak*0.05) * (DIFF_MODS[difficulty]||DIFF_MODS.normal).goldMult);
+        runScore += pts;
+        addFloat(e.x, e.y-e.radius-14, '+'+pts, '#ffe080', 10);
+        if(player._vampiric) player.hp=Math.min(player.maxHp,player.hp+3);
+        if(player._chainReact && killStreak>1){ for(let en of enemies){ if(Math.hypot(en.x-e.x,en.y-e.y)<120){ en.stun=Math.max(en.stun,1.2); spawnParticles(en.x,en.y,'#ffe080',3,80,0.3); } } }
+        if(e.isMini && e.loot){ for(let l=0;l<e.loot;l++) chests.push({x:e.x+(Math.random()-0.5)*60,y:e.y+(Math.random()-0.5)*60,radius:18,age:0,life:50,color:'#ffd040'}); }
+        if(e.beh==='bomber'){aoes.push({x:e.x,y:e.y,spell:{id:'bomb',size:e.explodeRange*1.7,color:'#ff6020'},dmg:e.dmg*1.5,age:0,dur:0.35,hit:new Set()});spawnParticles(e.x,e.y,'#ff6020',20,280,0.6);}
+        spawnParticles(e.x,e.y,e.color,8,160,0.45);
+        spawnXPOrb(e.x,e.y);
+        goldEarned+=Math.ceil(e.xp/5*(player._goldBonus||1));
+        grantXP(Math.round(e.xp*(player._xpBonus||1)));
+        updateStreakUI();
+    }
+    function updateStreakUI(){
+        const el=document.getElementById('kill-streak');
+        if(killStreak>=5){el.textContent=(killStreak>=20?"🔥 عدو غوكو ×":killStreak>=10?'⚡ تسلسل ×':'🗡 تتالي ×')+killStreak;el.classList.add('show');streakDispTimer=2.5;}
+    }
+
+    function spawnXPOrb(x,y){let r=Math.random(),t=0;if(r<0.05)t=2;else if(r<0.2)t=1;const s=[{r:5,xp:6,col:'#80d0ff'},{r:8,xp:16,col:'#50b0f0'},{r:11,xp:40,col:'#3090e0'}];xpOrbs.push({x,y,radius:s[t].r,xp:s[t].xp,color:s[t].col,age:0});}
+    function findNearest(x,y,range,exclude){let best=null,bd=range;for(let e of enemies){if(exclude&&exclude.has(e.id))continue;let d=Math.hypot(e.x-x,e.y-y);if(d<bd){bd=d;best=e;}}return best;}
+
+    function autoCast(dt){
+        if(state!==GAME_STATES.PLAYING)return;
+        player.spells.forEach(s=>{s.cdRem-=dt;if(s.cdRem<=0){s.cdRem=spellCD(s);cast(s);}if(s.type==='orbit')s.orbitAngle+=dt*2.6;});
+        orbSpirits=[];
+        player.spells.forEach(s=>{if(s.type==='orbit'){let cnt=(s.count||2)+Math.floor((s.level-1)*0.4);for(let i=0;i<cnt;i++){let ang=s.orbitAngle+(i/cnt)*Math.PI*2,dist=s.size*0.65;orbSpirits.push({x:player.x+Math.cos(ang)*dist,y:player.y+Math.sin(ang)*dist,radius:s.size*0.22,dmg:spellDmg(s),color:s.color,hit:new Set()});}}});
+    }
+
+    let camera={x:0,y:0};
+
+    function update(dt){
+        gameTime+=dt;
+        player.glowAngle=(player.glowAngle||0)+dt*1.8;
+        let berserk=player._berserker&&player.hp/player.maxHp<0.3;
+        if(player.dashActive){
+            player.dashTimer-=dt;
+            if(player.dashTimer<=0){
+                player.dashActive=false; player.dashTimer=player.dashCD;
+                if(player._thundercloak){ aoes.push({x:player.x,y:player.y,spell:{id:'thunder',size:190,color:'#b0e0ff'},dmg:40,age:0,dur:0.3,hit:new Set()}); spawnParticles(player.x,player.y,'#b0e0ff',18,280,0.45); }
+            }
+        }
+        let spd=(player.dashActive?player.dashSpd:player.speed)*(berserk?1.18:1);
+        let dx=player.targetX-player.x,dy=player.targetY-player.y,dist=Math.hypot(dx,dy);
+        if(dist>2&&player.moving){player.x+=dist<spd*dt?dx:(dx/dist)*spd*dt;player.y+=dist<spd*dt?dy:(dy/dist)*spd*dt;}
+        player.x=Math.max(player.radius,Math.min(WORLD-player.radius,player.x));
+        player.y=Math.max(player.radius,Math.min(WORLD-player.radius,player.y));
+        if(player.invTimer>0)player.invTimer-=dt;
+        camera.x=Math.max(0,Math.min(WORLD-W,player.x-W/2));
+        camera.y=Math.max(0,Math.min(WORLD-H,player.y-H/2));
+        if(!player.dashActive&&player.dashTimer>0)player.dashTimer-=dt;
+        autoCast(dt);
+        if(streakTimer>0){streakTimer-=dt;if(streakTimer<=0)killStreak=0;}
+        if(streakDispTimer>0){streakDispTimer-=dt;if(streakDispTimer<=0)document.getElementById('kill-streak').classList.remove('show');}
+        for(let i=projectiles.length-1;i>=0;i--){
+            let p=projectiles[i]; p.age+=dt; p.x+=p.vx*dt; p.y+=p.vy*dt;
+            if(p.x<-60||p.x>WORLD+60||p.y<-60||p.y>WORLD+60||p.age>3){projectiles.splice(i,1);continue;}
+            if(!p.enemy){ let hit=false; for(let e of enemies){ if(p.hit.has(e.id))continue; if(Math.hypot(e.x-p.x,e.y-p.y)<p.spell.size*0.25+e.radius){ p.hit.add(e.id); dealDmg(e,p.dmg); if(p.spell.type==='projectile_aoe') aoes.push({x:p.x,y:p.y,spell:p.spell,dmg:Math.round(p.dmg*0.6),age:0,dur:0.3,hit:new Set()}); spawnParticles(p.x,p.y,p.spell.color||'#fff',4,90,0.22); if(!p.pierce){projectiles.splice(i,1);hit=true;break;} } } }
+        }
+        for(let i=aoes.length-1;i>=0;i--){
+            let a=aoes[i]; a.age+=dt;
+            if(a.mine){ if(a.armed>0){a.armed-=dt;continue;} let triggered=false; for(let e of enemies){ if(Math.hypot(e.x-a.x,e.y-a.y)<a.spell.size*0.28+e.radius){ aoes.push({x:a.x,y:a.y,spell:{...a.spell,size:a.spell.size*1.4,color:'#80d0ff'},dmg:a.dmg,age:0,dur:0.35,hit:new Set()}); spawnParticles(a.x,a.y,'#40a0ff',18,260,0.55); playSFX('chest'); aoes.splice(i,1);triggered=true;break; } } if(!triggered&&a.age>a.dur) aoes.splice(i,1); continue; }
+            if(a.age>a.dur){ if(a.gravity&&!a.blackhole) aoes.push({x:a.x,y:a.y,spell:{...a.spell,size:a.spell.size*1.3,color:'#ff00ff'},dmg:Math.round(a.dmg*2),age:0,dur:0.4,hit:new Set()}); aoes.splice(i,1); continue; }
+            let r=a.spell.size*0.55;
+            if(a.blackhole){ for(let e of enemies){ let ed=Math.hypot(e.x-a.x,e.y-a.y); if(ed<r*2&&ed>5){ e.x+=(a.x-e.x)/ed*a.pullStrength*dt; e.y+=(a.y-e.y)/ed*a.pullStrength*dt; } } continue; }
+            if(a.sustained){ a.tickTimer-=dt; if(a.tickTimer<=0){ a.tickTimer=a.tickRate; a.hit.clear(); for(let e of enemies){ if(Math.hypot(e.x-a.x,e.y-a.y)<r+e.radius){ dealDmg(e,a.dmg); if(a.chill) e.slow=Math.max(e.slow,1.5); spawnParticles(e.x,e.y,a.spell.color,2,60,0.2); } } a.x+=(player.x-a.x)*0.06; a.y+=(player.y-a.y)*0.06; spawnParticles(a.x+(Math.random()-0.5)*r,a.y+(Math.random()-0.5)*r,a.spell.color,3,80,0.3); } continue; }
+            if(a.shockwave){ let prog=a.age/a.dur; let ringR=r*prog; let prevR=a.prevR||0; for(let e of enemies){ let ed=Math.hypot(e.x-a.x,e.y-a.y); if(!a.hit.has(e.id)&&ed>=prevR&&ed<=ringR+e.radius){ a.hit.add(e.id); dealDmg(e,a.dmg); let ang=Math.atan2(e.y-a.y,e.x-a.x); e.x+=Math.cos(ang)*80; e.y+=Math.sin(ang)*80; e.stun=Math.max(e.stun,0.5); spawnParticles(e.x,e.y,a.spell.color,5,120,0.3); } } a.prevR=ringR; continue; }
+            if(a.inferno){ a.tickTimer-=dt; let t=findNearest(player.x,player.y,500); if(t) a.ang=Math.atan2(t.y-player.y,t.x-player.x); if(a.tickTimer<=0){ a.tickTimer=a.tickRate; let halfAngle=0.55; for(let e of enemies){ let ed=Math.hypot(e.x-player.x,e.y-player.y); if(ed<r){ let ea=Math.atan2(e.y-player.y,e.x-player.x); let diff=Math.abs(((ea-a.ang)+Math.PI*3)%(Math.PI*2)-Math.PI); if(diff<halfAngle){ dealDmg(e,a.dmg); spawnParticles(e.x,e.y,a.spell.color,3,80,0.2); } } } spawnParticles(player.x+Math.cos(a.ang)*r*0.5,player.y+Math.sin(a.ang)*r*0.5,a.spell.color,5,100,0.25); } continue; }
+            for(let e of enemies){
+                if(a.gravity){ let ed=Math.hypot(e.x-a.x,e.y-a.y); if(ed<r*1.5&&ed>5){ e.x+=(a.x-e.x)/ed*a.pullStrength*dt; e.y+=(a.y-e.y)/ed*a.pullStrength*dt; } }
+                if(a.hit.has(e.id))continue;
+                if(Math.hypot(e.x-a.x,e.y-a.y)<r+e.radius){ a.hit.add(e.id); dealDmg(e,a.dmg); if(a.spell.id==='frost_nova'||a.spell.id==='arcane_nova'||a.timeWarp) e.slow=a.timeWarp?4:2.0; if(a.poison){e.burn=Math.max(e.burn,a.dur);e.burnDmg=Math.max(e.burnDmg||0,a.dmg*0.18);} if(a.spreading&&Math.random()<0.3) aoes.push({x:e.x+(Math.random()-0.5)*80,y:e.y+(Math.random()-0.5)*80,spell:{...a.spell,size:a.spell.size*0.7},dmg:Math.round(a.dmg*0.5),age:0,dur:a.dur*0.7,hit:new Set(),poison:a.poison}); }
+            }
+        }
+        for(let o of orbSpirits){for(let e of enemies){if(o.hit.has(e.id))continue;if(Math.hypot(e.x-o.x,e.y-o.y)<o.radius+e.radius){o.hit.add(e.id);dealDmg(e,o.dmg);}}o.hit.clear();}
+        let deadSet=new Set();
+        for(let e of enemies){
+            if(deadSet.has(e.id))continue;
+            if(e.flashTimer>0)e.flashTimer-=dt;
+            if(e.stun>0){e.stun-=dt;continue;}
+            if(e.slow>0)e.slow-=dt;
+            if(e.burn>0){e.burn-=dt;e.hp-=e.burnDmg*dt;if(e.hp<=0){killEnemy(e);deadSet.add(e.id);continue;}}
+            if(e.beh==='sentinel'&&e.shieldHP<e.maxShieldHP) e.shieldHP=Math.min(e.maxShieldHP,e.shieldHP+8*dt);
+            let sm=e.slow>0?0.35:1;
+            let edx=player.x-e.x,edy=player.y-e.y,ed=Math.hypot(edx,edy);
+            if(e.beh==='chase'||e.beh==='boss'||e.beh==='vampire'){
+                if(ed>5){e.x+=(edx/ed)*e.speed*sm*dt;e.y+=(edy/ed)*e.speed*sm*dt;}
+                if(e.beh==='boss'&&ed<75&&player.invTimer<=0){player.hp-=e.dmg;player.invTimer=0.45;if(player.hp<=0)handleDeath();}
+            }
+            if(e.beh==='swarm'){e.orbitAngle+=dt*(3+Math.sin(gameTime+e.id)*0.5);let tx=player.x+Math.cos(e.orbitAngle)*80,ty=player.y+Math.sin(e.orbitAngle)*80;let dd=Math.hypot(tx-e.x,ty-e.y);if(dd>5){e.x+=(tx-e.x)/dd*e.speed*sm*dt;e.y+=(ty-e.y)/dd*e.speed*sm*dt;}}
+            if(e.beh==='sentinel'){if(ed>140){e.x+=(edx/ed)*e.speed*sm*dt;e.y+=(edy/ed)*e.speed*sm*dt;}}
+            if(e.beh==='bomber'){if(ed>5){e.x+=(edx/ed)*e.speed*sm*dt;e.y+=(edy/ed)*e.speed*sm*dt;}if(ed<e.explodeRange){killEnemy(e);deadSet.add(e.id);continue;}}
+            if(e.beh==='ranged'||e.beh==='necro'){
+                if(ed>e.range){e.x+=(edx/ed)*e.speed*sm*dt;e.y+=(edy/ed)*e.speed*sm*dt;}
+                e.shootTimer-=dt;
+                if(e.shootTimer<=0&&ed<e.range+150){e.shootTimer=e.shootCD;let shots=e.multiShot||1;for(let s=0;s<shots;s++){let ang=Math.atan2(player.y-e.y,player.x-e.x)+(s-(shots-1)/2)*0.3;projectiles.push({x:e.x,y:e.y,vx:Math.cos(ang)*255,vy:Math.sin(ang)*255,spell:{size:28,color:e.color||'#f00'},dmg:e.dmg,age:0,hit:new Set(),enemy:true});}}
+                if(e.beh==='necro'){e.summonTimer-=dt;if(e.summonTimer<=0&&enemies.length<200){e.summonTimer=e.summonCD;spawnEnemy('ghost',e.x+(Math.random()-0.5)*90,e.y+(Math.random()-0.5)*90);spawnParticles(e.x,e.y,'#60a020',6,100,0.4);}}
+            }
+            if(ed<player.radius+e.radius&&player.invTimer<=0&&e.beh!=='ranged'&&e.beh!=='necro'&&e.beh!=='bomber'){
+                let d=Math.round(e.dmg*(1-player.dmgRed/100)*(berserk?0.8:1));
+                if(player._mirror&&Math.random()<0.1){dealDmg(e,d*2);}
+                else{player.hp-=d;damageTaken+=d;player.invTimer=0.3;playSFX('player_hit');}
+                if(player.hp<=0)handleDeath();
+            }
+        }
+        for(let i=projectiles.length-1;i>=0;i--){let p=projectiles[i];if(!p.enemy)continue;if(Math.hypot(player.x-p.x,player.y-p.y)<player.radius+12&&player.invTimer<=0){if(player._mirror&&Math.random()<0.1){p.vx=-p.vx;p.vy=-p.vy;p.enemy=false;}else{player.hp-=p.dmg;player.invTimer=0.3;projectiles.splice(i,1);if(player.hp<=0)handleDeath();}}}
+        for(let i=xpOrbs.length-1;i>=0;i--){let o=xpOrbs[i];o.age+=dt;let d=Math.hypot(player.x-o.x,player.y-o.y);if(d<player.pickup+o.radius){let spd=420*dt;if(d<spd){o.x=player.x;o.y=player.y;}else{o.x+=(player.x-o.x)/d*spd;o.y+=(player.y-o.y)/d*spd;}}if(d<player.radius+o.radius+4){grantXP(o.xp);xpOrbs.splice(i,1);}if(o.age>40)xpOrbs.splice(i,1);}
+        for(let i=healthPickups.length-1;i>=0;i--){let h=healthPickups[i];h.life-=dt;if(h.life<=0){healthPickups.splice(i,1);continue;}if(Math.hypot(player.x-h.x,player.y-h.y)<player.radius+h.radius+5){player.hp=Math.min(player.maxHp,player.hp+25);addFloat(player.x,player.y-24,'+25','#ff6080',14);healthPickups.splice(i,1);}}
+        for(let i=chests.length-1;i>=0;i--){let c=chests[i];c.age+=dt;if(c.age>c.life){chests.splice(i,1);continue;}if(Math.hypot(player.x-c.x,player.y-c.y)<player.radius+c.radius+10){openChest(c);chests.splice(i,1);}}
+        for(let i=particles.length-1;i>=0;i--){let p=particles[i];p.life-=dt;if(p.life<=0){particles.splice(i,1);continue;}p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=0.91;p.vy*=0.91;}
+        for(let i=floatingTexts.length-1;i>=0;i--){let ft=floatingTexts[i];ft.life-=dt;if(ft.life<=0){floatingTexts.splice(i,1);continue;}ft.y+=ft.vy*dt;ft.vy*=0.88;}
+        updateWaves(dt);
+        if(player._regen&&Math.random()<dt*0.6) player.hp=Math.min(player.maxHp,player.hp+1);
+        if(player.hp/player.maxHp>=1) fullHpTimer+=dt; else fullHpTimer=0;
+        if(player.hp<=1) player._nearDeath+=dt; else player._nearDeath=0;
+        if(synergyNotifTimer>0) synergyNotifTimer-=dt;
+        checkAch();
+        checkDailyChallenges();
+        if(player.hp<=0) handleDeath();
+        updateUI();
+    }
+
+    function handleDeath(){
+        if(player._phoenix&&player.hp<=0){player.hp=Math.round(player.maxHp*0.4);player._phoenix=false;player.invTimer=2.5;_phoenixTriggered=true;spawnParticles(player.x,player.y,'#ff8040',22,320,0.8);addFloat(player.x,player.y-35,'عنقاء!','#ff8040',16);return;}
+        saveRunHistory();
+        state=GAME_STATES.GAMEOVER;permGold+=goldEarned;localStorage.setItem('surv_gold',permGold);
+        document.getElementById('game-over-overlay').classList.add('show');
+        document.getElementById('gameover-stats').innerHTML=`<span class="stat-line">⏱ الوقت: <b>${formatTime(gameTime)}</b></span><span class="stat-line">💀 القتلى: <b>${totalKills}</b></span><span class="stat-line">📈 المستوى: <b>${player.level}</b></span><span class="stat-line">💰 الذهب: <b>${goldEarned}</b></span><span class="stat-line">🏅 النقاط: <b>${runScore.toLocaleString()}</b></span><span class="stat-line">🔥 أفضل تسلسل: <b>${killStreak}</b></span><span class="stat-line">🌊 الموجة: <b>${currentWave}</b></span>`;
+        stopMusic();
+    }
+    function formatTime(s){let m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
+
+    function updateUI(){
+        let hpPct=Math.max(0,player.hp/player.maxHp*100);
+        let hpEl=document.getElementById('hp-fill');
+        hpEl.style.width=hpPct+'%';
+        hpEl.style.background=hpPct<25?'linear-gradient(90deg,#900,#f00)':'linear-gradient(90deg,#c02030,#f04050)';
+        document.getElementById('hp-text').textContent=Math.round(player.hp)+'/'+player.maxHp;
+        document.getElementById('xp-fill').style.width=(player.xp/player.xpToNext*100)+'%';
+        document.getElementById('xp-text').textContent=player.xp+'/'+player.xpToNext;
+        document.getElementById('level-badge').textContent='مستوى '+player.level;
+        document.getElementById('timer-display').textContent='⏱ '+formatTime(gameTime);
+        document.getElementById('kill-display').textContent='💀 '+totalKills;
+        document.getElementById('gold-display').textContent='💰 ذهب: '+permGold;
+        document.getElementById('score-display').textContent='🏅 '+runScore.toLocaleString();
+        document.getElementById('wave-display').textContent='م'+currentWave;
+        const se=document.getElementById('status-effects');se.innerHTML='';
+        if(player._berserker&&player.hp/player.maxHp<0.3){let b=document.createElement('div');b.className='status-badge';b.style.color='#ff6040';b.style.borderColor='#ff6040';b.textContent='🔴 بربري';se.appendChild(b);}
+        if(player._regen){let b=document.createElement('div');b.className='status-badge';b.style.color='#40ff80';b.textContent='💚 تجديد';se.appendChild(b);}
+        if(player._chainReact){let b=document.createElement('div');b.className='status-badge';b.style.color='#80ffff';b.textContent='⚡ تسلسل';se.appendChild(b);}
+        const activeBoss=enemies.find(e=>e.beh==='boss'||e.isMini);
+        const bbar=document.getElementById('boss-healthbar');
+        if(activeBoss){bbar.style.display='block';document.getElementById('boss-hp-name').textContent=(activeBoss.isMini?'⚠️ زعيم صغير: ':' 👑 زعيم: ')+activeBoss.name;document.getElementById('boss-hp-fill').style.width=Math.max(0,activeBoss.hp/activeBoss.maxHp*100)+'%';}
+        else{bbar.style.display='none';}
+        let bar=document.getElementById('spell-bar');bar.innerHTML='';
+        player.spells.forEach(s=>{
+            let d=document.createElement('div');d.className='spell-icon'+(s.cdRem<=0?' active':'');d.title=s.name+' مستوى '+s.level+(s.awakening?' ['+s.awakening+']':'');d.textContent=s.icon;
+            let cd=document.createElement('div');cd.className='cd-overlay';cd.style.height=(Math.max(0,s.cdRem/spellCD(s))*100)+'%';d.appendChild(cd);
+            let lv=document.createElement('div');lv.className='spell-level';lv.textContent=s.level;d.appendChild(lv);
+            bar.appendChild(d);
+        });
+        miniC.clearRect(0,0,70,70);
+        miniC.fillStyle='#05050f';miniC.beginPath();miniC.arc(35,35,33,0,Math.PI*2);miniC.fill();
+        let sm=66/WORLD;
+        enemies.forEach(e=>{miniC.fillStyle=e.beh==='boss'?'#f00':e.color+'99';miniC.beginPath();miniC.arc(35+(e.x-WORLD/2)*sm,35+(e.y-WORLD/2)*sm,e.beh==='boss'?3:1.5,0,Math.PI*2);miniC.fill();});
+        chests.forEach(c=>{miniC.fillStyle='#e0b040';miniC.beginPath();miniC.arc(35+(c.x-WORLD/2)*sm,35+(c.y-WORLD/2)*sm,2.5,0,Math.PI*2);miniC.fill();});
+        miniC.fillStyle='#fff';miniC.beginPath();miniC.arc(35+(player.x-WORLD/2)*sm,35+(player.y-WORLD/2)*sm,3,0,Math.PI*2);miniC.fill();
+    }
+
+    function draw(){
+        const t=gameTime;
+        ctx.clearRect(0,0,W,H);ctx.save();ctx.translate(-camera.x,-camera.y);
+        ctx.fillStyle='#06060e';ctx.fillRect(0,0,WORLD,WORLD);
+        ctx.strokeStyle='#0d0d1c';ctx.lineWidth=1;
+        for(let gx=0;gx<WORLD;gx+=120){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,WORLD);ctx.stroke();}
+        for(let gy=0;gy<WORLD;gy+=120){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(WORLD,gy);ctx.stroke();}
+        ctx.strokeStyle='#1a0830';ctx.lineWidth=20;ctx.strokeRect(2,2,WORLD-4,WORLD-4);
+        ctx.strokeStyle='#300860';ctx.lineWidth=4;ctx.strokeRect(4,4,WORLD-8,WORLD-8);
+        mapDecos.forEach(d=>{
+            if(d.type==='pool'){let gr=ctx.createRadialGradient(d.x,d.y,0,d.x,d.y,d.r);gr.addColorStop(0,'#1a0045');gr.addColorStop(1,'transparent');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,Math.PI*2);ctx.fill();}
+            if(d.type==='pillar'){ctx.fillStyle='#2a2440';ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#3a3058';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#3a3058';ctx.beginPath();ctx.arc(d.x,d.y,d.r*0.5,0,Math.PI*2);ctx.fill();}
+            if(d.type==='crystal'){let pulse=0.5+0.5*Math.sin(t*2+d.phase);ctx.globalAlpha=pulse*0.65;let gr=ctx.createRadialGradient(d.x,d.y,0,d.x,d.y,d.r*1.6);gr.addColorStop(0,d.col+'cc');gr.addColorStop(1,'transparent');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(d.x,d.y,d.r*1.6,0,Math.PI*2);ctx.fill();ctx.globalAlpha=pulse;ctx.fillStyle=d.col;ctx.beginPath();ctx.moveTo(d.x,d.y-d.r*1.5);ctx.lineTo(d.x+d.r*0.7,d.y+d.r*0.7);ctx.lineTo(d.x-d.r*0.7,d.y+d.r*0.7);ctx.closePath();ctx.fill();ctx.globalAlpha=1;}
+            if(d.type==='debris'){ctx.save();ctx.translate(d.x,d.y);ctx.rotate(d.ang);ctx.fillStyle='#383038';ctx.fillRect(-d.r,-d.r*0.4,d.r*2,d.r*0.8);ctx.restore();}
+            if(d.type==='torch'){let fl=0.75+0.25*Math.sin(t*11+d.phase);let gr=ctx.createRadialGradient(d.x,d.y,0,d.x,d.y,55*fl);gr.addColorStop(0,'rgba(255,150,30,0.18)');gr.addColorStop(1,'transparent');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(d.x,d.y,55*fl,0,Math.PI*2);ctx.fill();ctx.fillStyle='#6b4400';ctx.fillRect(d.x-2,d.y,4,12);ctx.fillStyle=`rgba(255,${100+Math.floor(Math.random()*80)},0,${fl})`;ctx.beginPath();ctx.arc(d.x,d.y-2,4*fl,0,Math.PI*2);ctx.fill();}
+            if(d.type==='wall'){ctx.fillStyle='#1a1428';ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#2a2040';ctx.lineWidth=2;ctx.stroke();}
+        });
+        for(let p of particles){let a=p.life/p.maxLife;ctx.globalAlpha=a;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,2.5*a,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;
+        chests.forEach(c=>{
+            let pulse=0.8+0.2*Math.sin(t*4);
+            let gr=ctx.createRadialGradient(c.x,c.y,0,c.x,c.y,c.radius*2);gr.addColorStop(0,'#e0c06055');gr.addColorStop(1,'transparent');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(c.x,c.y,c.radius*2,0,Math.PI*2);ctx.fill();
+            ctx.fillStyle=c.color;ctx.beginPath();ctx.arc(c.x,c.y,c.radius*pulse,0,Math.PI*2);ctx.fill();
+            ctx.strokeStyle='#e0d060';ctx.lineWidth=2;ctx.stroke();
+        });
+        aoes.forEach(a=>{
+            let prog=1-a.age/a.dur,r=a.spell.size*0.55;
+            ctx.save();
+            if(a.blackhole){
+                let gr2=ctx.createRadialGradient(a.x,a.y,0,a.x,a.y,r);gr2.addColorStop(0,'#000000ff');gr2.addColorStop(0.4,'#550088cc');gr2.addColorStop(1,'transparent');
+                ctx.fillStyle=gr2;ctx.beginPath();ctx.arc(a.x,a.y,r,0,Math.PI*2);ctx.fill();
+                for(let ri=0;ri<3;ri++){ctx.strokeStyle='#cc00ff';ctx.lineWidth=2;ctx.globalAlpha=0.5+0.4*Math.sin(a.age*6+ri*1.5);ctx.beginPath();ctx.arc(a.x,a.y,r*(0.25+ri*0.25),0,Math.PI*2);ctx.stroke();}
+                ctx.globalAlpha=0.9;ctx.fillStyle='#000';ctx.beginPath();ctx.arc(a.x,a.y,r*0.18,0,Math.PI*2);ctx.fill();
+                ctx.restore();return;
+            }
+            if(a.gravity){
+                let gr2=ctx.createRadialGradient(a.x,a.y,0,a.x,a.y,r);gr2.addColorStop(0,'#ff00ff55');gr2.addColorStop(0.5,(a.spell.color||'#6000a0')+'88');gr2.addColorStop(1,'transparent');
+                ctx.fillStyle=gr2;ctx.beginPath();ctx.arc(a.x,a.y,r,0,Math.PI*2);ctx.fill();
+                ctx.strokeStyle=a.spell.color||'#6000a0';ctx.lineWidth=3;ctx.globalAlpha=prog*0.8;
+                ctx.beginPath();ctx.arc(a.x,a.y,r*(0.4+0.3*Math.sin(a.age*4)),0,Math.PI*2);ctx.stroke();
+                ctx.beginPath();ctx.arc(a.x,a.y,r*0.7,0,Math.PI*2);ctx.stroke();
+                ctx.restore();return;
+            }
+            if(a.mine){
+                let armed=a.armed<=0; let pulse=armed?(0.7+0.3*Math.sin(a.age*10)):0.5; ctx.globalAlpha=pulse;
+                let gr2=ctx.createRadialGradient(a.x,a.y,0,a.x,a.y,r*0.5);gr2.addColorStop(0,'#80e0ff');gr2.addColorStop(1,'#40a0ff00');
+                ctx.fillStyle=gr2;ctx.beginPath();ctx.arc(a.x,a.y,r*0.5,0,Math.PI*2);ctx.fill();
+                ctx.strokeStyle=armed?'#80e0ff':'#405060';ctx.lineWidth=2;ctx.beginPath();ctx.arc(a.x,a.y,r*0.28,0,Math.PI*2);ctx.stroke();
+                ctx.fillStyle=armed?'#c0f0ff':'#406080';ctx.font=`${Math.round(r*0.3)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('💠',a.x,a.y);
+                ctx.restore();return;
+            }
+            if(a.shockwave){
+                let ringR=r*(a.age/a.dur);
+                ctx.strokeStyle=a.spell.color||'#ffe060';ctx.lineWidth=6*(1-a.age/a.dur)+1;ctx.globalAlpha=prog*0.85;
+                ctx.beginPath();ctx.arc(a.x,a.y,ringR,0,Math.PI*2);ctx.stroke();
+                ctx.lineWidth=2;ctx.globalAlpha=prog*0.4;ctx.beginPath();ctx.arc(a.x,a.y,Math.max(0,ringR-12),0,Math.PI*2);ctx.stroke();
+                ctx.restore();return;
+            }
+            if(a.inferno){
+                ctx.globalAlpha=0.45+0.15*Math.sin(a.age*15);
+                let half=0.55;
+                let gr2=ctx.createRadialGradient(player.x,player.y,0,player.x,player.y,r);gr2.addColorStop(0,'#ffff8088');gr2.addColorStop(0.5,'#ff441088');gr2.addColorStop(1,'transparent');
+                ctx.fillStyle=gr2;ctx.beginPath();ctx.moveTo(player.x,player.y);ctx.arc(player.x,player.y,r,a.ang-half,a.ang+half);ctx.closePath();ctx.fill();
+                ctx.strokeStyle='#ff6610';ctx.lineWidth=2;ctx.globalAlpha=0.6;ctx.beginPath();ctx.arc(player.x,player.y,r,a.ang-half,a.ang+half);ctx.stroke();
+                ctx.restore();return;
+            }
+            if(a.sustained){
+                ctx.globalAlpha=0.3+0.1*Math.sin(a.age*8);
+                let gr2=ctx.createRadialGradient(a.x,a.y,0,a.x,a.y,r);gr2.addColorStop(0,'#e0f8ffaa');gr2.addColorStop(0.6,'#a0e8ff44');gr2.addColorStop(1,'transparent');
+                ctx.fillStyle=gr2;ctx.beginPath();ctx.arc(a.x,a.y,r,0,Math.PI*2);ctx.fill();
+                for(let si=0;si<8;si++){let ang=si/8*Math.PI*2+a.age*1.5;let dx2=Math.cos(ang)*r*(0.3+0.3*Math.random()),dy2=Math.sin(ang)*r*(0.3+0.3*Math.random());ctx.fillStyle='#c0f0ff';ctx.globalAlpha=0.5+0.5*Math.random();ctx.beginPath();ctx.arc(a.x+dx2,a.y+dy2,2,0,Math.PI*2);ctx.fill();}
+                ctx.restore();return;
+            }
+            ctx.globalAlpha=0.4*prog;
+            let gr=ctx.createRadialGradient(a.x,a.y,0,a.x,a.y,r);gr.addColorStop(0,(a.spell.color||'#fff')+'ff');gr.addColorStop(1,(a.spell.color||'#fff')+'00');
+            ctx.fillStyle=gr;ctx.beginPath();ctx.arc(a.x,a.y,r,0,Math.PI*2);ctx.fill();
+            ctx.globalAlpha=prog*0.8;ctx.strokeStyle=a.spell.color||'#fff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(a.x,a.y,r,0,Math.PI*2);ctx.stroke();
+            ctx.restore();
+        });
+        projectiles.forEach(p=>{
+            let col=p.enemy?'#ff5050':(p.spell.color||'#fff'),r=p.spell.size*0.16;
+            let gr=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*2.2);gr.addColorStop(0,col+'ff');gr.addColorStop(1,col+'00');
+            ctx.fillStyle=gr;ctx.beginPath();ctx.arc(p.x,p.y,r*2.2,0,Math.PI*2);ctx.fill();
+            ctx.fillStyle=col;ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill();
+        });
+        orbSpirits.forEach(o=>{
+            let col=o.color||'#d0e0ff';
+            let gr=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.radius*2);gr.addColorStop(0,col+'bb');gr.addColorStop(1,col+'00');
+            ctx.fillStyle=gr;ctx.beginPath();ctx.arc(o.x,o.y,o.radius*2,0,Math.PI*2);ctx.fill();
+            ctx.globalAlpha=0.95;ctx.fillStyle=col;ctx.beginPath();ctx.arc(o.x,o.y,o.radius,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+        });
+        xpOrbs.forEach(o=>{
+            let gr=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.radius*2);gr.addColorStop(0,o.color+'bb');gr.addColorStop(1,o.color+'00');
+            ctx.fillStyle=gr;ctx.beginPath();ctx.arc(o.x,o.y,o.radius*2,0,Math.PI*2);ctx.fill();
+            ctx.fillStyle=o.color;ctx.beginPath();ctx.arc(o.x,o.y,o.radius,0,Math.PI*2);ctx.fill();
+        });
+        healthPickups.forEach(h=>{
+            let pulse=0.85+0.15*Math.sin(t*5);
+            ctx.fillStyle='#ff608066';ctx.beginPath();ctx.arc(h.x,h.y,h.radius*2.2*pulse,0,Math.PI*2);ctx.fill();
+            ctx.fillStyle=h.color;ctx.fillRect(h.x-5,h.y-1.5,10,3);ctx.fillRect(h.x-1.5,h.y-5,3,10);
+        });
+        enemies.forEach(e=>{
+            ctx.save();
+            if(e.shieldHP>0){ ctx.globalAlpha=0.25+(e.shieldHP/Math.max(1,e.maxShieldHP))*0.35; let sg=ctx.createRadialGradient(e.x,e.y,e.radius,e.x,e.y,e.radius*1.9);sg.addColorStop(0,'#40c0a0aa');sg.addColorStop(1,'#40c0a000'); ctx.fillStyle=sg;ctx.beginPath();ctx.arc(e.x,e.y,e.radius*1.9,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1; }
+            if(e.elite||e.beh==='boss'||e.beh==='necro'||e.isMini){ let gc=e.beh==='boss'?'#ff2020':e.isMini?'#ff8800':e.beh==='necro'?'#60a020':'#e050e0'; let gg=ctx.createRadialGradient(e.x,e.y,e.radius*0.5,e.x,e.y,e.radius*2.4);gg.addColorStop(0,gc+'44');gg.addColorStop(1,gc+'00'); ctx.fillStyle=gg;ctx.beginPath();ctx.arc(e.x,e.y,e.radius*2.4,0,Math.PI*2);ctx.fill(); if(e.isMini){ ctx.strokeStyle=gc;ctx.lineWidth=2;ctx.globalAlpha=0.6+0.4*Math.sin(gameTime*3); ctx.beginPath();ctx.arc(e.x,e.y,e.radius+6,0,Math.PI*2);ctx.stroke(); ctx.globalAlpha=1; } }
+            const img=skinImgs[e.imgKey]; const emo=skinEmojis[e.imgKey];
+            if(img&&img.complete){ctx.drawImage(img,e.x-e.radius,e.y-e.radius,e.radius*2,e.radius*2);if(e.flashTimer>0){ctx.fillStyle='rgba(255,255,255,0.5)';ctx.beginPath();ctx.arc(e.x,e.y,e.radius,0,Math.PI*2);ctx.fill();}}
+            else if(emo){ ctx.font=`${Math.round(e.radius*1.7)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle'; ctx.fillText(emo,e.x,e.y+e.radius*0.05); if(e.flashTimer>0){ctx.globalAlpha=0.5;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(e.x,e.y,e.radius,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;} }
+            else{ ctx.fillStyle=e.flashTimer>0?'#fff':e.color;ctx.beginPath();ctx.arc(e.x,e.y,e.radius,0,Math.PI*2);ctx.fill(); if(e.beh==='boss'){ctx.strokeStyle='#ff6060';ctx.lineWidth=3;ctx.stroke();} if(e.beh==='bomber'){ctx.font=`bold ${e.radius}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#000';ctx.fillText('💣',e.x,e.y);} if(e.beh==='vampire'){ctx.globalAlpha=0.4;ctx.fillStyle='#cc44ff';ctx.beginPath();ctx.arc(e.x,e.y,e.radius*1.2,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;} if(e.beh==='necro'){ctx.fillStyle='#fff';ctx.font=`bold ${Math.round(e.radius*0.9)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('💀',e.x,e.y);} }
+            let hpPct=e.hp/e.maxHp;
+            if(hpPct<1){let bw=e.radius*2+4,bx=e.x-bw/2,by=e.y-e.radius-9;ctx.fillStyle='#2a2a2a';ctx.fillRect(bx,by,bw,4);ctx.fillStyle=hpPct>0.5?'#40d040':hpPct>0.25?'#d0c040':'#d04040';ctx.fillRect(bx,by,bw*Math.max(0,hpPct),4);}
+            ctx.restore();
+        });
+        let berserk=player._berserker&&player.hp/player.maxHp<0.3;
+        if(player.invTimer>0&&Math.floor(player.invTimer*20)%2===0) ctx.globalAlpha=0.45;
+        if(berserk){let bg=ctx.createRadialGradient(player.x,player.y,player.radius,player.x,player.y,player.radius*2.8);bg.addColorStop(0,'#ff400066');bg.addColorStop(1,'transparent');ctx.fillStyle=bg;ctx.beginPath();ctx.arc(player.x,player.y,player.radius*2.8,0,Math.PI*2);ctx.fill();}
+        let glowR=player.radius*2+4*Math.sin(player.glowAngle);
+        let pg=ctx.createRadialGradient(player.x,player.y,player.radius*0.5,player.x,player.y,glowR);pg.addColorStop(0,'#a080ff33');pg.addColorStop(1,'#a080ff00');
+        ctx.fillStyle=pg;ctx.beginPath();ctx.arc(player.x,player.y,glowR,0,Math.PI*2);ctx.fill();
+        const pimg=skinImgs.player; const pemo=skinEmojis.player;
+        if(pimg&&pimg.complete){ctx.drawImage(pimg,player.x-player.radius,player.y-player.radius,player.radius*2,player.radius*2);}
+        else if(pemo){ ctx.font=`${Math.round(player.radius*1.7)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle'; ctx.fillText(pemo,player.x,player.y+player.radius*0.05); }
+        else{ let grad=ctx.createRadialGradient(player.x,player.y,player.radius*0.25,player.x,player.y,player.radius*1.3);grad.addColorStop(0,'#f0e8ff');grad.addColorStop(0.55,'#9070e0');grad.addColorStop(1,'#180840'); ctx.fillStyle=grad;ctx.beginPath();ctx.arc(player.x,player.y,player.radius,0,Math.PI*2);ctx.fill(); ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(player.x-4,player.y-3,3,0,Math.PI*2);ctx.arc(player.x+4,player.y-3,3,0,Math.PI*2);ctx.fill(); ctx.fillStyle='#8040ff';ctx.beginPath();ctx.arc(player.x-4,player.y-3,1.5,0,Math.PI*2);ctx.arc(player.x+4,player.y-3,1.5,0,Math.PI*2);ctx.fill(); }
+        ctx.globalAlpha=1;
+        floatingTexts.forEach(ft=>{ctx.globalAlpha=ft.life/ft.maxLife;ctx.fillStyle=ft.col;ctx.font=`bold ${ft.size}px 'Segoe UI',sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor=ft.col;ctx.shadowBlur=8;ctx.fillText(ft.txt,ft.x,ft.y);ctx.shadowBlur=0;});ctx.globalAlpha=1;
+        ctx.restore();
+        if(warningActive){let pulse=0.22+0.15*Math.sin(t*10);ctx.fillStyle=`rgba(255,20,30,${pulse})`;ctx.fillRect(0,0,W,8);ctx.fillRect(0,H-8,W,8);ctx.fillRect(0,0,8,H);ctx.fillRect(W-8,0,8,H);}
+        if(player.hp/player.maxHp<0.25){let pulse=0.1+0.07*Math.sin(t*6);ctx.fillStyle=`rgba(180,0,0,${pulse})`;ctx.fillRect(0,0,W,H);}
+        if(berserk){ctx.strokeStyle='rgba(255,60,0,0.28)';ctx.lineWidth=6;ctx.strokeRect(0,0,W,H);}
+        if(synergyNotifTimer>0){
+            let a=Math.min(1,synergyNotifTimer)*0.95; ctx.globalAlpha=a;
+            ctx.fillStyle='rgba(60,0,80,0.9)';ctx.beginPath();ctx.roundRect(W/2-130,H/2-30,260,58,14);ctx.fill();
+            ctx.strokeStyle='#e040ff';ctx.lineWidth=2;ctx.stroke();
+            ctx.fillStyle='#ff80ff';ctx.font='bold 13px Segoe UI';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('✨ تآزر جديد!',W/2,H/2-10);
+            ctx.fillStyle='#fff';ctx.font='bold 15px Segoe UI';ctx.fillText(lastSynergyName,W/2,H/2+12);
+            ctx.globalAlpha=1;
+        }
+        if(activeSynergies.length>0){
+            ctx.globalAlpha=0.85;
+            activeSynergies.forEach((sid,i)=>{ let syn=SYNERGIES.find(s=>s.id===sid); if(!syn) return; ctx.fillStyle='rgba(40,0,60,0.9)';ctx.beginPath();ctx.roundRect(10+i*30,H-145,26,26,7);ctx.fill(); ctx.strokeStyle='#e040ff';ctx.lineWidth=1;ctx.stroke(); ctx.font='14px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle'; ctx.fillText(syn.icon,10+i*30+13,H-145+13); });
+            ctx.globalAlpha=1;
+        }
+    }
+
+    // ── عصا التحكم ──
+    const joyBase=document.getElementById('joystick-base'),joyThumb=document.getElementById('joystick-thumb');
+    const joyContainer=document.getElementById('joystick-container');
+    const joyPanel=document.getElementById('joy-panel');
+    const joySettingsBtn=document.getElementById('joy-settings-btn');
+    let joyPrefs = JSON.parse(localStorage.getItem('surv_joy')||'{"size":100,"thumbSize":40,"opacity":70,"sens":500,"pos":"br","color":"#c0a0ff","mode":"fixed"}');
+    let joyActive=false,joyVec={x:0,y:0},joyFloatOrigin={x:0,y:0};
+
+    function applyJoyPrefs(){
+        const s=joyPrefs.size, ts=joyPrefs.thumbSize, op=joyPrefs.opacity/100;
+        const half=Math.round(s/2), thumbOff=Math.round((s-ts)/2);
+        joyBase.style.width=s+'px'; joyBase.style.height=s+'px'; joyBase.style.opacity=op;
+        const cSize=s+24; joyContainer.style.width=cSize+'px'; joyContainer.style.height=cSize+'px';
+        joyThumb.style.width=ts+'px'; joyThumb.style.height=ts+'px';
+        joyThumb.style.left=thumbOff+'px'; joyThumb.style.top=thumbOff+'px';
+        joyThumb.style.background=joyPrefs.color+'dd'; joyThumb.style.borderColor=joyPrefs.color;
+        joyThumb.style.boxShadow=`0 0 12px ${joyPrefs.color}88`;
+        const hidden=joyPrefs.mode==='hidden'; joyContainer.style.display=hidden?'none':'flex'; joySettingsBtn.style.display=hidden?'none':'flex';
+        const positions={ br:{bottom:'90px',right:'14px',left:'auto',top:'auto'}, bl:{bottom:'90px',left:'14px',right:'auto',top:'auto'}, bc:{bottom:'90px',left:'50%',right:'auto',top:'auto',transform:'translateX(-50%)'}, mr:{bottom:'auto',top:'50%',right:'14px',left:'auto',transform:'translateY(-50%)'}, ml:{bottom:'auto',top:'50%',left:'14px',right:'auto',transform:'translateY(-50%)'}, mc:{bottom:'auto',top:'50%',left:'50%',right:'auto',transform:'translate(-50%,-50%)'}, };
+        const pos=positions[joyPrefs.pos]||positions.br;
+        Object.assign(joyContainer.style,{bottom:'',left:'',right:'',top:'',transform:'',...pos});
+        Object.assign(joySettingsBtn.style,{bottom:'',left:'',right:'',top:'',transform:'',...pos, bottom:pos.bottom?`calc(${pos.bottom} + ${cSize}px)`:'', right:pos.right, left:pos.left});
+        window._joyMax=Math.round(s/2-ts/3); window._joySens=joyPrefs.sens;
+    }
+    function resetThumb(){ const s=joyPrefs.size, ts=joyPrefs.thumbSize; joyThumb.style.left=Math.round((s-ts)/2)+'px'; joyThumb.style.top=Math.round((s-ts)/2)+'px'; }
+    function updateJoy(touch){
+        let br, cx, cy;
+        if(joyPrefs.mode==='float'){ cx=joyFloatOrigin.x; cy=joyFloatOrigin.y; br={left:cx-joyPrefs.size/2,top:cy-joyPrefs.size/2,width:joyPrefs.size,height:joyPrefs.size}; }
+        else { br=joyBase.getBoundingClientRect(); cx=br.left+br.width/2; cy=br.top+br.height/2; }
+        let dx=touch.clientX-cx, dy=touch.clientY-cy, dist=Math.hypot(dx,dy);
+        const jMax=window._joyMax||40; const ts=joyPrefs.thumbSize, s=joyPrefs.size, thumbOff=Math.round((s-ts)/2);
+        if(dist>jMax){dx=(dx/dist)*jMax;dy=(dy/dist)*jMax;}
+        joyThumb.style.left=(thumbOff+dx)+'px'; joyThumb.style.top=(thumbOff+dy)+'px';
+        const sens=window._joySens||500;
+        if(dist>5){ joyVec.x=dx/jMax; joyVec.y=dy/jMax; player.targetX=player.x+joyVec.x*sens; player.targetY=player.y+joyVec.y*sens; player.moving=true; }
+        else { joyVec.x=0; joyVec.y=0; player.moving=false; }
+    }
+    function handleJoyStart(e){ e.preventDefault(); e.stopPropagation(); joyActive=true; const t=e.touches?e.touches[0]:e; if(joyPrefs.mode==='float'){ const r=document.getElementById('game-container').getBoundingClientRect(); joyFloatOrigin.x=t.clientX; joyFloatOrigin.y=t.clientY; const left=t.clientX-r.left-joyPrefs.size/2; const top=t.clientY-r.top-joyPrefs.size/2; joyBase.style.position='absolute'; joyBase.style.left=left+'px'; joyBase.style.top=top+'px'; joyBase.style.visibility='visible'; } updateJoy(t); }
+    function handleJoyMove(e){if(!joyActive)return;e.preventDefault();e.stopPropagation();updateJoy(e.touches?e.touches[0]:e);}
+    function handleJoyEnd(e){ e.preventDefault(); e.stopPropagation(); joyActive=false; resetThumb(); joyVec.x=0; joyVec.y=0; player.moving=false; if(joyPrefs.mode==='float'){ joyBase.style.left=''; joyBase.style.top=''; } }
+    joyContainer.addEventListener('touchstart',handleJoyStart,{passive:false});
+    joyContainer.addEventListener('touchmove',handleJoyMove,{passive:false});
+    joyContainer.addEventListener('touchend',handleJoyEnd);
+    joyContainer.addEventListener('mousedown',handleJoyStart);
+    window.addEventListener('mousemove',e=>{if(joyActive){e.preventDefault();updateJoy(e);}});
+    window.addEventListener('mouseup',()=>{if(joyActive)handleJoyEnd({});});
+
+    joySettingsBtn.addEventListener('click',e=>{ e.stopPropagation(); joyPanel.classList.toggle('open'); syncJoyUI(); });
+    function syncJoyUI(){
+        document.getElementById('joy-size').value=joyPrefs.size; document.getElementById('joy-size-val').textContent=joyPrefs.size;
+        document.getElementById('joy-thumb-size').value=joyPrefs.thumbSize; document.getElementById('joy-thumb-val').textContent=joyPrefs.thumbSize;
+        document.getElementById('joy-opacity').value=joyPrefs.opacity; document.getElementById('joy-opacity-val').textContent=joyPrefs.opacity+'%';
+        document.getElementById('joy-sens').value=joyPrefs.sens;
+        const sensLabel=['منخفض جداً','منخفض','متوسط','مرتفع','مرتفع جداً','أقصى'];
+        document.getElementById('joy-sens-val').textContent=sensLabel[Math.round((joyPrefs.sens-200)/140)]||'متوسط';
+        document.querySelectorAll('.joy-pos-btn').forEach(b=>b.classList.toggle('active',b.dataset.pos===joyPrefs.pos));
+        document.querySelectorAll('.joy-color-dot').forEach(d=>d.classList.toggle('active',d.dataset.color===joyPrefs.color));
+        document.querySelectorAll('.joy-toggle-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===joyPrefs.mode));
+        const sjs=document.getElementById('set-joy-size'), sjsv=document.getElementById('set-joy-size-val');
+        if(sjs){ sjs.value=joyPrefs.size; sjsv.textContent=joyPrefs.size; }
+    }
+    function saveJoy(){ localStorage.setItem('surv_joy',JSON.stringify(joyPrefs)); applyJoyPrefs(); syncJoyUI(); }
+    document.getElementById('joy-size').addEventListener('input',function(){ joyPrefs.size=parseInt(this.value); document.getElementById('joy-size-val').textContent=this.value; if(joyPrefs.thumbSize>joyPrefs.size*0.55) joyPrefs.thumbSize=Math.round(joyPrefs.size*0.45); saveJoy(); });
+    document.getElementById('joy-thumb-size').addEventListener('input',function(){ joyPrefs.thumbSize=Math.min(parseInt(this.value),Math.round(joyPrefs.size*0.7)); document.getElementById('joy-thumb-val').textContent=joyPrefs.thumbSize; saveJoy(); });
+    document.getElementById('joy-opacity').addEventListener('input',function(){ joyPrefs.opacity=parseInt(this.value); document.getElementById('joy-opacity-val').textContent=this.value+'%'; saveJoy(); });
+    document.getElementById('joy-sens').addEventListener('input',function(){ joyPrefs.sens=parseInt(this.value); const sensLabel=['منخفض جداً','منخفض','متوسط','مرتفع','مرتفع جداً','أقصى']; document.getElementById('joy-sens-val').textContent=sensLabel[Math.round((joyPrefs.sens-200)/140)]||'متوسط'; saveJoy(); });
+    document.querySelectorAll('.joy-pos-btn').forEach(b=>b.addEventListener('click',()=>{ joyPrefs.pos=b.dataset.pos; saveJoy(); }));
+    document.querySelectorAll('.joy-color-dot').forEach(d=>d.addEventListener('click',()=>{ joyPrefs.color=d.dataset.color; saveJoy(); }));
+    document.querySelectorAll('.joy-toggle-btn').forEach(b=>b.addEventListener('click',()=>{ joyPrefs.mode=b.dataset.mode; saveJoy(); joyPanel.classList.remove('open'); setTimeout(()=>{ if(joyPrefs.mode!=='hidden') joyPanel.classList.add('open'); },100); }));
+    applyJoyPrefs();
+
+    // ── الإعدادات ──
+    function syncSettingsUI(){
+        const sv=document.getElementById('set-volume'), svv=document.getElementById('set-volume-val');
+        if(sv){ sv.value=Math.round(masterVolume*100); svv.textContent=Math.round(masterVolume*100)+'%'; }
+        const son=document.getElementById('set-music-on'), soff=document.getElementById('set-music-off');
+        if(son){ son.classList.toggle('active',musicEnabled); soff.classList.toggle('active',!musicEnabled); }
+        const sjs=document.getElementById('set-joy-size'), sjsv=document.getElementById('set-joy-size-val');
+        if(sjs){ sjs.value=joyPrefs.size; sjsv.textContent=joyPrefs.size; }
+    }
+    const setVolumeEl=document.getElementById('set-volume');
+    if(setVolumeEl) setVolumeEl.addEventListener('input',function(){ masterVolume=parseInt(this.value)/100; document.getElementById('set-volume-val').textContent=this.value+'%'; localStorage.setItem('surv_volume',masterVolume); if(musicMasterGain) musicMasterGain.gain.value=0.04*masterVolume; if(masterVolume>0&&!audioCtx) initAudio(); });
+    const setMusicOnEl=document.getElementById('set-music-on'), setMusicOffEl=document.getElementById('set-music-off');
+    if(setMusicOnEl) setMusicOnEl.addEventListener('click',()=>{ if(!musicEnabled) toggleMusic(); syncSettingsUI(); });
+    if(setMusicOffEl) setMusicOffEl.addEventListener('click',()=>{ if(musicEnabled) toggleMusic(); syncSettingsUI(); });
+    const setJoySizeEl=document.getElementById('set-joy-size');
+    if(setJoySizeEl) setJoySizeEl.addEventListener('input',function(){ joyPrefs.size=parseInt(this.value); document.getElementById('set-joy-size-val').textContent=this.value; if(joyPrefs.thumbSize>joyPrefs.size*0.55) joyPrefs.thumbSize=Math.round(joyPrefs.size*0.45); saveJoy(); });
+    syncSettingsUI();
+
+    function inputPos(e){const r=canvas.getBoundingClientRect();let cx,cy;if(e.touches){cx=e.touches[0].clientX;cy=e.touches[0].clientY;}else{cx=e.clientX;cy=e.clientY;}return{x:(cx-r.left)/r.width*W+camera.x,y:(cy-r.top)/r.height*H+camera.y};}
+    canvas.addEventListener('mousedown',e=>{if(state===GAME_STATES.PLAYING||state===GAME_STATES.PAUSED){let p=inputPos(e);player.targetX=p.x;player.targetY=p.y;player.moving=true;if(state===GAME_STATES.PAUSED)state=GAME_STATES.PLAYING;}});
+    canvas.addEventListener('mousemove',e=>{if((state===GAME_STATES.PLAYING||state===GAME_STATES.PAUSED)&&e.buttons===1){let p=inputPos(e);player.targetX=p.x;player.targetY=p.y;player.moving=true;}});
+    canvas.addEventListener('mouseup',()=>{if(!joyActive)player.moving=false;});
+    canvas.addEventListener('touchstart',e=>{if(e.target.closest('#joystick-container'))return;e.preventDefault();if(state===GAME_STATES.PLAYING||state===GAME_STATES.PAUSED){let p=inputPos(e);player.targetX=p.x;player.targetY=p.y;player.moving=true;if(state===GAME_STATES.PAUSED)state=GAME_STATES.PLAYING;}},{passive:false});
+    canvas.addEventListener('touchmove',e=>{if(joyActive)return;e.preventDefault();if(state===GAME_STATES.PLAYING||state===GAME_STATES.PAUSED){let p=inputPos(e);player.targetX=p.x;player.targetY=p.y;player.moving=true;}},{passive:false});
+    canvas.addEventListener('touchend',()=>{if(!joyActive)player.moving=false;});
+    canvas.addEventListener('contextmenu',e=>{e.preventDefault();if(player.dashTimer<=0&&!player.dashActive){player.dashActive=true;player.dashTimer=0.1;player.invTimer=0.1;dashCount++;playSFX('dash');spawnParticles(player.x,player.y,'#c0a0ff',8,200,0.3);}});
+
+    // ── القوائم ──
+    function switchMenuPanel(panel){
+        document.querySelectorAll('.mnav-btn').forEach(b=>b.classList.toggle('active',b.dataset.panel===panel));
+        document.querySelectorAll('.menu-panel').forEach(p=>p.classList.remove('active-panel'));
+        const target=document.getElementById('menu-panel-'+panel); if(target) target.classList.add('active-panel');
+        if(panel==='achievements'){renderAchList();}
+        if(panel==='arcapedia'){renderArcapedia('spells');}
+        if(panel==='challenges'){renderChallenges();}
+        if(panel==='history'){renderHistory();}
+        if(panel==='settings'){syncSettingsUI();}
+        const mgv=document.getElementById('menu-gold-val'); if(mgv) mgv.textContent=permGold;
+    }
+    document.querySelectorAll('.mnav-btn').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.panel) switchMenuPanel(b.dataset.panel); }));
+    const _mgv=document.getElementById('menu-gold-val'); if(_mgv) _mgv.textContent=permGold;
+    document.addEventListener('click',e=>{if(e.target.classList.contains('arc-tab'))renderArcapedia(e.target.dataset.arc);});
+
+    document.getElementById('start-btn').onclick=()=>{
+        document.getElementById('start-screen').style.display='none';
+        resetPlayer();enemies=[];projectiles=[];aoes=[];xpOrbs=[];chests=[];particles=[];healthPickups=[];floatingTexts=[];orbSpirits=[];
+        waveTimer=0;bossFlags=[false,false,false,false,false];gameTime=0;totalKills=0;goldEarned=0;roundAch={};player._nearDeath=0;killStreak=0;bossKills=0;streakTimer=0;
+        currentWave=1;runScore=0;_phoenixTriggered=false;fullHpTimer=0;miniBossKills=0;dashCount=0;chestsOpened=0;damageTaken=0;firstMinKills=0;
+        rerolls=2+(permUp.rerolls||0);
+        SYNERGIES.forEach(s=>s.active=false); activeSynergies=[]; synergyNotifTimer=0; miniBossTimer=120; miniBossCount=0;
+        generateMap();
+        state=GAME_STATES.PLAYING;updateUI();initAudio();if(musicEnabled)startMusic();
+    };
+    document.getElementById('restart-btn').onclick=()=>{document.getElementById('game-over-overlay').classList.remove('show');state=GAME_STATES.START;document.getElementById('start-screen').style.display='flex';updatePermButtons();renderAchList();renderHistory();stopMusic();switchMenuPanel('play');};
+    document.getElementById('pause-btn').onclick=()=>{if(state===GAME_STATES.PLAYING)state=GAME_STATES.PAUSED;else if(state===GAME_STATES.PAUSED)state=GAME_STATES.PLAYING;};
+    document.querySelectorAll('.class-card').forEach(c=>c.onclick=()=>{document.querySelectorAll('.class-card').forEach(x=>x.classList.remove('selected'));c.classList.add('selected');selectedClass=c.dataset.class;});
+    document.querySelectorAll('.perm-btn-card').forEach(b=>b.onclick=()=>{
+        let up=b.dataset.upgrade;
+        const baseCosts={attack:150,hp:150,cdr:200,speed:150,crit:220,xpboost:250,dashcd:180,rerolls:300};
+        const maxL={attack:8,hp:8,cdr:8,speed:8,crit:8,xpboost:5,dashcd:5,rerolls:4};
+        let lvl=permUp[up]||0;
+        let cost=Math.round(baseCosts[up]*Math.pow(1.6,lvl));
+        if(permGold>=cost&&lvl<(maxL[up]||8)){permGold-=cost;permUp[up]=lvl+1;localStorage.setItem('surv_gold',permGold);localStorage.setItem('surv_up',JSON.stringify(permUp));updatePermButtons();}
+    });
+    function updatePermButtons(){
+        const baseCosts={attack:150,hp:150,cdr:200,speed:150,crit:220,xpboost:250,dashcd:180,rerolls:300};
+        const maxL={attack:8,hp:8,cdr:8,speed:8,crit:8,xpboost:5,dashcd:5,rerolls:4};
+        document.querySelectorAll('.perm-btn-card').forEach(b=>{ let up=b.dataset.upgrade, lvl=permUp[up]||0; const lvlEl=document.getElementById('plvl-'+up); const costEl=document.getElementById('pcost-'+up); if(lvlEl) lvlEl.textContent='مستوى '+lvl+'/'+(maxL[up]||8); if(costEl){ if(lvl>=(maxL[up]||8)){costEl.textContent='MAX';b.style.opacity='0.5';}else{costEl.textContent=Math.round(baseCosts[up]*Math.pow(1.6,lvl));b.style.opacity='1';} } });
+        document.getElementById('gold-display').textContent='💰 ذهب: '+permGold;
+        const mgv=document.getElementById('menu-gold-val'); if(mgv) mgv.textContent=permGold;
+    }
+
+    function buildSkinUI(){
+        const c=document.getElementById('skins-container');c.innerHTML='';
+        const defaultEmoji={player:'🧙',ghost:'👻',golem:'🗿',wolf:'🐺',archer:'🏹',boss:'👑',elite:'💜',lich:'☠️',bomber:'💣',vampire:'🦇',sentinel:'🛡️'};
+        const labels={player:'لاعب',ghost:'شبح',golem:'غولم',wolf:'ذئب',archer:'رامي',boss:'زعيم',elite:'نخبة',lich:'ليتش',bomber:'مفجر',vampire:'مصاص',sentinel:'حارس'};
+        Object.keys(skinImgs).forEach(key=>{
+            let row=document.createElement('div');row.className='skin-upload';
+            let label=document.createElement('span');label.className='skin-label';label.textContent=labels[key]||key;
+            let prev=document.createElement('div');prev.className='skin-preview-emoji';
+            function refreshPreview(){
+                if(skinImgs[key]&&skinImgs[key].src){ prev.style.backgroundImage="url('"+skinImgs[key].src+"')"; prev.style.backgroundSize='cover';prev.style.backgroundPosition='center'; prev.textContent='';prev.style.opacity='1'; }
+                else if(skinEmojis[key]){ prev.style.backgroundImage='';prev.textContent=skinEmojis[key];prev.style.opacity='1'; }
+                else { prev.style.backgroundImage='';prev.textContent=defaultEmoji[key]||'❔';prev.style.opacity='0.35'; }
+            }
+            refreshPreview();
+            let controls=document.createElement('div');controls.className='skin-controls';
+            let btn=document.createElement('button');btn.textContent='🖼 PNG';
+            let inp=document.createElement('input');inp.type='file';inp.accept='image/png';inp.style.display='none';
+            inp.onchange=e=>{ let f=e.target.files[0];if(!f)return; let reader=new FileReader(); reader.onload=ev=>{ let img=new Image();img.src=ev.target.result; img.onload=()=>{skinImgs[key]=img;skinEmojis[key]=null;saveSkins();saveSkinEmojis();emojiInput.value='';refreshPreview();}; }; reader.readAsDataURL(f); };
+            btn.onclick=()=>inp.click();
+            let emojiInput=document.createElement('input');emojiInput.type='text';emojiInput.className='skin-emoji-input';emojiInput.maxLength=4;emojiInput.placeholder='🙂';
+            if(skinEmojis[key])emojiInput.value=skinEmojis[key];
+            let emojiBtn=document.createElement('button');emojiBtn.textContent='تطبيق';
+            emojiBtn.onclick=()=>{ let val=emojiInput.value.trim(); if(!val)return; skinEmojis[key]=val;skinImgs[key]=null;saveSkins();saveSkinEmojis();refreshPreview(); };
+            let clearBtn=document.createElement('button');clearBtn.className='skin-clear-btn';clearBtn.textContent='✕';clearBtn.title='إعادة الافتراضي';
+            clearBtn.onclick=()=>{ skinImgs[key]=null;skinEmojis[key]=null;emojiInput.value='';saveSkins();saveSkinEmojis();refreshPreview(); };
+            controls.appendChild(btn);controls.appendChild(inp);controls.appendChild(emojiInput);controls.appendChild(emojiBtn);controls.appendChild(clearBtn);
+            row.appendChild(label);row.appendChild(prev);row.appendChild(controls);
+            c.appendChild(row);
+        });
+    }
+    loadSkins();buildSkinUI();updatePermButtons();renderAchList();renderChallenges();renderHistory();
+    achievements=JSON.parse(localStorage.getItem('surv_ach')||'{}');
+
+    let fpsFrames=0,fpsTime=0,fpsVal=0;
+    function gameLoop(ts){requestAnimationFrame(gameLoop);if(!lastT)lastT=ts;let dt=(ts-lastT)/1000;lastT=ts;if(dt>0.2)dt=0.2;
+        fpsFrames++;fpsTime+=dt;if(fpsTime>=1){fpsVal=fpsFrames;fpsFrames=0;fpsTime=0;const fe=document.getElementById('fps-counter');if(fe)fe.textContent=fpsVal+' fps';}
+        if(state===GAME_STATES.PLAYING)update(dt);draw();}
+    let lastT=0;
+    requestAnimationFrame(gameLoop);
+})();
+</script>
+</body>
+</html>

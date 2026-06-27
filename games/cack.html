@@ -1,0 +1,2586 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CyberHack PRO - الإصدار المتطور</title>
+    <style>
+        /* ============================================================
+           CYBERHACK PRO - الإصدار المتطور مع كل الميزات
+           ============================================================ */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        :root {
+            --green: #00ff41;
+            --dark: #0a0e0a;
+            --darker: #050805;
+            --panel: #0d120d;
+            --red: #ff0040;
+            --yellow: #ffcc00;
+            --blue: #44aaff;
+            --purple: #cc66ff;
+            --orange: #ff8800;
+            --pink: #ff66aa;
+            --font: 'Courier New', monospace;
+            --touch-size: 44px;
+            --transition: 0.3s ease;
+        }
+        body {
+            font-family: var(--font);
+            background: var(--dark);
+            color: var(--green);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        ::selection {
+            background: var(--green);
+            color: var(--dark);
+        }
+        ::-webkit-scrollbar {
+            width: 3px;
+            height: 3px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--darker);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--green);
+            border-radius: 3px;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            max-height: 100vh;
+            background: var(--panel);
+            border: 1px solid var(--green);
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--green);
+            padding-bottom: 4px;
+            margin-bottom: 4px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 2px;
+        }
+        .header h1 {
+            font-size: 0.85rem;
+            text-shadow: 0 0 15px var(--green);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .header h1 .blink-cursor {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+        .header .status-indicators {
+            display: flex;
+            gap: 4px;
+            font-size: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .header .status-indicators span {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .dot {
+            display: inline-block;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            animation: pulse 1.8s infinite;
+        }
+        .dot.green {
+            background: var(--green);
+            box-shadow: 0 0 6px var(--green);
+        }
+        .dot.yellow {
+            background: var(--yellow);
+            box-shadow: 0 0 6px var(--yellow);
+            animation-delay: 0.6s;
+        }
+        .dot.red {
+            background: var(--red);
+            box-shadow: 0 0 6px var(--red);
+            animation-delay: 1.2s;
+        }
+        .dot.purple {
+            background: var(--purple);
+            box-shadow: 0 0 6px var(--purple);
+            animation-delay: 0.3s;
+        }
+        .dot.orange {
+            background: var(--orange);
+            box-shadow: 0 0 6px var(--orange);
+            animation-delay: 0.9s;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.3;
+                transform: scale(0.8);
+            }
+        }
+
+        /* TOP BAR - XP & Level */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.55rem;
+            border-bottom: 1px solid #1a3a1a;
+            padding-bottom: 3px;
+            margin-bottom: 3px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        .top-bar .level-display {
+            color: var(--purple);
+            font-weight: bold;
+        }
+        .top-bar .xp-bar {
+            flex: 1;
+            min-width: 60px;
+            height: 4px;
+            background: #0a1a0a;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .top-bar .xp-bar .xp-fill {
+            height: 100%;
+            background: var(--yellow);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 2px;
+        }
+        .top-bar .coins-display {
+            color: var(--yellow);
+        }
+        .top-bar .reputation-display {
+            color: var(--blue);
+        }
+
+        /* MAIN */
+        .main-area {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 3px;
+            min-height: 0;
+        }
+
+        /* TERMINAL */
+        .terminal-wrap {
+            display: flex;
+            flex-direction: column;
+            flex: 3;
+            min-height: 60px;
+        }
+        .terminal {
+            flex: 1;
+            background: var(--darker);
+            border: 1px solid var(--green);
+            border-radius: 4px;
+            padding: 6px;
+            overflow-y: auto;
+            font-size: 0.65rem;
+            line-height: 1.5;
+            min-height: 50px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .terminal .line {
+            opacity: 0;
+            animation: fadeIn 0.2s forwards;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .terminal .line.system {
+            color: #66ff88;
+        }
+        .terminal .line.error {
+            color: var(--red);
+        }
+        .terminal .line.success {
+            color: #00ff88;
+            font-weight: bold;
+        }
+        .terminal .line.warning {
+            color: var(--yellow);
+        }
+        .terminal .line.info {
+            color: var(--blue);
+        }
+        .terminal .line.highlight {
+            color: var(--purple);
+            text-shadow: 0 0 8px var(--purple);
+        }
+        .terminal .line.dim {
+            color: #335533;
+        }
+        .terminal .line.ascii {
+            color: var(--green);
+            text-shadow: 0 0 6px var(--green);
+            font-size: 0.45rem;
+            line-height: 1.1;
+            white-space: pre;
+        }
+        .terminal .line.achievement {
+            color: var(--orange);
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--orange);
+        }
+        .terminal .line.mission {
+            color: var(--pink);
+        }
+        .terminal .line.gold {
+            color: var(--orange);
+            font-weight: bold;
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* NETWORK MAP */
+        .network-panel {
+            flex: 0 0 auto;
+            background: var(--darker);
+            border: 1px solid var(--green);
+            border-radius: 4px;
+            padding: 3px;
+            max-height: 60px;
+        }
+        .network-panel h3 {
+            text-align: center;
+            font-size: 0.45rem;
+            color: #559955;
+            border-bottom: 1px solid #1a3a1a;
+            padding-bottom: 2px;
+            margin-bottom: 2px;
+            letter-spacing: 1px;
+        }
+        .network-map {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 2px;
+            height: 100%;
+            min-height: 35px;
+        }
+        .net-node {
+            background: #0a1a0a;
+            border: 1px solid #1a3a1a;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.5rem;
+            color: #335533;
+            transition: all var(--transition);
+            min-height: 18px;
+            touch-action: manipulation;
+            cursor: default;
+        }
+        .net-node.active {
+            border-color: var(--green);
+            color: var(--green);
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.15);
+        }
+        .net-node.compromised {
+            border-color: var(--red);
+            color: var(--red);
+            box-shadow: 0 0 10px rgba(255, 0, 64, 0.2);
+            animation: pulseNode 1.5s infinite;
+        }
+        .net-node.target {
+            border-color: var(--yellow);
+            color: var(--yellow);
+            box-shadow: 0 0 12px rgba(255, 204, 0, 0.2);
+            animation: pulseNode 0.8s infinite;
+        }
+        @keyframes pulseNode {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            flex: 0 0 auto;
+            background: var(--darker);
+            border: 1px solid var(--green);
+            border-radius: 4px;
+            padding: 3px 5px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1px 4px;
+            font-size: 0.5rem;
+            max-height: 42px;
+            overflow: hidden;
+        }
+        .sidebar .stat-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            white-space: nowrap;
+        }
+        .sidebar .stat-item .label {
+            color: #559955;
+            font-size: 0.45rem;
+        }
+        .sidebar .stat-item .value {
+            color: var(--green);
+            font-weight: bold;
+            font-size: 0.55rem;
+        }
+        .sidebar .stat-item .value.danger {
+            color: var(--red);
+        }
+        .sidebar .stat-item .value.warn {
+            color: var(--yellow);
+        }
+        .sidebar .stat-item .value.gold {
+            color: var(--orange);
+        }
+        .sidebar .progress-bar {
+            width: 40px;
+            height: 4px;
+            background: #0a1a0a;
+            border-radius: 2px;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .sidebar .progress-bar .fill {
+            height: 100%;
+            background: var(--green);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 2px;
+        }
+        .sidebar .progress-bar .fill.red {
+            background: var(--red);
+        }
+        .sidebar .progress-bar .fill.yellow {
+            background: var(--yellow);
+        }
+        .sidebar .stealth-meter {
+            display: inline-flex;
+            gap: 1px;
+            align-items: center;
+        }
+        .sidebar .stealth-meter .bar {
+            width: 3px;
+            height: 5px;
+            background: #0a1a0a;
+            border-radius: 1px;
+            transition: background 0.3s;
+        }
+        .sidebar .stealth-meter .bar.active {
+            background: var(--green);
+        }
+        .sidebar .stealth-meter .bar.warn {
+            background: var(--yellow);
+        }
+        .sidebar .stealth-meter .bar.danger {
+            background: var(--red);
+        }
+
+        /* COMMAND AREA */
+        .command-area {
+            display: flex;
+            gap: 3px;
+            margin-top: 3px;
+            border-top: 1px solid var(--green);
+            padding-top: 3px;
+            flex-shrink: 0;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .command-area .prompt {
+            color: var(--green);
+            font-weight: bold;
+            font-size: 0.65rem;
+            white-space: nowrap;
+        }
+        .command-area .prompt .user {
+            color: var(--purple);
+        }
+        .command-area .prompt .at {
+            color: #559955;
+        }
+        .command-area .prompt .host {
+            color: var(--yellow);
+        }
+        .command-area .input-wrap {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: var(--darker);
+            border: 1px solid var(--green);
+            border-radius: 4px;
+            padding: 0 4px;
+            min-width: 0;
+        }
+        .command-area .input-wrap input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--green);
+            font-family: var(--font);
+            font-size: 0.75rem;
+            outline: none;
+            caret-color: var(--green);
+            min-height: 32px;
+            padding: 2px 0;
+            width: 100%;
+        }
+        .command-area .input-wrap input::placeholder {
+            color: #1a3a1a;
+            font-size: 0.55rem;
+        }
+        .command-area .send-btn {
+            background: var(--green);
+            color: var(--dark);
+            border: none;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-family: var(--font);
+            font-weight: bold;
+            font-size: 0.7rem;
+            min-height: 32px;
+            min-width: 32px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .command-area .send-btn:active {
+            opacity: 0.6;
+        }
+        .command-area .toggle-btn {
+            background: transparent;
+            border: 1px solid #335533;
+            border-radius: 4px;
+            color: #559955;
+            padding: 2px 5px;
+            font-size: 0.6rem;
+            min-height: 32px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .command-area .toggle-btn:active {
+            opacity: 0.6;
+        }
+        .command-area .theme-btn {
+            background: transparent;
+            border: 1px solid #335533;
+            border-radius: 4px;
+            color: #559955;
+            padding: 2px 5px;
+            font-size: 0.6rem;
+            min-height: 32px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .command-area .theme-btn:active {
+            opacity: 0.6;
+        }
+
+        /* GLITCH */
+        .glitch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+            background: rgba(0, 255, 65, 0.02);
+            opacity: 0;
+            transition: opacity 0.05s;
+        }
+        .glitch-overlay.active {
+            opacity: 1;
+            animation: glitchAnim 0.4s ease-in-out;
+        }
+        @keyframes glitchAnim {
+            0% {
+                background: rgba(0, 255, 65, 0.08);
+                transform: translate(0);
+            }
+            15% {
+                background: rgba(255, 0, 64, 0.06);
+                transform: translate(-3px);
+            }
+            30% {
+                background: rgba(0, 255, 65, 0.08);
+                transform: translate(3px);
+            }
+            45% {
+                background: rgba(255, 0, 64, 0.06);
+                transform: translate(-1px);
+            }
+            60% {
+                background: rgba(0, 255, 65, 0.08);
+                transform: translate(1px);
+            }
+            100% {
+                background: rgba(0, 255, 65, 0.02);
+                transform: translate(0);
+            }
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: repeating-linear-gradient(0deg,
+                    rgba(0, 0, 0, 0) 0px,
+                    rgba(0, 0, 0, 0) 2px,
+                    rgba(0, 255, 65, 0.005) 2px,
+                    rgba(0, 255, 65, 0.005) 3px);
+            opacity: 0.15;
+        }
+
+        /* Panels - اصلاح */
+        .panel-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 998;
+            justify-content: center;
+            align-items: center;
+        }
+        .panel-overlay.show {
+            display: flex;
+        }
+
+        .panel-box {
+            background: var(--panel);
+            border: 2px solid var(--green);
+            border-radius: 8px;
+            padding: 15px;
+            max-width: 90%;
+            width: 350px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 0 50px rgba(0, 255, 65, 0.2);
+            z-index: 999;
+        }
+        .panel-box h3 {
+            color: var(--green);
+            text-align: center;
+            border-bottom: 1px solid var(--green);
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+        .panel-box .close-btn {
+            display: block;
+            margin: 10px auto 0;
+            background: var(--green);
+            color: var(--dark);
+            border: none;
+            border-radius: 4px;
+            padding: 6px 20px;
+            font-family: var(--font);
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .panel-box .close-btn:active {
+            opacity: 0.6;
+        }
+        .panel-box .item {
+            border-bottom: 1px solid #1a3a1a;
+            padding: 4px 0;
+            font-size: 0.65rem;
+        }
+        .panel-box .item.unlocked {
+            color: var(--orange);
+        }
+        .panel-box .item.locked {
+            color: #335533;
+        }
+        .panel-box .mission-item {
+            border-bottom: 1px solid #1a3a1a;
+            padding: 6px 0;
+            font-size: 0.65rem;
+        }
+        .panel-box .mission-item .mission-name {
+            color: var(--yellow);
+        }
+        .panel-box .mission-item .mission-progress {
+            color: #559955;
+            font-size: 0.55rem;
+        }
+        .panel-box .shop-item {
+            border-bottom: 1px solid #1a3a1a;
+            padding: 6px 0;
+            font-size: 0.6rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .panel-box .shop-item .buy-btn {
+            background: var(--green);
+            color: var(--dark);
+            border: none;
+            border-radius: 3px;
+            padding: 2px 10px;
+            font-family: var(--font);
+            font-size: 0.55rem;
+            cursor: pointer;
+            touch-action: manipulation;
+            min-height: 28px;
+        }
+        .panel-box .shop-item .buy-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .panel-box .shop-item .buy-btn:active {
+            opacity: 0.6;
+        }
+
+        /* Responsive */
+        @media (max-width: 400px) {
+            .header h1 {
+                font-size: 0.65rem;
+            }
+            .header .status-indicators {
+                font-size: 0.4rem;
+                gap: 2px;
+            }
+            .top-bar {
+                font-size: 0.45rem;
+            }
+            .terminal {
+                font-size: 0.55rem;
+                padding: 4px;
+            }
+            .network-panel {
+                max-height: 50px;
+            }
+            .network-map {
+                grid-template-columns: repeat(4, 1fr);
+                grid-template-rows: repeat(3, 1fr);
+                gap: 1px;
+                min-height: 30px;
+            }
+            .net-node {
+                font-size: 0.4rem;
+                min-height: 15px;
+            }
+            .sidebar {
+                font-size: 0.4rem;
+                padding: 2px 3px;
+                max-height: 35px;
+            }
+            .sidebar .progress-bar {
+                width: 30px;
+            }
+            .sidebar .stealth-meter .bar {
+                width: 2px;
+                height: 4px;
+            }
+            .command-area .prompt {
+                font-size: 0.5rem;
+            }
+            .command-area .input-wrap input {
+                font-size: 0.6rem;
+                min-height: 28px;
+            }
+            .command-area .send-btn {
+                font-size: 0.55rem;
+                min-height: 28px;
+                min-width: 28px;
+                padding: 2px 5px;
+            }
+            .command-area .toggle-btn,
+            .command-area .theme-btn {
+                font-size: 0.45rem;
+                min-height: 28px;
+                padding: 2px 4px;
+            }
+            .panel-box {
+                padding: 10px;
+                width: 92%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="glitch-overlay" id="glitchOverlay"></div>
+
+    <!-- Panels -->
+    <div class="panel-overlay" id="missionsOverlay">
+        <div class="panel-box">
+            <h3>📋 المهام اليومية</h3>
+            <div id="missionsList"></div>
+            <button class="close-btn" onclick="closePanel('missionsOverlay')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="panel-overlay" id="achievementsOverlay">
+        <div class="panel-box">
+            <h3>🏆 الإنجازات</h3>
+            <div id="achievementsList"></div>
+            <button class="close-btn" onclick="closePanel('achievementsOverlay')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="panel-overlay" id="shopOverlay">
+        <div class="panel-box">
+            <h3>🛒 السوق السوداء</h3>
+            <div id="shopList"></div>
+            <button class="close-btn" onclick="closePanel('shopOverlay')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- HEADER -->
+        <div class="header">
+            <h1>⬢ CYBERHACK <span class="blink-cursor">█</span></h1>
+            <div class="status-indicators">
+                <span><span class="dot green"></span> SYS</span>
+                <span><span class="dot yellow"></span> NET</span>
+                <span><span class="dot red"></span> TGT</span>
+                <span><span class="dot purple"></span> STL</span>
+                <span><span class="dot orange"></span> REP</span>
+                <span id="timerDisplay">⏱ 00:00</span>
+            </div>
+        </div>
+
+        <!-- TOP BAR -->
+        <div class="top-bar">
+            <span class="level-display">🏅 Lv.<span id="levelDisplay">1</span></span>
+            <span class="xp-bar"><span class="xp-fill" id="xpFill"></span></span>
+            <span id="xpDisplay">0/100 XP</span>
+            <span class="coins-display">🪙 <span id="coinsDisplay">0</span></span>
+            <span class="reputation-display">⭐ <span id="reputationDisplay">محايد</span></span>
+        </div>
+
+        <!-- MAIN -->
+        <div class="main-area">
+
+            <!-- TERMINAL -->
+            <div class="terminal-wrap">
+                <div class="terminal" id="terminal"></div>
+            </div>
+
+            <!-- NETWORK MAP -->
+            <div class="network-panel">
+                <h3>🌐 MAP</h3>
+                <div class="network-map" id="networkMap"></div>
+            </div>
+
+            <!-- SIDEBAR -->
+            <div class="sidebar" id="sidebar">
+                <div class="stat-item">
+                    <span class="label">المرحلة</span>
+                    <span class="value" id="phaseDisplay">بدء</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">التقدم</span>
+                    <span class="value" id="progressDisplay">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="fill" id="progressFill"></div>
+                </div>
+                <div class="stat-item">
+                    <span class="label">الهدف</span>
+                    <span class="value" id="targetDisplay">GLOBAL</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">الجدار</span>
+                    <span class="value" id="firewallDisplay">نشط</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">التخفي</span>
+                    <span class="value" id="stealthDisplay">100%</span>
+                </div>
+                <div class="stealth-meter" id="stealthMeter">
+                    <div class="bar active"></div>
+                    <div class="bar active"></div>
+                    <div class="bar active"></div>
+                    <div class="bar active"></div>
+                    <div class="bar active"></div>
+                    <div class="bar active"></div>
+                    <div class="bar active"></div>
+                    <div class="bar active"></div>
+                    <div class="bar active"></div>
+                    <div class="bar active"></div>
+                </div>
+                <div class="stat-item">
+                    <span class="label">الأوامر</span>
+                    <span class="value" id="cmdCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMMAND -->
+        <div class="command-area">
+            <span class="prompt">
+                <span class="user">h</span><span class="at">@</span><span class="host">c</span> ❯
+            </span>
+            <div class="input-wrap">
+                <input type="text" id="cmdInput" placeholder="أدخل أمر..." autofocus spellcheck="false" enterkeyhint="send">
+            </div>
+            <button class="send-btn" id="sendBtn">↵</button>
+            <button class="toggle-btn" id="toggleSoundBtn">🔊</button>
+            <button class="theme-btn" id="themeBtn">🎨</button>
+        </div>
+
+    </div>
+
+    <script>
+        // ================================================================
+        //  CYBERHACK PRO - الإصدار المتطور (مصحح)
+        // ================================================================
+
+        // ---------- DOM REFS ----------
+        const terminal = document.getElementById('terminal');
+        const cmdInput = document.getElementById('cmdInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const phaseDisplay = document.getElementById('phaseDisplay');
+        const progressDisplay = document.getElementById('progressDisplay');
+        const progressFill = document.getElementById('progressFill');
+        const targetDisplay = document.getElementById('targetDisplay');
+        const firewallDisplay = document.getElementById('firewallDisplay');
+        const stealthDisplay = document.getElementById('stealthDisplay');
+        const stealthMeter = document.getElementById('stealthMeter');
+        const cmdCountDisplay = document.getElementById('cmdCount');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const networkMap = document.getElementById('networkMap');
+        const glitchOverlay = document.getElementById('glitchOverlay');
+        const toggleSoundBtn = document.getElementById('toggleSoundBtn');
+        const themeBtn = document.getElementById('themeBtn');
+        const levelDisplay = document.getElementById('levelDisplay');
+        const xpFill = document.getElementById('xpFill');
+        const xpDisplay = document.getElementById('xpDisplay');
+        const coinsDisplay = document.getElementById('coinsDisplay');
+        const reputationDisplay = document.getElementById('reputationDisplay');
+
+        // ================================================================
+        //  STATE
+        // ================================================================
+        const state = {
+            phase: 0,
+            progress: 0,
+            target: 'GLOBALNET.SEC',
+            firewall: 'ACTIVE',
+            stealth: 100,
+            maxStealth: 100,
+            commandsUsed: 0,
+            sessionTime: 0,
+            timerInterval: null,
+            isHacking: false,
+            hackComplete: false,
+            compromised: [],
+            discovered: [],
+            currentDir: '/',
+            commandHistory: [],
+            historyIndex: -1,
+            alerts: 0,
+            maxAlerts: 5,
+            networkNodes: [],
+            soundEnabled: true,
+            glitchEnabled: true,
+
+            // النظام الجديد
+            level: 1,
+            xp: 0,
+            xpToNext: 100,
+            coins: 0,
+            reputation: 0,
+            reputationLevel: 'محايد',
+            skills: { hacking: 1, encryption: 1, networking: 1, social: 1 },
+            unlockedAchievements: [],
+            missions: [],
+            missionProgress: {},
+            shopItems: [],
+            inventory: [],
+            totalScans: 0,
+            totalExploits: 0,
+            totalCracks: 0,
+            totalSteals: 0,
+            totalHacks: 0,
+            gameStart: Date.now(),
+            lastDailyReset: Date.now(),
+            currentCity: 'نيويورك',
+            unlockedCities: ['نيويورك'],
+            theme: 'classic',
+            tools: { portScanner: false, passwordCracker: false, packetSniffer: false, exploitBuilder: false },
+            dailyMissionsGenerated: false,
+        };
+
+        // ================================================================
+        //  الثيمات
+        // ================================================================
+        const themes = {
+            classic: { green: '#00ff41', dark: '#0a0e0a', panel: '#0d120d' },
+            blue: { green: '#00bfff', dark: '#0a0e1a', panel: '#0d1220' },
+            purple: { green: '#cc66ff', dark: '#1a0a1a', panel: '#1a0d20' },
+            amber: { green: '#ffb000', dark: '#1a0e0a', panel: '#1a100d' },
+            pink: { green: '#ff66aa', dark: '#1a0a12', panel: '#1a0d14' },
+            cyan: { green: '#00ffcc', dark: '#0a1212', panel: '#0d1616' },
+        };
+
+        let currentTheme = 'classic';
+
+        function applyTheme(themeName) {
+            const theme = themes[themeName];
+            if (!theme) return;
+            currentTheme = themeName;
+            document.documentElement.style.setProperty('--green', theme.green);
+            document.documentElement.style.setProperty('--dark', theme.dark);
+            document.documentElement.style.setProperty('--panel', theme.panel);
+            print(`🎨 تم تطبيق ثيم: ${themeName}`, 'success');
+        }
+
+        // ================================================================
+        //  الملفات
+        // ================================================================
+        const fileSystem = {
+            '/': ['etc/', 'var/', 'home/', 'tmp/', 'root/', 'opt/', 'usr/'],
+            '/etc/': ['passwd', 'shadow', 'hosts', 'ssh/', 'nginx/', 'ssl/'],
+            '/var/': ['log/', 'www/', 'lib/', 'cache/', 'spool/'],
+            '/home/': ['user1/', 'admin/', 'guest/', 'developer/'],
+            '/root/': ['.bashrc', 'secret.txt', 'keys/', 'scripts/', 'backup/'],
+            '/opt/': ['app1/', 'app2/', 'tools/'],
+            '/usr/': ['bin/', 'lib/', 'local/', 'share/'],
+            '/etc/ssh/': ['sshd_config', 'host_key', 'authorized_keys'],
+            '/etc/nginx/': ['nginx.conf', 'sites-available/', 'sites-enabled/'],
+            '/root/keys/': ['id_rsa', 'id_rsa.pub', 'authorized_keys'],
+            '/root/scripts/': ['cleanup.sh', 'backup.sh', 'monitor.py'],
+            '/var/log/': ['syslog', 'auth.log', 'access.log', 'error.log'],
+        };
+
+        const fileContents = {
+            '/etc/passwd': 'root:x:0:0:root:/root:/bin/bash\nadmin:x:1000:1000:admin:/home/admin:/bin/bash',
+            '/etc/shadow': 'root:$2y$12$KxQk2qL8nM9zXyR7tUvW...:19000:0:99999:7:::',
+            '/root/secret.txt': '🔐 TOP SECRET - NIGHTFALL PROJECT\nStatus: ACTIVE\nClearance: LEVEL 5',
+            '/home/admin/.bashrc': 'alias ll="ls -la"\nexport PS1="\\u@\\h:\\w$ "',
+            '/var/log/syslog': 'Jun 18 10:23:45 kernel: Linux version 5.15.0',
+            '/etc/nginx/nginx.conf': 'user www-data;\nworker_processes auto;\nhttp {\n    server {\n        listen 80;\n    }\n}',
+            '/root/scripts/backup.sh': '#!/bin/bash\ntar -czf /backup/backup.tar.gz /var/www',
+        };
+
+        function getDirContents(path) {
+            const normalized = path.endsWith('/') ? path : path + '/';
+            if (fileSystem[normalized]) return fileSystem[normalized];
+            for (const key in fileSystem) {
+                if (path.startsWith(key)) return fileSystem[key];
+            }
+            return null;
+        }
+
+        function getFileContent(path) {
+            return fileContents[path] || null;
+        }
+
+        // ================================================================
+        //  TERMINAL FUNCTIONS
+        // ================================================================
+        function print(line, className = '') {
+            const div = document.createElement('div');
+            div.className = 'line ' + className;
+            div.textContent = line;
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function printAsync(lines, delay = 150) {
+            let i = 0;
+            return new Promise((resolve) => {
+                const interval = setInterval(() => {
+                    if (i >= lines.length) { clearInterval(interval);
+                        resolve(); return; }
+                    const [text, cls] = Array.isArray(lines[i]) ? lines[i] : [lines[i], ''];
+                    print(text, cls);
+                    i++;
+                }, delay);
+            });
+        }
+
+        function typeWriter(text, className = '', speed = 20) {
+            return new Promise(resolve => {
+                let i = 0;
+                const div = document.createElement('div');
+                div.className = 'line ' + className;
+                terminal.appendChild(div);
+                const interval = setInterval(() => {
+                    if (i >= text.length) { clearInterval(interval);
+                        resolve(); return; }
+                    div.textContent += text[i];
+                    terminal.scrollTop = terminal.scrollHeight;
+                    i++;
+                }, speed);
+            });
+        }
+
+        function printAscii(art, className = 'ascii') {
+            const div = document.createElement('div');
+            div.className = 'line ' + className;
+            div.textContent = art;
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // ================================================================
+        //  PANEL FUNCTIONS (مصححة)
+        // ================================================================
+        function openPanel(overlayId) {
+            document.getElementById(overlayId).classList.add('show');
+        }
+
+        function closePanel(overlayId) {
+            document.getElementById(overlayId).classList.remove('show');
+        }
+
+        // ================================================================
+        //  AUDIO & GLITCH
+        // ================================================================
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx && state.soundEnabled) {
+                try {
+                    audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {}
+            }
+        }
+
+        function playBeep(freq = 800, duration = 100, type = 'sine') {
+            if (!state.soundEnabled || !audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                gain.gain.value = 0.10;
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration / 1000);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration / 1000);
+            } catch (e) {}
+        }
+
+        function playGlitchSound() { if (!state.soundEnabled) return;
+            playBeep(200, 120, 'sawtooth');
+            setTimeout(() => playBeep(400, 80, 'square'), 100); }
+
+        function playSuccessSound() { if (!state.soundEnabled) return;
+            playBeep(1200, 70);
+            setTimeout(() => playBeep(1600, 70), 120); }
+
+        function playErrorSound() { if (!state.soundEnabled) return;
+            playBeep(300, 180, 'sawtooth'); }
+
+        function playScanSound() { if (!state.soundEnabled) return;
+            playBeep(600, 40);
+            setTimeout(() => playBeep(800, 40), 100); }
+
+        function triggerGlitch(intensity = 1) {
+            if (!state.glitchEnabled) return;
+            glitchOverlay.classList.remove('active');
+            void glitchOverlay.offsetWidth;
+            glitchOverlay.style.animationDuration = (0.3 + intensity * 0.1) + 's';
+            glitchOverlay.classList.add('active');
+            setTimeout(() => glitchOverlay.classList.remove('active'), 350 + intensity * 150);
+            if (state.stealth > 5) {
+                state.stealth = Math.max(0, state.stealth - intensity * 2);
+                updateUI();
+            }
+        }
+
+        // ================================================================
+        //  NETWORK MAP
+        // ================================================================
+        const nodeNames = ['GW', 'FW', 'PROXY', 'MAIL', 'WEB', 'DB', 'DNS', 'FTP', 'BACKUP', 'ADMIN', 'TERM', 'TARGET'];
+        const nodeIcons = ['🔀', '🛡️', '🔄', '✉️', '🌐', '🗄️', '📡', '📁', '💾', '👤', '💻', '🎯'];
+
+        function initNetworkMap() {
+            networkMap.innerHTML = '';
+            state.networkNodes = [];
+            const total = 12;
+            for (let i = 0; i < total; i++) {
+                const div = document.createElement('div');
+                div.className = 'net-node';
+                div.dataset.index = i;
+                div.textContent = nodeIcons[i] || '●';
+                div.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (i < nodeNames.length - 1) {
+                        const cityNetworks = cities[state.currentCity]?.networks || ['GLOBALNET.SEC'];
+                        state.target = cityNetworks[i % cityNetworks.length] + '.SEC';
+                        updateUI();
+                        print(`🎯 الهدف: ${state.target}`, 'info');
+                        playScanSound();
+                    }
+                });
+                networkMap.appendChild(div);
+                state.networkNodes.push({ el: div, name: nodeNames[i], compromised: false, active: false });
+            }
+            const targetNode = state.networkNodes[state.networkNodes.length - 1];
+            targetNode.el.classList.add('target');
+            targetNode.el.textContent = '🎯';
+            updateNetworkMap();
+        }
+
+        function updateNetworkMap() {
+            state.networkNodes.forEach((node, i) => {
+                node.el.classList.remove('active', 'compromised');
+                if (state.compromised.includes(i)) {
+                    node.el.classList.add('compromised');
+                    node.el.textContent = '⚠️';
+                } else if (state.discovered.includes(i)) {
+                    node.el.classList.add('active');
+                }
+            });
+            const targetIdx = state.networkNodes.length - 1;
+            state.networkNodes[targetIdx].el.classList.add('target');
+            state.networkNodes[targetIdx].el.textContent = '🎯';
+        }
+
+        // ================================================================
+        //  UI UPDATE
+        // ================================================================
+        function updateUI() {
+            const phases = ['بدء', 'مسح', 'استغلال', 'كسر', 'دخول', 'اكتمل'];
+            phaseDisplay.textContent = phases[state.phase] || 'بدء';
+            const pct = Math.min(state.progress, 100);
+            progressDisplay.textContent = pct + '%';
+            progressFill.style.width = pct + '%';
+            targetDisplay.textContent = state.target.substring(0, 6);
+            const fwMap = { 'ACTIVE': 'نشط', 'DETECTED': 'مكتشف', 'BYPASSED': 'متجاوز', 'BREACHED': 'مخترق' };
+            firewallDisplay.textContent = fwMap[state.firewall] || state.firewall;
+            const stealthPct = Math.max(0, Math.round(state.stealth));
+            stealthDisplay.textContent = stealthPct + '%';
+            stealthDisplay.className = 'value' + (stealthPct < 30 ? ' danger' : stealthPct < 60 ? ' warn' : '');
+            const bars = stealthMeter.querySelectorAll('.bar');
+            const filled = Math.floor(stealthPct / 10);
+            bars.forEach((bar, idx) => {
+                bar.className = 'bar';
+                if (idx < filled) {
+                    if (idx < 4) bar.classList.add('danger');
+                    else if (idx < 7) bar.classList.add('warn');
+                    else bar.classList.add('active');
+                }
+            });
+            cmdCountDisplay.textContent = state.commandsUsed;
+            progressFill.className = 'fill' + (pct < 30 ? ' red' : pct < 70 ? ' yellow' : '');
+
+            levelDisplay.textContent = state.level;
+            const xpPct = Math.min(100, (state.xp / state.xpToNext) * 100);
+            xpFill.style.width = xpPct + '%';
+            xpDisplay.textContent = `${Math.floor(state.xp)}/${state.xpToNext} XP`;
+            coinsDisplay.textContent = state.coins;
+
+            const repLabels = {
+                'محترم': '⭐ محترم',
+                'جيد': '👍 جيد',
+                'محايد': '😐 محايد',
+                'مشبوه': '⚠️ مشبوه',
+                'مجرم': '🚨 مجرم'
+            };
+            reputationDisplay.textContent = repLabels[state.reputationLevel] || state.reputationLevel;
+
+            if (pct >= 100 && state.phase < 5 && !state.hackComplete) {
+                state.phase = 5;
+                completeHack();
+            }
+        }
+
+        // ================================================================
+        //  TIMER
+        // ================================================================
+        function startTimer() {
+            state.timerInterval = setInterval(() => {
+                state.sessionTime++;
+                const m = String(Math.floor((state.sessionTime % 3600) / 60)).padStart(2, '0');
+                const s = String(state.sessionTime % 60).padStart(2, '0');
+                timerDisplay.textContent = `⏱ ${m}:${s}`;
+            }, 1000);
+        }
+
+        // ================================================================
+        //  STEALTH
+        // ================================================================
+        function reduceStealth(amount = 5) {
+            state.stealth = Math.max(0, state.stealth - amount);
+            if (state.stealth < 20) {
+                state.alerts++;
+                print(`⚠️ تنبيه: نشاط مشبوه! (${state.alerts}/${state.maxAlerts})`, 'error');
+                playErrorSound();
+                if (state.alerts >= state.maxAlerts) {
+                    print('🚨 تم كشفك! انتهت اللعبة. اكتب reset للمحاولة.', 'error');
+                    state.isHacking = true;
+                    triggerGlitch(3);
+                    changeReputation(-10);
+                }
+            }
+            updateUI();
+        }
+
+        function restoreStealth(amount = 5) {
+            state.stealth = Math.min(state.maxStealth, state.stealth + amount);
+            updateUI();
+        }
+
+        // ================================================================
+        //  XP & LEVELS
+        // ================================================================
+        function addXP(amount) {
+            state.xp += amount;
+            let leveledUp = false;
+            while (state.xp >= state.xpToNext) {
+                state.xp -= state.xpToNext;
+                state.level++;
+                state.xpToNext = Math.floor(state.xpToNext * 1.4);
+                leveledUp = true;
+                print(`🎉 مبروك! وصلت للمستوى ${state.level}!`, 'highlight');
+                playSuccessSound();
+                checkLevelUnlocks();
+                state.coins += state.level * 5;
+                print(`🪙 مكافأة المستوى: ${state.level * 5} عملات!`, 'gold');
+            }
+            updateUI();
+            checkAchievements();
+        }
+
+        function checkLevelUnlocks() {
+            const unlocks = {
+                2: { cmd: 'inject', msg: '🔓 تم فتح الأمر: inject' },
+                3: { cmd: 'decrypt', msg: '🔓 تم فتح الأمر: decrypt' },
+                4: { cmd: 'trace', msg: '🔓 تم فتح الأمر: trace' },
+                5: { cmd: 'steal', msg: '🔓 تم فتح الأمر: steal' },
+                7: { cmd: 'hack', msg: '🔓 تم فتح الأمر: hack' },
+                10: { cmd: 'city', msg: '🌍 تم فتح مدينة جديدة: طوكيو' },
+                15: { cmd: 'city', msg: '🌍 تم فتح مدينة جديدة: لندن' },
+                20: { cmd: 'city', msg: '🌍 تم فتح مدينة جديدة: دبي' },
+            };
+            if (unlocks[state.level]) {
+                print(unlocks[state.level].msg, 'info');
+                if (unlocks[state.level].cmd === 'city') {
+                    const citiesList = ['طوكيو', 'لندن', 'دبي'];
+                    const newCity = citiesList[state.level === 10 ? 0 : state.level === 15 ? 1 : 2];
+                    if (!state.unlockedCities.includes(newCity)) {
+                        state.unlockedCities.push(newCity);
+                    }
+                }
+            }
+        }
+
+        // ================================================================
+        //  ACHIEVEMENTS
+        // ================================================================
+        const achievementDefinitions = [
+            { id: 'first_hack', name: '🚀 أول اختراق', desc: 'نفذ أول اختراق ناجح', check: () => state.totalHacks >= 1 },
+            { id: 'scanner', name: '🔍 ماسح محترف', desc: 'نفذ 10 عمليات مسح', check: () => state.totalScans >= 10 },
+            { id: 'exploiter', name: '💥 خبير استغلال', desc: 'نفذ 5 عمليات استغلال', check: () => state.totalExploits >= 5 },
+            { id: 'cracker', name: '🔑 كاسر الأسرار', desc: 'اكسر 3 كلمات مرور', check: () => state.totalCracks >= 3 },
+            { id: 'thief', name: '🕵️ لص محترف', desc: 'اسرق 5 ملفات', check: () => state.totalSteals >= 5 },
+            { id: 'master_hacker', name: '👑 هاكر أسطوري', desc: 'وصل للمستوى 10', check: () => state.level >= 10 },
+            { id: 'rich', name: '💰 ثري', desc: 'اجمع 500 عملة', check: () => state.coins >= 500 },
+            { id: 'reputation', name: '⭐ محترم', desc: 'وصل سمعة 50', check: () => state.reputation >= 50 },
+            { id: 'city_hopper', name: '🌍 متنقل', desc: 'افتح 3 مدن', check: () => state.unlockedCities.length >= 3 },
+            { id: 'tool_master', name: '🛠️ جامع أدوات', desc: 'اشترِ 3 أدوات', check: () => Object.values(state.tools)
+                    .filter(Boolean).length >= 3 },
+            { id: 'stealth_master', name: '🕵️ سيد التخفي', desc: 'احتفظ بتخفي 90% لمدة 5 دقائق', check: () => state
+                    .stealth >= 90 && state.sessionTime >= 300 },
+        ];
+
+        function checkAchievements() {
+            achievementDefinitions.forEach(ach => {
+                if (!state.unlockedAchievements.includes(ach.id) && ach.check()) {
+                    state.unlockedAchievements.push(ach.id);
+                    print(`🏆 إنجاز جديد: ${ach.name} - ${ach.desc}`, 'achievement');
+                    playSuccessSound();
+                    addXP(20);
+                    state.coins += 10;
+                }
+            });
+        }
+
+        // ================================================================
+        //  MISSIONS
+        // ================================================================
+        function generateDailyMissions() {
+            if (state.dailyMissionsGenerated && Date.now() - state.lastDailyReset < 86400000) return;
+
+            state.missions = [];
+            state.missionProgress = {};
+
+            const missionTemplates = [
+                { name: 'اخترق 3 عقد', target: 3, type: 'nodes', rewardXP: 30, rewardCoins: 50 },
+                { name: 'نفذ 10 أوامر', target: 10, type: 'commands', rewardXP: 20, rewardCoins: 30 },
+                { name: 'اسرق ملفاً سرياً', target: 1, type: 'steal', rewardXP: 50, rewardCoins: 100 },
+                { name: 'اكسر كلمة مرور', target: 2, type: 'cracks', rewardXP: 40, rewardCoins: 60 },
+                { name: 'نفذ 5 عمليات مسح', target: 5, type: 'scans', rewardXP: 25, rewardCoins: 40 },
+            ];
+
+            const shuffled = missionTemplates.sort(() => Math.random() - 0.5);
+            for (let i = 0; i < Math.min(4, shuffled.length); i++) {
+                const mission = { ...shuffled[i], current: 0, completed: false };
+                state.missions.push(mission);
+                state.missionProgress[mission.name] = 0;
+            }
+
+            state.dailyMissionsGenerated = true;
+            state.lastDailyReset = Date.now();
+            print('📋 تم إنشاء مهام يومية جديدة! اكتب missions لعرضها.', 'mission');
+        }
+
+        function updateMissionProgress(type, amount = 1) {
+            state.missions.forEach(mission => {
+                if (mission.completed) return;
+                if (mission.type === type) {
+                    mission.current += amount;
+                    state.missionProgress[mission.name] = mission.current;
+                    if (mission.current >= mission.target) {
+                        mission.completed = true;
+                        print(`✅ اكتملت المهمة: ${mission.name}!`, 'success');
+                        addXP(mission.rewardXP);
+                        state.coins += mission.rewardCoins;
+                        print(`🏅 مكافأة: ${mission.rewardXP}XP, ${mission.rewardCoins}🪙`, 'gold');
+                        playSuccessSound();
+                    }
+                }
+            });
+            const allCompleted = state.missions.every(m => m.completed);
+            if (allCompleted && state.missions.length > 0) {
+                print('🎉 جميع المهام اليومية اكتملت! مكافأة إضافية!', 'achievement');
+                addXP(50);
+                state.coins += 30;
+            }
+        }
+
+        // ================================================================
+        //  REPUTATION
+        // ================================================================
+        function changeReputation(amount) {
+            state.reputation = Math.max(-100, Math.min(100, state.reputation + amount));
+            if (state.reputation >= 50) state.reputationLevel = 'محترم';
+            else if (state.reputation >= 20) state.reputationLevel = 'جيد';
+            else if (state.reputation >= -20) state.reputationLevel = 'محايد';
+            else if (state.reputation >= -50) state.reputationLevel = 'مشبوه';
+            else state.reputationLevel = 'مجرم';
+            updateUI();
+        }
+
+        // ================================================================
+        //  SHOP
+        // ================================================================
+        function initShop() {
+            state.shopItems = [
+                { id: 'port_scanner', name: '🔍 ماسح المنافذ', desc: 'يكشف المنافذ المخفية', price: 100, owned: false },
+                { id: 'password_cracker', name: '🔑 كاسر كلمات المرور', desc: 'يسرع كسر التشفير', price: 150,
+                owned: false },
+                { id: 'packet_sniffer', name: '📡 محلل الحزم', desc: 'يعترض حركة الشبكة', price: 200, owned: false },
+                { id: 'exploit_builder', name: '💣 باني الحمولات', desc: 'يبني حمولات مخصصة', price: 250, owned: false },
+                { id: 'stealth_boost', name: '🕵️ معزز التخفي', desc: 'يزيد التخفي 20%', price: 80, owned: false },
+                { id: 'xp_boost', name: '📈 معزز الخبرة', desc: 'يزيد الخبرة المكتسبة 50%', price: 120, owned: false },
+                { id: 'reputation_boost', name: '⭐ معزز السمعة', desc: 'يزيد السمعة 10 نقاط', price: 90, owned: false },
+            ];
+        }
+
+        function buyShopItem(itemId) {
+            const item = state.shopItems.find(i => i.id === itemId);
+            if (!item) return print('❌ العنصر غير موجود', 'error');
+            if (item.owned) return print('❌ لديك هذا العنصر بالفعل', 'warning');
+            if (state.coins < item.price) return print(`❌ ليس لديك عملات كافية. تحتاج ${item.price}🪙`, 'error');
+
+            state.coins -= item.price;
+            item.owned = true;
+
+            if (itemId === 'stealth_boost') state.stealth = Math.min(100, state.stealth + 20);
+            if (itemId === 'reputation_boost') changeReputation(10);
+            if (itemId === 'port_scanner') state.tools.portScanner = true;
+            if (itemId === 'password_cracker') state.tools.passwordCracker = true;
+            if (itemId === 'packet_sniffer') state.tools.packetSniffer = true;
+            if (itemId === 'exploit_builder') state.tools.exploitBuilder = true;
+
+            print(`✅ تم شراء: ${item.name}`, 'success');
+            playSuccessSound();
+            updateUI();
+            checkAchievements();
+        }
+
+        // ================================================================
+        //  CITIES
+        // ================================================================
+        const cities = {
+            'نيويورك': { networks: ['NYC-GOV', 'NYC-BANK', 'NYC-TECH'], difficulty: 'easy',
+            description: 'شبكات متوسطة الحماية' },
+            'طوكيو': { networks: ['TOKYO-CORP', 'TOKYO-UNI', 'TOKYO-GOV'], difficulty: 'medium',
+                description: 'شبكات محمية بقوة' },
+            'لندن': { networks: ['LONDON-BANK', 'LONDON-GOV', 'LONDON-CORP'], difficulty: 'hard',
+                description: 'شبكات عالية الحماية' },
+            'دبي': { networks: ['DUBAI-CORP', 'DUBAI-GOV', 'DUBAI-TECH'], difficulty: 'expert',
+                description: 'شبكات فائقة الحماية' },
+        };
+
+        function changeCity(cityName) {
+            if (!state.unlockedCities.includes(cityName)) {
+                return print(`❌ مدينة ${cityName} غير مفتوحة بعد`, 'error');
+            }
+            if (!cities[cityName]) return print('❌ مدينة غير موجودة', 'error');
+
+            state.currentCity = cityName;
+            state.target = cities[cityName].networks[0] + '.SEC';
+            print(`🌍 انتقلت إلى: ${cityName}`, 'info');
+            print(`📡 الهدف الجديد: ${state.target}`, 'info');
+            state.compromised = [];
+            state.discovered = [];
+            state.networkNodes.forEach((node, i) => {
+                node.compromised = false;
+                node.active = false;
+            });
+            state.firewall = 'ACTIVE';
+            state.phase = 0;
+            state.progress = 0;
+            updateNetworkMap();
+            updateUI();
+        }
+
+        // ================================================================
+        //  COMMANDS
+        // ================================================================
+
+        // help
+        function cmdHelp() {
+            print('╔═══════════════════════════════════════════════╗', 'system');
+            print('║  🎮 CYBERHACK PRO - الأوامر المتاحة         ║', 'system');
+            print('╠═══════════════════════════════════════════════╣', 'system');
+
+            const groups = {
+                '🔍 الاستكشاف': ['help', 'scan', 'map', 'whois', 'ping', 'trace'],
+                '💥 الهجوم': ['exploit', 'crack', 'access', 'inject', 'hack'],
+                '📂 الملفات': ['ls', 'cd', 'cat', 'steal', 'decrypt'],
+                '🛡️ الدفاع': ['firewall', 'stealth', 'status'],
+                '🌍 العالم': ['city', 'missions', 'achievements'],
+                '🛒 السوق': ['shop', 'buy'],
+                '⚙️ النظام': ['clear', 'save', 'load', 'reset', 'theme', 'stats', 'echo', 'whoami', 'date', 'uptime',
+                    'motd'
+                ],
+            };
+
+            for (const [group, cmds] of Object.entries(groups)) {
+                print(`  ${group}: ${cmds.join(', ')}`, 'system');
+            }
+            print('╚═══════════════════════════════════════════════╝', 'system');
+            print('💡 ↑↓ تاريخ، TAB إكمال تلقائي', 'info');
+            print(`🏅 المستوى ${state.level} | 🪙 ${state.coins} | ⭐ ${state.reputationLevel}`, 'highlight');
+        }
+
+        // scan
+        async function cmdScan() {
+            if (state.hackComplete) return print('⚠️ الهدف مخترق.', 'warning');
+            if (state.isHacking) return print('⏳ عملية قيد التنفيذ.', 'warning');
+            if (state.alerts >= state.maxAlerts) return print('🚨 النظام مقفل. اكتب reset.', 'error');
+
+            state.isHacking = true;
+            state.phase = Math.max(state.phase, 1);
+            print(`🔍 بدء مسح الشبكة في ${state.currentCity}...`, 'info');
+            playScanSound();
+
+            const cityNetworks = cities[state.currentCity]?.networks || ['GLOBALNET.SEC'];
+            const targets = cityNetworks.map(n => n + '.SEC');
+
+            await printAsync([
+                ['[1/6] مسح النطاق...', ''],
+                ['[2/6] تم العثور على أجهزة.', ''],
+                ['[3/6] فحص المنافذ المفتوحة...', 'progress'],
+                ['[4/6] تحديد الخدمات...', ''],
+                ['[5/6] البحث عن ثغرات...', ''],
+                [`[6/6] تم تحديد ${targets.length} أهداف.`, 'success'],
+            ], 150);
+
+            const discoverCount = Math.min(2 + Math.floor(Math.random() * 3), state.networkNodes.length - 1);
+            for (let i = 0; i < discoverCount; i++) {
+                if (!state.discovered.includes(i)) {
+                    state.discovered.push(i);
+                    state.networkNodes[i].active = true;
+                }
+            }
+            updateNetworkMap();
+
+            state.totalScans++;
+            updateMissionProgress('scans');
+            await typeWriter(`✅ اكتمل المسح. تم تحديد ${state.discovered.length} نظام.`, 'success');
+            state.progress += 12;
+            state.firewall = 'DETECTED';
+            state.isHacking = false;
+            reduceStealth(3);
+            addXP(10);
+            changeReputation(2);
+            updateUI();
+            playSuccessSound();
+        }
+
+        // exploit
+        async function cmdExploit() {
+            if (state.hackComplete) return print('⚠️ الهدف مخترق.', 'warning');
+            if (state.isHacking) return print('⏳ عملية قيد التنفيذ.', 'warning');
+            if (state.phase < 1) return print('❌ نفذ "scan" أولاً.', 'error');
+            if (state.alerts >= state.maxAlerts) return print('🚨 النظام مقفل. اكتب reset.', 'error');
+
+            state.isHacking = true;
+            state.phase = Math.max(state.phase, 2);
+            print('💥 اختيار ثغرة...', 'warning');
+            triggerGlitch(1.5);
+            playGlitchSound();
+
+            const exploits = ['CVE-2024-1234 (RCE)', 'CVE-2024-5678 (Buffer Overflow)',
+                'CVE-2024-9012 (SQL Injection)'
+            ];
+            const selected = exploits[Math.floor(Math.random() * exploits.length)];
+            const exploitBonus = state.tools.exploitBuilder ? 20 : 0;
+
+            await printAsync([
+                ['[1/5] فحص الثغرات...', ''],
+                [`[2/5] تم العثور على: ${selected}`, 'success'],
+                ['[3/5] تجهيز الحمولة...', ''],
+                ['[4/5] تشغيل الاستغلال...', 'progress'],
+                [`[5/5] ${state.tools.exploitBuilder ? '✅ تم استخدام باني الحمولات!' : '✅ اكتمل!'}`, 'success'],
+            ], 180);
+
+            const failChance = state.tools.exploitBuilder ? 0.05 : 0.15;
+            if (Math.random() < failChance) {
+                await typeWriter('❌ فشل الاستغلال!', 'error');
+                reduceStealth(15);
+                state.isHacking = false;
+                playErrorSound();
+                changeReputation(-3);
+                return;
+            }
+
+            triggerGlitch(2);
+            await typeWriter('✅ نجح الاستغلال! تم الحصول على وصول.', 'success');
+            state.totalExploits++;
+            updateMissionProgress('exploits');
+            state.progress += 18 + exploitBonus / 10;
+            state.firewall = 'BYPASSED';
+            state.isHacking = false;
+            reduceStealth(6);
+            addXP(15 + exploitBonus);
+            changeReputation(3);
+            updateUI();
+            playSuccessSound();
+
+            if (state.networkNodes.length > 1) {
+                const idx = 1;
+                if (!state.compromised.includes(idx)) {
+                    state.compromised.push(idx);
+                    state.networkNodes[idx].compromised = true;
+                    updateNetworkMap();
+                    updateMissionProgress('nodes');
+                }
+            }
+        }
+
+        // crack
+        async function cmdCrack() {
+            if (state.hackComplete) return print('⚠️ الهدف مخترق.', 'warning');
+            if (state.isHacking) return print('⏳ عملية قيد التنفيذ.', 'warning');
+            if (state.phase < 2) return print('❌ نفذ "exploit" أولاً.', 'error');
+            if (state.alerts >= state.maxAlerts) return print('🚨 النظام مقفل. اكتب reset.', 'error');
+
+            state.isHacking = true;
+            state.phase = Math.max(state.phase, 3);
+            print('🔑 كسر كلمة المرور...', 'info');
+
+            const dict = ['password', '123456', 'admin', 'letmein', 'welcome', 'monkey', 'dragon', 'master', 'hacker'];
+            const correct = dict[Math.floor(Math.random() * dict.length)];
+            const crackBonus = state.tools.passwordCracker ? 30 : 0;
+
+            await printAsync([
+                ['[1/6] تحميل قاموس الكلمات...', ''],
+                ['[2/6] بدء الهجوم...', ''],
+                ['[3/6] اختبار كلمات شائعة...', 'progress'],
+                [`[4/6] تم العثور على: "${correct}"`, 'success'],
+                ['[5/6] التحقق من التجزئة...', ''],
+                ['[6/6] اكتمل الكسر!', ''],
+            ], 150);
+
+            await typeWriter(`✅ تم كسرها! admin:${correct}`, 'success');
+            state.totalCracks++;
+            updateMissionProgress('cracks');
+            state.progress += 18 + crackBonus / 10;
+            state.isHacking = false;
+            reduceStealth(8);
+            addXP(20 + crackBonus);
+            changeReputation(2);
+            updateUI();
+            playSuccessSound();
+
+            for (let i = 2; i < 5 && i < state.networkNodes.length; i++) {
+                if (!state.compromised.includes(i) && Math.random() < 0.4) {
+                    state.compromised.push(i);
+                    state.networkNodes[i].compromised = true;
+                    updateMissionProgress('nodes');
+                }
+            }
+            updateNetworkMap();
+        }
+
+        // access
+        async function cmdAccess() {
+            if (state.hackComplete) return print('⚠️ لديك صلاحية الجذر.', 'warning');
+            if (state.isHacking) return print('⏳ عملية قيد التنفيذ.', 'warning');
+            if (state.phase < 3) return print('❌ نفذ "crack" أولاً.', 'error');
+            if (state.alerts >= state.maxAlerts) return print('🚨 النظام مقفل. اكتب reset.', 'error');
+
+            state.isHacking = true;
+            state.phase = Math.max(state.phase, 4);
+            print('👑 رفع الصلاحيات...', 'highlight');
+            triggerGlitch(2);
+            playGlitchSound();
+
+            await printAsync([
+                ['[1/4] رفع الصلاحيات...', ''],
+                ['[2/4] تجاوز SELinux...', ''],
+                ['[3/4] تثبيت باب خلفي...', ''],
+                ['[4/4] تأكيد الصلاحية...', ''],
+            ], 180);
+
+            await typeWriter('✅ تم الحصول على صلاحية الجذر!', 'success');
+            state.progress += 22;
+            state.firewall = 'BREACHED';
+            state.isHacking = false;
+            reduceStealth(5);
+            addXP(30);
+            changeReputation(5);
+            updateUI();
+            playSuccessSound();
+
+            for (let i = 0; i < state.networkNodes.length - 1; i++) {
+                if (!state.compromised.includes(i) && Math.random() < 0.5) {
+                    state.compromised.push(i);
+                    state.networkNodes[i].compromised = true;
+                    updateMissionProgress('nodes');
+                }
+            }
+            updateNetworkMap();
+
+            if (state.progress >= 100) {
+                state.phase = 5;
+                await completeHack();
+            }
+        }
+
+        // hack
+        async function cmdHack() {
+            if (state.hackComplete) return print('⚠️ الهدف مخترق.', 'warning');
+            if (state.isHacking) return print('⏳ عملية قيد التنفيذ.', 'warning');
+            if (state.phase < 2) return print('❌ نفذ "scan" و "exploit" أولاً.', 'error');
+            if (state.alerts >= state.maxAlerts) return print('🚨 النظام مقفل. اكتب reset.', 'error');
+
+            print('🚀 تشغيل الاختراق التلقائي...', 'highlight');
+            state.isHacking = true;
+            triggerGlitch(1);
+
+            const steps = [
+                '[1/9] إنشاء نفق مشفر...',
+                '[2/9] اختطاف الجلسة...',
+                '[3/9] رفع الصلاحيات...',
+                '[4/9] تجاوز الجدار...',
+                '[5/9] حقن الحمولة...',
+                '[6/9] سحب البيانات...',
+                '[7/9] تثبيت باب خلفي...',
+                '[8/9] مسح الآثار...',
+                '[9/9] تأكيد الاختراق...',
+            ];
+
+            for (let i = 0; i < steps.length; i++) {
+                await typeWriter(steps[i], i % 2 === 0 ? '' : 'progress');
+                if (i % 3 === 0) playScanSound();
+                if (i === 4) triggerGlitch(0.5);
+                if (i === 6) playGlitchSound();
+                await new Promise(r => setTimeout(r, 200 + Math.random() * 150));
+            }
+
+            state.totalHacks++;
+            state.progress = 100;
+            state.phase = 5;
+            state.isHacking = false;
+            addXP(50);
+            changeReputation(10);
+            updateUI();
+            await completeHack();
+        }
+
+        // completeHack
+        async function completeHack() {
+            if (state.hackComplete) return;
+            state.hackComplete = true;
+            state.isHacking = false;
+            state.firewall = 'BREACHED';
+            triggerGlitch(3);
+            playSuccessSound();
+            setTimeout(() => playSuccessSound(), 300);
+
+            const art = `
+        ╔════════════════════════════════════╗
+        ║  🎯 تم الاختراق بنجاح!           ║
+        ║  ✓ صلاحية الجذر مكتملة           ║
+        ║  ✓ تم سحب 2.4TB من البيانات      ║
+        ║  ✓ تم تثبيت الباب الخلفي         ║
+        ║  ✓ تم مسح الآثار                 ║
+        ║  ✓ ${state.compromised.length} عقد مخترقة   ║
+        ╚════════════════════════════════════╝`;
+            printAscii(art);
+            await typeWriter('✅ تم اختراق النظام بالكامل!', 'success');
+            await typeWriter('🌟 أنت الآن هاكر محترف!', 'highlight');
+            print(`📊 الإحصائيات النهائية:`, 'info');
+            print(`   • المستوى: ${state.level}`, '');
+            print(`   • الأوامر: ${state.commandsUsed}`, '');
+            print(`   • الوقت: ${timerDisplay.textContent}`, '');
+            print(`   • العقد: ${state.compromised.length}/${state.networkNodes.length-1}`, '');
+            print(`   • السمعة: ${state.reputationLevel} (${state.reputation})`, '');
+            print(`   • العملات: ${state.coins}🪙`, '');
+            print('💡 اكتب help للأوامر أو reset لإعادة المحاولة.', 'system');
+            updateUI();
+
+            for (let i = 0; i < state.networkNodes.length - 1; i++) {
+                if (!state.compromised.includes(i)) {
+                    state.compromised.push(i);
+                    state.networkNodes[i].compromised = true;
+                }
+            }
+            updateNetworkMap();
+            checkAchievements();
+        }
+
+        // ---------- الأوامر الجديدة ----------
+
+        // missions
+        function cmdMissions() {
+            const list = document.getElementById('missionsList');
+            list.innerHTML = '';
+
+            if (state.missions.length === 0) {
+                list.innerHTML = '<div style="text-align:center;color:#559955;">لا توجد مهام.</div>';
+            } else {
+                state.missions.forEach((m) => {
+                    const div = document.createElement('div');
+                    div.className = 'mission-item';
+                    const status = m.completed ? '✅' : `⏳ ${m.current}/${m.target}`;
+                    div.innerHTML = `
+                        <div class="mission-name">${m.name}</div>
+                        <div class="mission-progress">${status} | 🏅 ${m.rewardXP}XP, ${m.rewardCoins}🪙</div>
+                    `;
+                    list.appendChild(div);
+                });
+            }
+            openPanel('missionsOverlay');
+        }
+
+        // achievements
+        function cmdAchievements() {
+            const list = document.getElementById('achievementsList');
+            list.innerHTML = '';
+
+            achievementDefinitions.forEach(ach => {
+                const unlocked = state.unlockedAchievements.includes(ach.id);
+                const div = document.createElement('div');
+                div.className = `item ${unlocked ? 'unlocked' : 'locked'}`;
+                div.textContent = `${unlocked ? '✅' : '🔒'} ${ach.name} - ${ach.desc}`;
+                list.appendChild(div);
+            });
+
+            openPanel('achievementsOverlay');
+        }
+
+        // shop
+        function cmdShop() {
+            const list = document.getElementById('shopList');
+            list.innerHTML = '';
+
+            state.shopItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'shop-item';
+                const owned = item.owned ? '✅ مملوك' : `${item.price}🪙`;
+                div.innerHTML = `
+                    <div>
+                        <div>${item.name}</div>
+                        <div style="font-size:0.5rem;color:#559955;">${item.desc}</div>
+                    </div>
+                    <button class="buy-btn" ${item.owned || state.coins < item.price ? 'disabled' : ''} onclick="buyShopItemFromUI('${item.id}')">
+                        ${owned}
+                    </button>
+                `;
+                list.appendChild(div);
+            });
+
+            openPanel('shopOverlay');
+        }
+
+        // buy من الواجهة
+        function buyShopItemFromUI(itemId) {
+            buyShopItem(itemId);
+            // تحديث القائمة
+            cmdShop();
+        }
+
+        // buy من سطر الأوامر
+        function cmdBuy() {
+            const parts = cmdInput.value.trim().split(' ');
+            if (parts.length < 2) {
+                print('❌ حدد العنصر. اكتب shop لعرض القائمة.', 'error');
+                return;
+            }
+            const itemId = parts[1];
+            buyShopItem(itemId);
+        }
+
+        // city
+        function cmdCity() {
+            const parts = cmdInput.value.trim().split(' ');
+            if (parts.length < 2) {
+                print('🌍 المدن المتاحة:', 'info');
+                state.unlockedCities.forEach(c => {
+                    const status = c === state.currentCity ? ' (الحالية)' : '';
+                    print(`  • ${c}${status}`, c === state.currentCity ? 'highlight' : '');
+                });
+                print('📝 استخدم: city [اسم المدينة] للانتقال', 'info');
+                return;
+            }
+            const cityName = parts.slice(1).join(' ');
+            changeCity(cityName);
+        }
+
+        // status
+        function cmdStatus() {
+            print('╔═══════════ حالة الجلسة ═════════════════════╗', 'system');
+            print(`║ المرحلة:   ${phaseDisplay.textContent.padEnd(22)}║`, 'system');
+            print(`║ التقدم:    ${progressDisplay.textContent.padEnd(22)}║`, 'system');
+            print(`║ الهدف:     ${state.target.padEnd(22)}║`, 'system');
+            print(`║ الجدار:    ${firewallDisplay.textContent.padEnd(22)}║`, 'system');
+            print(`║ التخفي:    ${stealthDisplay.textContent.padEnd(22)}║`, 'system');
+            print(`║ المستوى:   ${state.level} (${Math.floor(state.xp)}/${state.xpToNext} XP)`.padEnd(41) + '║', 'system');
+            print(`║ العملات:   ${state.coins}🪙`.padEnd(41) + '║', 'system');
+            print(`║ السمعة:    ${state.reputationLevel} (${state.reputation})`.padEnd(41) + '║', 'system');
+            print(`║ الأوامر:   ${state.commandsUsed.padEnd(22)}║`, 'system');
+            print(`║ الوقت:     ${timerDisplay.textContent.replace('⏱ ','').padEnd(22)}║`, 'system');
+            print(`║ المدينة:   ${state.currentCity.padEnd(22)}║`, 'system');
+            print(`║ العقد:     ${state.compromised.length}/${state.networkNodes.length-1} مخترقة`.padEnd(41) + '║',
+            'system');
+            print(`║ التنبيهات: ${state.alerts}/${state.maxAlerts}${' '.padEnd(14)}║`, 'system');
+            print('╚═══════════════════════════════════════════╝', 'system');
+        }
+
+        // map
+        function cmdMap() {
+            print(`🌐 خريطة الشبكة - ${state.currentCity}:`, 'info');
+            state.networkNodes.forEach((node, i) => {
+                let status = '●';
+                let color = 'dim';
+                if (state.compromised.includes(i)) { status = '⚠️';
+                    color = 'error'; } else if (i === state.networkNodes.length - 1) { status = '🎯';
+                    color = 'highlight'; } else if (state.discovered.includes(i)) { status = '○';
+                    color = 'info'; }
+                print(`  ${status} ${node.name}${state.compromised.includes(i) ? ' [مخترق]' : ''}`, color);
+            });
+            print(`📊 ${state.compromised.length}/${state.networkNodes.length-1} عقد مخترقة`, 'system');
+        }
+
+        // clear
+        function cmdClear() {
+            terminal.innerHTML = '';
+            print('🔄 تم المسح.', 'system');
+        }
+
+        // save
+        function cmdSave() {
+            try {
+                const data = {
+                    phase: state.phase,
+                    progress: state.progress,
+                    target: state.target,
+                    firewall: state.firewall,
+                    stealth: state.stealth,
+                    commandsUsed: state.commandsUsed,
+                    sessionTime: state.sessionTime,
+                    hackComplete: state.hackComplete,
+                    compromised: state.compromised,
+                    discovered: state.discovered,
+                    alerts: state.alerts,
+                    currentDir: state.currentDir,
+                    level: state.level,
+                    xp: state.xp,
+                    xpToNext: state.xpToNext,
+                    coins: state.coins,
+                    reputation: state.reputation,
+                    reputationLevel: state.reputationLevel,
+                    unlockedAchievements: state.unlockedAchievements,
+                    missions: state.missions,
+                    missionProgress: state.missionProgress,
+                    totalScans: state.totalScans,
+                    totalExploits: state.totalExploits,
+                    totalCracks: state.totalCracks,
+                    totalSteals: state.totalSteals,
+                    totalHacks: state.totalHacks,
+                    currentCity: state.currentCity,
+                    unlockedCities: state.unlockedCities,
+                    tools: state.tools,
+                    shopItems: state.shopItems,
+                    dailyMissionsGenerated: state.dailyMissionsGenerated,
+                    lastDailyReset: state.lastDailyReset,
+                    theme: currentTheme,
+                };
+                localStorage.setItem('cyberhack_pro_save', JSON.stringify(data));
+                print('💾 تم الحفظ!', 'success');
+                playSuccessSound();
+            } catch (e) {
+                print('❌ فشل الحفظ.', 'error');
+            }
+        }
+
+        // load
+        function cmdLoad() {
+            try {
+                const raw = localStorage.getItem('cyberhack_pro_save');
+                if (!raw) { print('❌ لا يوجد حفظ.', 'error'); return; }
+                const data = JSON.parse(raw);
+                Object.assign(state, data);
+                state.networkNodes.forEach((node, i) => {
+                    node.compromised = state.compromised.includes(i);
+                    node.active = state.discovered.includes(i);
+                });
+                if (data.theme) applyTheme(data.theme);
+                updateNetworkMap();
+                updateUI();
+                const m = String(Math.floor((state.sessionTime % 3600) / 60)).padStart(2, '0');
+                const s = String(state.sessionTime % 60).padStart(2, '0');
+                timerDisplay.textContent = `⏱ ${m}:${s}`;
+                print('📂 تم تحميل الجلسة!', 'success');
+                playSuccessSound();
+                checkAchievements();
+            } catch (e) {
+                print('❌ فشل التحميل.', 'error');
+            }
+        }
+
+        // reset
+        function cmdReset() {
+            if (confirm('⚠️ إعادة تعيين كل شيء؟')) {
+                localStorage.removeItem('cyberhack_pro_save');
+                location.reload();
+            }
+        }
+
+        // theme
+        function cmdTheme() {
+            const parts = cmdInput.value.trim().split(' ');
+            if (parts.length < 2) {
+                print('🎨 الثيمات المتاحة:', 'info');
+                Object.keys(themes).forEach(t => {
+                    const status = t === currentTheme ? ' (الحالي)' : '';
+                    print(`  • ${t}${status}`, t === currentTheme ? 'highlight' : '');
+                });
+                print('📝 استخدم: theme [اسم الثيم] للتغيير', 'info');
+                return;
+            }
+            const themeName = parts[1];
+            if (themes[themeName]) {
+                applyTheme(themeName);
+            } else {
+                print(`❌ ثيم "${themeName}" غير موجود.`, 'error');
+            }
+        }
+
+        // stats
+        function cmdStats() {
+            print('╔═══════════ الإحصائيات المتقدمة ═══════════╗', 'system');
+            print(`║ المستوى:          ${state.level}${' '.padEnd(18)}║`, 'system');
+            print(`║ الخبرة (XP):      ${Math.floor(state.xp)}/${state.xpToNext}${' '.padEnd(12)}║`, 'system');
+            print(`║ العملات:          ${state.coins}🪙${' '.padEnd(18)}║`, 'system');
+            print(`║ السمعة:           ${state.reputation} (${state.reputationLevel})${' '.padEnd(6)}║`, 'system');
+            print(`║ عمليات المسح:     ${state.totalScans}${' '.padEnd(18)}║`, 'system');
+            print(`║ عمليات الاستغلال: ${state.totalExploits}${' '.padEnd(18)}║`, 'system');
+            print(`║ كلمات مكسورة:     ${state.totalCracks}${' '.padEnd(18)}║`, 'system');
+            print(`║ ملفات مسروقة:     ${state.totalSteals}${' '.padEnd(18)}║`, 'system');
+            print(`║ اختراقات كاملة:   ${state.totalHacks}${' '.padEnd(18)}║`, 'system');
+            print(`║ الإنجازات:        ${state.unlockedAchievements.length}/${achievementDefinitions.length}${' '.padEnd(12)}║`,
+                'system');
+            print(`║ المدينة:          ${state.currentCity}${' '.padEnd(18)}║`, 'system');
+            print(`║ المدن المفتوحة:   ${state.unlockedCities.length}${' '.padEnd(18)}║`, 'system');
+            print(`║ المهام اليومية:   ${state.missions.filter(m=>m.completed).length}/${state.missions.length}${' '.padEnd(12)}║`,
+                'system');
+            print(`║ الأدوات المملوكة: ${Object.values(state.tools).filter(Boolean).length}/4${' '.padEnd(12)}║`, 'system');
+            print(`║ وقت اللعب:        ${timerDisplay.textContent.replace('⏱ ','')}${' '.padEnd(12)}║`, 'system');
+            print('╚═══════════════════════════════════════════╝', 'system');
+        }
+
+        // ls
+        function cmdLs() {
+            const parts = cmdInput.value.trim().split(' ');
+            let path = state.currentDir;
+            if (parts.length > 1) {
+                const arg = parts.slice(1).join(' ');
+                if (arg === '-l' || arg === '-la') {
+                    const contents = getDirContents(state.currentDir);
+                    if (contents) {
+                        contents.forEach(item => {
+                            const isDir = item.endsWith('/');
+                            const size = isDir ? '4096' : Math.floor(Math.random() * 10000 + 100);
+                            const perms = isDir ? 'drwxr-xr-x' : '-rw-r--r--';
+                            print(`${perms} 1 root root ${size} ${item}`, isDir ? 'info' : '');
+                        });
+                    }
+                    return;
+                }
+                path = arg.startsWith('/') ? arg : state.currentDir + arg;
+            }
+            const contents = getDirContents(path);
+            if (contents) {
+                contents.forEach(item => print(item, item.endsWith('/') ? 'info' : ''));
+            } else {
+                print(`ls: لا يوجد ملفات في '${path}'`, 'error');
+            }
+        }
+
+        // cd
+        function cmdCd() {
+            const parts = cmdInput.value.trim().split(' ');
+            if (parts.length < 2) {
+                state.currentDir = '/';
+                print('انتقلت إلى المجلد الجذر', 'system');
+                return;
+            }
+            let path = parts[1];
+            if (!path.startsWith('/')) path = state.currentDir + path;
+            const contents = getDirContents(path);
+            if (contents !== null || path === '/' || path.endsWith('/')) {
+                state.currentDir = path.endsWith('/') ? path : path + '/';
+                print(`المجلد الحالي: ${state.currentDir}`, 'system');
+            } else {
+                print(`cd: '${path}' غير موجود`, 'error');
+            }
+        }
+
+        // cat
+        function cmdCat() {
+            const parts = cmdInput.value.trim().split(' ');
+            if (parts.length < 2) {
+                print('cat: حدد ملفاً', 'error');
+                return;
+            }
+            let path = parts[1];
+            if (!path.startsWith('/')) path = state.currentDir + path;
+            const content = getFileContent(path);
+            if (content !== null) {
+                print(content, '');
+                updateMissionProgress('steal');
+                state.totalSteals++;
+            } else {
+                print(`cat: '${path}' غير موجود`, 'error');
+            }
+        }
+
+        // steal
+        async function cmdSteal() {
+            if (state.hackComplete) return print('⚠️ تم سرقة كل شيء.', 'warning');
+            if (state.phase < 3) return print('❌ نفذ "crack" أولاً.', 'error');
+            if (state.alerts >= state.maxAlerts) return print('🚨 النظام مقفل. اكتب reset.', 'error');
+
+            print('📤 سحب البيانات...', 'warning');
+            triggerGlitch(1.5);
+            playGlitchSound();
+
+            await printAsync([
+                ['[1/6] الوصول إلى /secure/database/', ''],
+                ['[2/6] تم العثور على 2.4TB من البيانات.', ''],
+                ['[3/6] ضغط البيانات...', 'progress'],
+                ['[4/6] تشفير تيار السحب...', ''],
+                ['[5/6] رفع إلى خادم خارجي...', ''],
+                ['[6/6] تأكيد الاستلام...', ''],
+            ], 160);
+
+            if (Math.random() < 0.12) {
+                await typeWriter('⚠️ فقدان جزئي للبيانات!', 'warning');
+                reduceStealth(12);
+                state.progress += 8;
+                changeReputation(-2);
+            } else {
+                await typeWriter('✅ تم سحب البيانات بنجاح!', 'success');
+                state.totalSteals++;
+                updateMissionProgress('steal');
+                state.progress += 20;
+                addXP(25);
+                changeReputation(3);
+                playSuccessSound();
+            }
+            reduceStealth(6);
+            updateUI();
+            if (state.progress >= 100) {
+                state.phase = 5;
+                await completeHack();
+            }
+        }
+
+        // firewall
+        async function cmdFirewall() {
+            if (state.hackComplete) {
+                print('🛡️ الجدار: مخترق', 'error');
+                return;
+            }
+            const fwMap = { 'ACTIVE': 'نشط', 'DETECTED': 'مكتشف', 'BYPASSED': 'متجاوز', 'BREACHED': 'مخترق' };
+            print(`🛡️ الجدار: ${fwMap[state.firewall] || state.firewall}`, '');
+            if (state.phase >= 3 && !state.hackComplete) {
+                print('💥 محاولة تجاوز الجدار...', 'warning');
+                await new Promise(r => setTimeout(r, 400));
+                if (Math.random() < 0.25) {
+                    state.firewall = 'BYPASSED';
+                    print('✅ تم تجاوز الجدار!', 'success');
+                    state.progress += 5;
+                    addXP(10);
+                    updateUI();
+                    playSuccessSound();
+                } else {
+                    print('❌ فشل التجاوز.', 'error');
+                    reduceStealth(10);
+                }
+            }
+        }
+
+        // stealth
+        function cmdStealth() {
+            const pct = Math.round(state.stealth);
+            print(`🕵️ التخفي: ${pct}%`, pct < 30 ? 'error' : pct < 60 ? 'warning' : 'success');
+            if (pct < 20) print('⚠️ خطر: يتم تتبعك!', 'error');
+            else if (pct < 50) print('⚠️ تحذير: نشاط مشبوه.', 'warning');
+            else if (pct < 80) print('✅ التخفي متوسط. كن هادئاً.', 'info');
+            else print('✅ تخفي ممتاز. أنت غير مرئي.', 'success');
+            print(`   التنبيهات: ${state.alerts}/${state.maxAlerts}`, state.alerts > 0 ? 'warning' : '');
+            print(`   السمعة: ${state.reputationLevel} (${state.reputation})`, '');
+        }
+
+        // inject
+        async function cmdInject() {
+            if (state.hackComplete) return print('⚠️ الهدف مخترق.', 'warning');
+            if (state.phase < 1) return print('❌ نفذ "scan" أولاً.', 'error');
+            if (state.alerts >= state.maxAlerts) return print('🚨 النظام مقفل. اكتب reset.', 'error');
+
+            print('💉 حقن الحمولة...', 'warning');
+            triggerGlitch(1);
+            playGlitchSound();
+
+            const payloads = ['reverse_shell.so', 'keylogger.ko', 'rootkit.ko'];
+            const selected = payloads[Math.floor(Math.random() * payloads.length)];
+
+            await printAsync([
+                [`الحمولة: ${selected}`, ''],
+                ['الهدف: 192.168.1.105:4444', ''],
+                ['التشفير: base64 + XOR', ''],
+                ['الحقن جارٍ...', 'progress'],
+            ], 160);
+
+            if (Math.random() < 0.18) {
+                await typeWriter('❌ فشل الحقن! تم الكشف.', 'error');
+                reduceStealth(20);
+                playErrorSound();
+                changeReputation(-3);
+                return;
+            }
+
+            await typeWriter('✅ تم الحقن بنجاح!', 'success');
+            state.progress += 8;
+            addXP(12);
+            reduceStealth(5);
+            updateUI();
+            playSuccessSound();
+        }
+
+        // decrypt
+        async function cmdDecrypt() {
+            if (state.phase < 1) return print('❌ لا توجد بيانات.', 'error');
+            print('🔓 فك التشفير...', 'info');
+            await printAsync([
+                ['التشفير: AES-256-GCM', ''],
+                ['المفتاح: ********************************', ''],
+                ['جاري فك 1.2GB من البيانات...', 'progress'],
+            ], 180);
+            await typeWriter('📄 ملف: "Project_Nightfall_2024.pdf"', 'info');
+            await typeWriter('📄 ملف: "Executive_Summary.txt"', 'info');
+            state.progress += 10;
+            addXP(8);
+            reduceStealth(3);
+            updateUI();
+            playSuccessSound();
+        }
+
+        // trace
+        async function cmdTrace() {
+            print('🌐 تتبع المسار...', 'info');
+            const hops = ['1.0.0.1', '2.0.0.5', '4.0.0.9', '8.0.0.17', '16.0.0.33', '32.0.0.65'];
+            for (let i = 0; i < hops.length; i++) {
+                const ms = Math.floor(Math.random() * 30 + 5);
+                await typeWriter(`  ${String(i+1).padStart(2)}  ${hops[i].padEnd(12)} ${ms}ms`, '');
+            }
+            await typeWriter(`✅ تم الوصول عبر ${hops.length} خطوة.`, 'success');
+        }
+
+        // whois
+        async function cmdWhois() {
+            print(`🔍 استعلام WHOIS: ${state.target}`, 'info');
+            await printAsync([
+                ['النطاق: GLOBALNET.SEC', ''],
+                ['المسجل: CyberCorp Intl.', ''],
+                ['التاريخ: 2018-03-15', ''],
+                ['ينتهي: 2026-03-15', ''],
+            ], 100);
+            print('✅ اكتمل.', 'success');
+        }
+
+        // ping
+        async function cmdPing() {
+            print(`📡 PING ${state.target}...`, 'info');
+            for (let i = 0; i < 3; i++) {
+                const ms = Math.floor(Math.random() * 40 + 5);
+                await typeWriter(`  64 bytes from ${state.target}: time=${ms}ms`, '');
+            }
+            await typeWriter(`✅ ${state.target} ping: 0% فقدان`, 'success');
+        }
+
+        // echo
+        function cmdEcho() {
+            const msg = cmdInput.value.trim().substring(5);
+            print(msg || '', '');
+        }
+
+        // whoami
+        function cmdWhoami() {
+            print(`hacker@${state.currentCity}`, 'highlight');
+            print(`المستوى: ${state.level} | السمعة: ${state.reputationLevel}`, 'info');
+        }
+
+        // date
+        function cmdDate() {
+            print(new Date().toLocaleString('ar-EG'), '');
+        }
+
+        // uptime
+        function cmdUptime() {
+            const m = String(Math.floor((state.sessionTime % 3600) / 60)).padStart(2, '0');
+            const s = String(state.sessionTime % 60).padStart(2, '0');
+            print(`مدة الجلسة: ${m}:${s}`, '');
+            print(`المستوى: ${state.level} | XP: ${Math.floor(state.xp)}/${state.xpToNext}`, 'info');
+        }
+
+        // motd
+        function cmdMotd() {
+            const msgs = [
+                '💀 "كلما كنت هادئاً، كلما سمعت أكثر."',
+                '🔓 "الوصول ممنوح. استخدم قوتك بحكمة."',
+                '🌐 "الشبكة هي ملعبك."',
+                '🕵️ "التخفي هو سلاحك الأقوى."',
+                '⚡ "اخترق الكوكب!"',
+            ];
+            print(msgs[Math.floor(Math.random() * msgs.length)], 'highlight');
+        }
+
+        // generate_missions
+        function cmdGenerateMissions() {
+            state.dailyMissionsGenerated = false;
+            generateDailyMissions();
+            print('📋 تم إنشاء مهام جديدة! اكتب missions لعرضها.', 'mission');
+        }
+
+        // ================================================================
+        //  COMMAND REGISTRY
+        // ================================================================
+        const commands = {
+            help: cmdHelp,
+            scan: cmdScan,
+            exploit: cmdExploit,
+            crack: cmdCrack,
+            access: cmdAccess,
+            hack: cmdHack,
+            status: cmdStatus,
+            clear: cmdClear,
+            ls: cmdLs,
+            cd: cmdCd,
+            cat: cmdCat,
+            firewall: cmdFirewall,
+            stealth: cmdStealth,
+            inject: cmdInject,
+            decrypt: cmdDecrypt,
+            trace: cmdTrace,
+            whois: cmdWhois,
+            ping: cmdPing,
+            steal: cmdSteal,
+            map: cmdMap,
+            save: cmdSave,
+            load: cmdLoad,
+            reset: cmdReset,
+            echo: cmdEcho,
+            whoami: cmdWhoami,
+            date: cmdDate,
+            uptime: cmdUptime,
+            motd: cmdMotd,
+            missions: cmdMissions,
+            achievements: cmdAchievements,
+            shop: cmdShop,
+            buy: cmdBuy,
+            city: cmdCity,
+            theme: cmdTheme,
+            stats: cmdStats,
+            generate_missions: cmdGenerateMissions,
+        };
+
+        const aliases = {
+            'll': 'ls -l',
+            'dir': 'ls',
+            'pwd': 'ls',
+            'ach': 'achievements',
+            'mission': 'missions',
+        };
+
+        // ================================================================
+        //  COMMAND DISPATCHER
+        // ================================================================
+        async function executeCommand(input) {
+            const trimmed = input.trim();
+            if (!trimmed) return;
+
+            const first = trimmed.split(' ')[0];
+            if (aliases[first]) {
+                const expanded = aliases[first];
+                const rest = trimmed.substring(first.length);
+                const newInput = expanded + (rest ? ' ' + rest : '');
+                print(`❯ ${trimmed} → ${newInput}`, 'dim');
+                return executeCommand(newInput);
+            }
+
+            state.commandsUsed++;
+            const parts = trimmed.split(' ');
+            const cmd = parts[0].toLowerCase();
+
+            state.commandHistory.push(trimmed);
+            state.historyIndex = state.commandHistory.length;
+
+            if (commands[cmd]) {
+                try {
+                    await commands[cmd]();
+                } catch (e) {
+                    print(`❌ خطأ: ${e.message}`, 'error');
+                }
+            } else {
+                print(`❌ أمر غير معروف: "${cmd}". اكتب help`, 'error');
+                playErrorSound();
+            }
+
+            cmdInput.value = '';
+            cmdInput.focus();
+            updateUI();
+            updateMissionProgress('commands');
+        }
+
+        // ================================================================
+        //  HISTORY & AUTOCOMPLETE
+        // ================================================================
+        function historyUp() {
+            if (state.historyIndex > 0) {
+                state.historyIndex--;
+                cmdInput.value = state.commandHistory[state.historyIndex] || '';
+                cmdInput.selectionStart = cmdInput.selectionEnd = cmdInput.value.length;
+            }
+        }
+
+        function historyDown() {
+            if (state.historyIndex < state.commandHistory.length - 1) {
+                state.historyIndex++;
+                cmdInput.value = state.commandHistory[state.historyIndex] || '';
+                cmdInput.selectionStart = cmdInput.selectionEnd = cmdInput.value.length;
+            } else {
+                state.historyIndex = state.commandHistory.length;
+                cmdInput.value = '';
+            }
+        }
+
+        function autocomplete() {
+            const input = cmdInput.value;
+            const parts = input.split(' ');
+            const cmd = parts[0].toLowerCase();
+            if (parts.length === 1) {
+                const matches = Object.keys(commands).filter(c => c.startsWith(cmd));
+                if (matches.length === 1) {
+                    cmdInput.value = matches[0] + ' ';
+                } else if (matches.length > 1) {
+                    print(`الإكمالات: ${matches.join(' ')}`, 'system');
+                }
+            }
+            cmdInput.focus();
+        }
+
+        // ================================================================
+        //  EVENTS
+        // ================================================================
+        cmdInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const input = cmdInput.value;
+                if (input.trim()) {
+                    print(`❯ ${input}`, 'system');
+                    executeCommand(input);
+                }
+                e.preventDefault();
+            } else if (e.key === 'ArrowUp') {
+                historyUp();
+                e.preventDefault();
+            } else if (e.key === 'ArrowDown') {
+                historyDown();
+                e.preventDefault();
+            } else if (e.key === 'Tab') {
+                autocomplete();
+                e.preventDefault();
+            }
+        });
+
+        sendBtn.addEventListener('click', () => {
+            const input = cmdInput.value;
+            if (input.trim()) {
+                print(`❯ ${input}`, 'system');
+                executeCommand(input);
+            }
+        });
+
+        toggleSoundBtn.addEventListener('click', () => {
+            state.soundEnabled = !state.soundEnabled;
+            state.glitchEnabled = state.soundEnabled;
+            toggleSoundBtn.textContent = state.soundEnabled ? '🔊' : '🔇';
+            print(`🔊 الصوت ${state.soundEnabled ? 'مفعل' : 'معطل'}`, 'system');
+        });
+
+        themeBtn.addEventListener('click', () => {
+            const themeNames = Object.keys(themes);
+            const idx = (themeNames.indexOf(currentTheme) + 1) % themeNames.length;
+            applyTheme(themeNames[idx]);
+            print(`🎨 تم تغيير الثيم إلى: ${themeNames[idx]}`, 'success');
+        });
+
+        document.querySelector('.container').addEventListener('click', () => {
+            cmdInput.focus();
+        });
+
+        document.addEventListener('dblclick', (e) => e.preventDefault());
+
+        // إغلاق الألواح عند الضغط خارجها
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('panel-overlay')) {
+                e.target.classList.remove('show');
+            }
+        });
+
+        // ================================================================
+        //  BOOT
+        // ================================================================
+        async function boot() {
+            initShop();
+
+            print('╔══════════════════════════════════════════════╗', 'system');
+            print('║   🚀 CYBERHACK PRO - الإصدار المتطور       ║', 'highlight');
+            print('║   🏅 نظام مستويات | 🏆 إنجازات | 📋 مهام   ║', 'highlight');
+            print('║   🌍 مدن متعددة | 🛒 سوق سوداء | ⭐ سمعة   ║', 'highlight');
+            print('╚══════════════════════════════════════════════╝', 'system');
+
+            await typeWriter('🔧 تهيئة الأنظمة...', 'info', 12);
+            await printAsync([
+                ['[✓] النواة محملة', 'success'],
+                ['[✓] الشبكة جاهزة', 'success'],
+                ['[✓] التشفير نشط', 'success'],
+                ['[✓] الحمولات جاهزة', 'success'],
+                ['[✓] خريطة الشبكة جاهزة', 'success'],
+                ['[✓] نظام المهام جاهز', 'success'],
+                ['[✓] نظام الإنجازات جاهز', 'success'],
+                ['[✓] السوق السوداء جاهزة', 'success'],
+            ], 80);
+
+            generateDailyMissions();
+
+            await typeWriter('✅ النظام جاهز.', 'success');
+            await typeWriter(`🌍 المدينة الحالية: ${state.currentCity}`, 'info');
+            await typeWriter(`🎯 الهدف: ${state.target}`, 'info');
+            await typeWriter('📖 اكتب help لرؤية الأوامر', 'system');
+            await typeWriter('💡 المسار: scan → exploit → crack → access → hack', 'info');
+            await typeWriter('📋 اكتب missions لعرض المهام اليومية', 'info');
+            await typeWriter('🏆 اكتب achievements لعرض الإنجازات', 'info');
+
+            startTimer();
+            updateUI();
+            playSuccessSound();
+
+            const saved = localStorage.getItem('cyberhack_pro_save');
+            if (saved) {
+                print('💾 يوجد حفظ سابق. اكتب load للمتابعة.', 'warning');
+            }
+        }
+
+        // ================================================================
+        //  INIT
+        // ================================================================
+        initNetworkMap();
+        boot();
+
+        document.addEventListener('click', () => {
+            initAudio();
+        }, { once: true });
+
+        console.log('🖥️ CyberHack PRO - الإصدار المتطور (مصحح)');
+        console.log('📖 اكتب help');
+        console.log(`🏅 المستوى: ${state.level} | 🪙 ${state.coins} | ⭐ ${state.reputationLevel}`);
+        console.log(`🌍 المدينة: ${state.currentCity} | 🎯 الهدف: ${state.target}`);
+    </script>
+</body>
+</html>

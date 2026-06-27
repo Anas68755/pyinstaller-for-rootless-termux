@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐗Keyboar🐗</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top left, #2efcff22, transparent 30%),
+        radial-gradient(circle at bottom right, #ff00cc22, transparent 30%),
+        linear-gradient(135deg, #050816, #0b1022, #070b16);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    color: white;
+    overflow: hidden;
+}
+
+.container {
+    width: min(900px, 100%);
+    background: rgba(10, 16, 34, 0.85);
+    border: 1px solid rgba(46, 252, 255, 0.2);
+    backdrop-filter: blur(14px);
+    border-radius: 32px;
+    padding: 28px 24px;
+    box-shadow:
+        0 0 30px rgba(46, 252, 255, 0.18),
+        0 0 60px rgba(255, 0, 204, 0.12);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    max-height: 98vh;
+    overflow-y: auto;
+}
+
+.container::-webkit-scrollbar { width: 4px; }
+.container::-webkit-scrollbar-track { background: rgba(255,255,255,0.04); border-radius: 12px; }
+.container::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #2efcff, #ff00cc); border-radius: 12px; }
+
+.container::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(90deg, #2efcff, #ff00cc, #7d5cff, #2efcff);
+    background-size: 400%;
+    z-index: -1;
+    filter: blur(18px);
+    animation: glow 10s linear infinite;
+    opacity: 0.4;
+}
+
+@keyframes glow {
+    0% { background-position: 0%; }
+    100% { background-position: 400%; }
+}
+
+/* ===== العنوان ===== */
+h1 {
+    font-size: 2.4rem;
+    font-weight: bold;
+    background: linear-gradient(90deg, #2efcff, #ff00cc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 2px;
+}
+.sub {
+    color: #b9c7e6;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+}
+
+/* ===== الإحصائيات ===== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 8px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 16px;
+    padding: 12px 10px;
+    margin-bottom: 14px;
+    border: 1px solid rgba(255,255,255,0.04);
+}
+.stat-item {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #7f8fb8;
+}
+.stat-item .val {
+    display: block;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #fff;
+    margin-top: 2px;
+}
+.stat-item .val.gold { color: #ffd700; }
+.stat-item .val.cyan { color: #2efcff; }
+.stat-item .val.pink { color: #ff00cc; }
+.stat-item .val.green { color: #2ecc71; }
+.stat-item .val.red { color: #ff6b6b; }
+
+/* ===== شريط الوقت ===== */
+.timer-bar-wrap {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 10px;
+    margin-bottom: 14px;
+    overflow: hidden;
+}
+.timer-bar {
+    height: 100%;
+    width: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #2efcff, #ff00cc);
+    transition: width 0.3s linear;
+}
+
+/* ===== رسالة الحالة ===== */
+#statusMsg {
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+    min-height: 36px;
+    color: #b9c7e6;
+    transition: 0.3s;
+}
+#statusMsg.success { color: #2efcff; text-shadow: 0 0 20px #2efcff66; }
+#statusMsg.fail { color: #ff6b6b; text-shadow: 0 0 20px #ff6b6b66; }
+#statusMsg.combo { color: #ffd700; text-shadow: 0 0 30px #ffd70088; animation: comboPulse 0.5s ease; }
+@keyframes comboPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* ===== الكيبورد ===== */
+.keyboard {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 8px 0 16px;
+}
+.row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* ===== الزر الأساسي ===== */
+.key {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: rgba(17, 24, 48, 0.9);
+    color: #7f8fb8;
+    font-size: 1rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    position: relative;
+    
+    /* ===== الإطار المضيء الأزرق الدائم ===== */
+    border: 2px solid rgba(46, 252, 255, 0.35);
+    box-shadow: 
+        0 0 10px rgba(46, 252, 255, 0.15),
+        inset 0 0 10px rgba(46, 252, 255, 0.05),
+        0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== توهج الإطار الأزرق عند التمرير ===== */
+.key:hover {
+    border-color: rgba(46, 252, 255, 0.7);
+    box-shadow: 
+        0 0 20px rgba(46, 252, 255, 0.3),
+        inset 0 0 20px rgba(46, 252, 255, 0.08),
+        0 4px 12px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+/* ===== تأثير وميض الإطار الأزرق (توهج ناعم دائم) ===== */
+.key::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 14px;
+    padding: 2px;
+    background: linear-gradient(135deg, rgba(46, 252, 255, 0.3), rgba(46, 252, 255, 0.05));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    animation: borderGlow 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes borderGlow {
+    0% {
+        opacity: 0.5;
+        background: linear-gradient(135deg, rgba(46, 252, 255, 0.2), rgba(46, 252, 255, 0.02));
+    }
+    100% {
+        opacity: 1;
+        background: linear-gradient(135deg, rgba(46, 252, 255, 0.6), rgba(46, 252, 255, 0.15));
+    }
+}
+
+/* ===== أنماط الإضاءة للزر النشط ===== */
+.key.active-glow {
+    border-color: #2efcff !important;
+    background: rgba(46, 252, 255, 0.25) !important;
+    color: #fff !important;
+    box-shadow: 
+        0 0 30px rgba(46, 252, 255, 0.5),
+        inset 0 0 30px rgba(46, 252, 255, 0.15),
+        0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    transform: scale(1.06);
+    animation: pulseGlow 0.5s ease-in-out infinite alternate;
+}
+@keyframes pulseGlow {
+    0% { box-shadow: 0 0 20px rgba(46, 252, 255, 0.3), inset 0 0 20px rgba(46, 252, 255, 0.05); }
+    100% { box-shadow: 0 0 50px rgba(46, 252, 255, 0.7), inset 0 0 40px rgba(46, 252, 255, 0.2); }
+}
+
+.key.active-neon {
+    border-color: #ff00cc !important;
+    background: rgba(255, 0, 204, 0.2) !important;
+    color: #fff !important;
+    box-shadow: 
+        0 0 30px rgba(255, 0, 204, 0.4),
+        inset 0 0 30px rgba(255, 0, 204, 0.1),
+        0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    transform: scale(1.06);
+    animation: pulseNeon 0.4s ease-in-out infinite alternate;
+}
+@keyframes pulseNeon {
+    0% { box-shadow: 0 0 15px rgba(255, 0, 204, 0.3), inset 0 0 15px rgba(255, 0, 204, 0.05); }
+    100% { box-shadow: 0 0 50px rgba(255, 0, 204, 0.6), inset 0 0 40px rgba(255, 0, 204, 0.15); }
+}
+
+.key.active-rainbow {
+    border-color: #ffd700 !important;
+    background: linear-gradient(135deg, rgba(46,252,255,0.25), rgba(255,0,204,0.25)) !important;
+    color: #fff !important;
+    box-shadow: 
+        0 0 30px rgba(255, 215, 0, 0.3),
+        inset 0 0 30px rgba(255, 215, 0, 0.05),
+        0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    transform: scale(1.06);
+    animation: rainbowPulse 0.6s ease-in-out infinite alternate;
+}
+@keyframes rainbowPulse {
+    0% { box-shadow: 0 0 15px rgba(46,252,255,0.3); }
+    50% { box-shadow: 0 0 40px rgba(255,0,204,0.4); }
+    100% { box-shadow: 0 0 30px rgba(255,215,0,0.3); }
+}
+
+/* ===== تأثير النجاح ===== */
+.key.hit {
+    animation: hitAnim 0.3s ease;
+}
+@keyframes hitAnim {
+    0% { transform: scale(0.8); background: rgba(46,252,255,0.5) !important; border-color: #2efcff !important; }
+    50% { transform: scale(1.2); background: rgba(46,252,255,0.3) !important; }
+    100% { transform: scale(1); background: transparent; }
+}
+
+/* ===== انفجار نيون ===== */
+.neon-burst {
+    position: fixed;
+    pointer-events: none;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(46,252,255,0.6), transparent 70%);
+    animation: burstAnim 0.6s ease forwards;
+    z-index: 999;
+}
+@keyframes burstAnim {
+    0% { transform: scale(0); opacity: 1; }
+    100% { transform: scale(4); opacity: 0; }
+}
+
+/* ===== مستويات الصعوبة ===== */
+.difficulty {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+.diff-btn {
+    padding: 6px 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    background: transparent;
+    color: #7f8fb8;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: bold;
+    transition: 0.3s;
+}
+.diff-btn:hover {
+    border-color: rgba(46,252,255,0.3);
+    color: #fff;
+}
+.diff-btn.active {
+    border-color: #2efcff;
+    background: rgba(46,252,255,0.1);
+    color: #2efcff;
+    box-shadow: 0 0 20px rgba(46,252,255,0.15);
+}
+
+/* ===== أنماط الإضاءة ===== */
+.light-style {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+.style-btn {
+    padding: 4px 16px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    background: transparent;
+    color: #7f8fb8;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: 0.3s;
+}
+.style-btn:hover {
+    border-color: rgba(255,255,255,0.2);
+    color: #fff;
+}
+.style-btn.active {
+    border-color: #ff00cc;
+    background: rgba(255,0,204,0.1);
+    color: #ff00cc;
+}
+
+/* ===== الأزرار ===== */
+.btn-group {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+.btn-primary {
+    padding: 12px 40px;
+    border: none;
+    border-radius: 18px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #fff;
+    background: linear-gradient(135deg, #2efcff, #7d5cff);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 30px rgba(46, 252, 255, 0.25);
+}
+.btn-primary:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(46, 252, 255, 0.4);
+}
+.btn-primary:active { transform: scale(0.95); }
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    padding: 10px 28px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    color: #b9c7e6;
+    background: rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: 0.3s;
+}
+.btn-secondary:hover {
+    border-color: #ff00cc;
+    color: #fff;
+    background: rgba(255,0,204,0.08);
+}
+
+/* ===== لوحة الشرف ===== */
+.hall-of-fame {
+    margin-top: 14px;
+    padding: 12px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.04);
+}
+.hall-title {
+    font-size: 0.8rem;
+    color: #7f8fb8;
+    margin-bottom: 6px;
+}
+.hall-list {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 0.85rem;
+    color: #b9c7e6;
+    flex-wrap: wrap;
+}
+.hall-list .rank.gold { color: #ffd700; }
+.hall-list .rank.silver { color: #c0c0c0; }
+.hall-list .rank.bronze { color: #cd7f32; }
+
+/* ===== نجوم التقييم ===== */
+.stars {
+    font-size: 1.8rem;
+    letter-spacing: 4px;
+    margin: 4px 0;
+}
+.stars .on { color: #ffd700; text-shadow: 0 0 20px #ffd70066; }
+.stars .off { color: #333; }
+
+/* ===== التوافق ===== */
+@media (max-width: 700px) {
+    .container { padding: 18px 12px; }
+    h1 { font-size: 1.8rem; }
+    .key { width: 38px; height: 38px; font-size: 0.8rem; border-radius: 9px; }
+    .row { gap: 4px; }
+    .keyboard { gap: 4px; }
+    .stats-grid { grid-template-columns: repeat(4, 1fr); padding: 8px; }
+    .stat-item .val { font-size: 1rem; }
+    .btn-primary { padding: 10px 28px; font-size: 0.95rem; }
+    #statusMsg { font-size: 1rem; min-height: 30px; }
+}
+
+@media (max-width: 450px) {
+    .key { width: 28px; height: 28px; font-size: 0.6rem; border-radius: 6px; }
+    .row { gap: 3px; }
+    .keyboard { gap: 3px; }
+    h1 { font-size: 1.4rem; }
+    .stat-item { font-size: 0.6rem; }
+    .stat-item .val { font-size: 0.85rem; }
+    .difficulty { gap: 6px; }
+    .diff-btn { padding: 4px 12px; font-size: 0.7rem; }
+    .btn-primary { padding: 8px 20px; font-size: 0.85rem; }
+    .btn-secondary { padding: 6px 16px; font-size: 0.8rem; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🐗KEYBOAR🐗</h1>
+    <div class="sub">اضغط على الزر المضيء بأسرع وقت</div>
+
+    <!-- ===== الإحصائيات ===== -->
+    <div class="stats-grid">
+        <div class="stat-item">🎯 النقاط <span class="val cyan" id="scoreDisplay">0</span></div>
+        <div class="stat-item">🔥 السلسلة <span class="val gold" id="comboDisplay">0</span></div>
+        <div class="stat-item">🎯 الدقة <span class="val green" id="accuracyDisplay">0%</span></div>
+        <div class="stat-item">⏱️ الوقت <span class="val pink" id="timerDisplay">30</span>s</div>
+    </div>
+
+    <!-- ===== شريط الوقت ===== -->
+    <div class="timer-bar-wrap">
+        <div class="timer-bar" id="timerBar"></div>
+    </div>
+
+    <!-- ===== مستويات الصعوبة ===== -->
+    <div class="difficulty" id="difficultyGroup">
+        <button class="diff-btn" data-diff="easy">🟢 سهل</button>
+        <button class="diff-btn active" data-diff="medium">🟡 متوسط</button>
+        <button class="diff-btn" data-diff="hard">🔴 صعب</button>
+        <button class="diff-btn" data-diff="expert">💀 خبير</button>
+    </div>
+
+    <!-- ===== أنماط الإضاءة ===== -->
+    <div class="light-style" id="styleGroup">
+        <button class="style-btn active" data-style="glow">✨ توهج</button>
+        <button class="style-btn" data-style="neon">💜 نيون</button>
+        <button class="style-btn" data-style="rainbow">🌈 قوس قزح</button>
+    </div>
+
+    <!-- ===== رسالة الحالة ===== -->
+    <div id="statusMsg">✨ اضغط "بدء" للعب</div>
+
+    <!-- ===== الكيبورد ===== -->
+    <div class="keyboard" id="keyboard">
+        <div class="row">
+            <div class="key" data-key="Q">Q</div>
+            <div class="key" data-key="W">W</div>
+            <div class="key" data-key="E">E</div>
+            <div class="key" data-key="R">R</div>
+            <div class="key" data-key="T">T</div>
+            <div class="key" data-key="Y">Y</div>
+            <div class="key" data-key="U">U</div>
+            <div class="key" data-key="I">I</div>
+            <div class="key" data-key="O">O</div>
+            <div class="key" data-key="P">P</div>
+        </div>
+        <div class="row">
+            <div class="key" data-key="A">A</div>
+            <div class="key" data-key="S">S</div>
+            <div class="key" data-key="D">D</div>
+            <div class="key" data-key="F">F</div>
+            <div class="key" data-key="G">G</div>
+            <div class="key" data-key="H">H</div>
+            <div class="key" data-key="J">J</div>
+            <div class="key" data-key="K">K</div>
+            <div class="key" data-key="L">L</div>
+        </div>
+        <div class="row">
+            <div class="key" data-key="Z">Z</div>
+            <div class="key" data-key="X">X</div>
+            <div class="key" data-key="C">C</div>
+            <div class="key" data-key="V">V</div>
+            <div class="key" data-key="B">B</div>
+            <div class="key" data-key="N">N</div>
+            <div class="key" data-key="M">M</div>
+        </div>
+    </div>
+
+    <!-- ===== الأزرار ===== -->
+    <div class="btn-group">
+        <button class="btn-primary" id="startBtn">🚀 بدء اللعبة</button>
+        <button class="btn-secondary" id="resetBtn">🔄 إعادة تعيين</button>
+    </div>
+
+    <!-- ===== نجوم التقييم ===== -->
+    <div class="stars" id="starsDisplay">
+        <span class="off">★</span>
+        <span class="off">★</span>
+        <span class="off">★</span>
+    </div>
+
+    <!-- ===== لوحة الشرف ===== -->
+    <div class="hall-of-fame">
+        <div class="hall-title">🏆 لوحة الشرف</div>
+        <div class="hall-list" id="hallList">
+            <span>🥇 <span id="hall1">--</span></span>
+            <span>🥈 <span id="hall2">--</span></span>
+            <span>🥉 <span id="hall3">--</span></span>
+        </div>
+    </div>
+
+</div>
+
+<!-- ============================================================ -->
+<script>
+(function() {
+    'use strict';
+
+    // ---- عناصر DOM ----
+    const keys = document.querySelectorAll('.key');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const comboDisplay = document.getElementById('comboDisplay');
+    const accuracyDisplay = document.getElementById('accuracyDisplay');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const timerBar = document.getElementById('timerBar');
+    const statusMsg = document.getElementById('statusMsg');
+    const starsDisplay = document.getElementById('starsDisplay');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const hall1 = document.getElementById('hall1');
+    const hall2 = document.getElementById('hall2');
+    const hall3 = document.getElementById('hall3');
+    const diffBtns = document.querySelectorAll('.diff-btn');
+    const styleBtns = document.querySelectorAll('.style-btn');
+
+    // ---- حالة اللعبة ----
+    let score = 0;
+    let combo = 0;
+    let maxCombo = 0;
+    let totalClicks = 0;
+    let correctClicks = 0;
+    let isPlaying = false;
+    let isWaitingForClick = false;
+    let activeKey = null;
+    let gameTimer = null;
+    let roundTimeout = null;
+    let timeLeft = 30;
+    let maxTime = 30;
+    let difficulty = 'medium';
+    let lightStyle = 'glow';
+
+    // ---- إعدادات الصعوبة ----
+    const DIFFICULTY = {
+        easy: { time: 40, baseSpeed: 1600, minSpeed: 600, decrease: 40 },
+        medium: { time: 30, baseSpeed: 1300, minSpeed: 450, decrease: 50 },
+        hard: { time: 20, baseSpeed: 900, minSpeed: 300, decrease: 60 },
+        expert: { time: 15, baseSpeed: 600, minSpeed: 200, decrease: 70 }
+    };
+
+    // ---- أنماط الإضاءة ----
+    const STYLES = {
+        glow: 'active-glow',
+        neon: 'active-neon',
+        rainbow: 'active-rainbow'
+    };
+
+    // ---- أفضل النتائج ----
+    let bestScores = JSON.parse(localStorage.getItem('neonKeyBestScores')) || [];
+
+    // ---- تحديث لوحة الشرف ----
+    function updateHallOfFame() {
+        const sorted = [...bestScores].sort((a, b) => b - a);
+        hall1.textContent = sorted[0] || '--';
+        hall2.textContent = sorted[1] || '--';
+        hall3.textContent = sorted[2] || '--';
+    }
+    updateHallOfFame();
+
+    // ---- دالة حفظ النتيجة ----
+    function saveScore(score) {
+        bestScores.push(score);
+        bestScores.sort((a, b) => b - a);
+        if (bestScores.length > 3) bestScores = bestScores.slice(0, 3);
+        localStorage.setItem('neonKeyBestScores', JSON.stringify(bestScores));
+        updateHallOfFame();
+    }
+
+    // ---- دالة تحديث النجوم ----
+    function updateStars(score) {
+        const stars = starsDisplay.querySelectorAll('span');
+        let count = 0;
+        if (score >= 10) count = 3;
+        else if (score >= 5) count = 2;
+        else if (score >= 1) count = 1;
+
+        stars.forEach((s, i) => {
+            s.className = i < count ? 'on' : 'off';
+        });
+    }
+
+    // ---- دالة اختيار زر عشوائي ----
+    function getRandomKey() {
+        const allKeys = Array.from(keys);
+        const available = allKeys.filter(k => k !== activeKey);
+        return available[Math.floor(Math.random() * available.length)];
+    }
+
+    // ---- دالة إضاءة زر ----
+    function lightUpKey() {
+        if (activeKey) {
+            activeKey.classList.remove(STYLES[lightStyle]);
+        }
+
+        const newKey = getRandomKey();
+        activeKey = newKey;
+        newKey.classList.add(STYLES[lightStyle]);
+
+        statusMsg.textContent = `🔆 اضغط على: ${newKey.dataset.key}`;
+        statusMsg.className = 'waiting';
+        isWaitingForClick = true;
+
+        const diff = DIFFICULTY[difficulty];
+        const timeLeft = Math.max(diff.minSpeed, diff.baseSpeed - (score * diff.decrease));
+
+        if (roundTimeout) clearTimeout(roundTimeout);
+        roundTimeout = setTimeout(() => {
+            if (isPlaying && isWaitingForClick) {
+                handleMiss();
+            }
+        }, timeLeft);
+    }
+
+    // ---- دالة إنشاء انفجار نيون ----
+    function createBurst(x, y) {
+        const burst = document.createElement('div');
+        burst.className = 'neon-burst';
+        const size = 40 + Math.random() * 60;
+        burst.style.width = size + 'px';
+        burst.style.height = size + 'px';
+        burst.style.left = (x - size/2) + 'px';
+        burst.style.top = (y - size/2) + 'px';
+        document.body.appendChild(burst);
+        setTimeout(() => burst.remove(), 700);
+    }
+
+    // ---- دالة النجاح ----
+    function handleSuccess(keyElement, event) {
+        if (!isPlaying || !isWaitingForClick || keyElement !== activeKey) return;
+
+        isWaitingForClick = false;
+        if (roundTimeout) clearTimeout(roundTimeout);
+
+        keyElement.classList.remove(STYLES[lightStyle]);
+
+        score++;
+        combo++;
+        if (combo > maxCombo) maxCombo = combo;
+        totalClicks++;
+        correctClicks++;
+
+        scoreDisplay.textContent = score;
+        comboDisplay.textContent = combo;
+        accuracyDisplay.textContent = Math.round((correctClicks / totalClicks) * 100) + '%';
+
+        keyElement.classList.add('hit');
+        setTimeout(() => keyElement.classList.remove('hit'), 300);
+
+        if (event) {
+            createBurst(event.clientX || event.pageX, event.clientY || event.pageY);
+        }
+
+        if (combo >= 3) {
+            statusMsg.textContent = `🔥 سلسلة ${combo}! +${combo}`;
+            statusMsg.className = 'combo';
+        } else {
+            statusMsg.textContent = `✅ صحيح! (${score})`;
+            statusMsg.className = 'success';
+        }
+
+        setTimeout(() => {
+            if (isPlaying && timeLeft > 0) {
+                lightUpKey();
+            }
+        }, 250);
+    }
+
+    // ---- دالة الفشل ----
+    function handleMiss() {
+        if (!isPlaying) return;
+        isWaitingForClick = false;
+        if (activeKey) {
+            activeKey.classList.remove(STYLES[lightStyle]);
+        }
+        combo = 0;
+        comboDisplay.textContent = '0';
+        statusMsg.textContent = `❌ فاتك الزر! النقاط: ${score}`;
+        statusMsg.className = 'fail';
+        endGame(false);
+    }
+
+    // ---- دالة الضغط الخطأ ----
+    function handleWrongPress(keyElement) {
+        if (!isPlaying || !isWaitingForClick) return;
+        combo = 0;
+        comboDisplay.textContent = '0';
+        totalClicks++;
+        accuracyDisplay.textContent = Math.round((correctClicks / totalClicks) * 100) + '%';
+
+        keyElement.style.background = 'rgba(255,0,0,0.3)';
+        keyElement.style.borderColor = '#ff0000';
+        setTimeout(() => {
+            keyElement.style.background = '';
+            keyElement.style.borderColor = '';
+        }, 200);
+
+        statusMsg.textContent = `❌ زر خاطئ! اضغط ${activeKey ? activeKey.dataset.key : '?'}`;
+        statusMsg.className = 'fail';
+    }
+
+    // ---- دالة إنهاء اللعبة ----
+    function endGame(win = false) {
+        if (!isPlaying) return;
+        isPlaying = false;
+        isWaitingForClick = false;
+
+        if (roundTimeout) clearTimeout(roundTimeout);
+        if (gameTimer) clearInterval(gameTimer);
+
+        if (activeKey) {
+            activeKey.classList.remove(STYLES[lightStyle]);
+            activeKey = null;
+        }
+
+        startBtn.disabled = false;
+        startBtn.textContent = '🔄 العب مرة أخرى';
+
+        if (score > 0) saveScore(score);
+        updateStars(score);
+
+        if (win) {
+            statusMsg.textContent = `🎉 انتهى الوقت! النقاط: ${score} 🎉`;
+            statusMsg.className = 'success';
+        }
+    }
+
+    // ---- دالة بدء اللعبة ----
+    function startGame() {
+        if (isPlaying) return;
+
+        score = 0;
+        combo = 0;
+        maxCombo = 0;
+        totalClicks = 0;
+        correctClicks = 0;
+
+        const diff = DIFFICULTY[difficulty];
+        maxTime = diff.time;
+        timeLeft = maxTime;
+
+        scoreDisplay.textContent = '0';
+        comboDisplay.textContent = '0';
+        accuracyDisplay.textContent = '0%';
+        timerDisplay.textContent = maxTime;
+        timerBar.style.width = '100%';
+
+        if (activeKey) {
+            activeKey.classList.remove(STYLES[lightStyle]);
+            activeKey = null;
+        }
+        if (roundTimeout) clearTimeout(roundTimeout);
+
+        isPlaying = true;
+        isWaitingForClick = false;
+
+        startBtn.disabled = true;
+        startBtn.textContent = '⏳ جاري اللعب...';
+
+        statusMsg.textContent = '🎯 استعد...';
+        statusMsg.className = '';
+
+        starsDisplay.querySelectorAll('span').forEach(s => s.className = 'off');
+
+        gameTimer = setInterval(() => {
+            timeLeft--;
+            timerDisplay.textContent = timeLeft;
+            timerBar.style.width = (timeLeft / maxTime * 100) + '%';
+
+            if (timeLeft <= 5) {
+                timerBar.style.background = 'linear-gradient(90deg, #ff6b6b, #ff00cc)';
+            }
+
+            if (timeLeft <= 0) {
+                clearInterval(gameTimer);
+                endGame(true);
+            }
+        }, 1000);
+
+        setTimeout(() => {
+            if (isPlaying) {
+                lightUpKey();
+            }
+        }, 500);
+    }
+
+    // ---- دالة إعادة التعيين ----
+    function resetGame() {
+        isPlaying = false;
+        isWaitingForClick = false;
+
+        if (roundTimeout) clearTimeout(roundTimeout);
+        if (gameTimer) clearInterval(gameTimer);
+
+        if (activeKey) {
+            activeKey.classList.remove(STYLES[lightStyle]);
+            activeKey = null;
+        }
+
+        score = 0;
+        combo = 0;
+        maxCombo = 0;
+        totalClicks = 0;
+        correctClicks = 0;
+
+        const diff = DIFFICULTY[difficulty];
+        maxTime = diff.time;
+        timeLeft = maxTime;
+
+        scoreDisplay.textContent = '0';
+        comboDisplay.textContent = '0';
+        accuracyDisplay.textContent = '0%';
+        timerDisplay.textContent = maxTime;
+        timerBar.style.width = '100%';
+        timerBar.style.background = 'linear-gradient(90deg, #2efcff, #ff00cc)';
+
+        startBtn.disabled = false;
+        startBtn.textContent = '🚀 بدء اللعبة';
+
+        statusMsg.textContent = '🔄 تم إعادة التعيين';
+        statusMsg.className = '';
+
+        starsDisplay.querySelectorAll('span').forEach(s => s.className = 'off');
+
+        keys.forEach(k => {
+            k.style.background = '';
+            k.style.borderColor = '';
+            k.style.transform = '';
+            k.classList.remove(STYLES[lightStyle], 'hit');
+        });
+
+        updateHallOfFame();
+    }
+
+    // ---- مستمعات الأحداث ----
+    keys.forEach(key => {
+        key.addEventListener('click', function(e) {
+            if (!isPlaying) {
+                statusMsg.textContent = '⚠️ اضغط "بدء" أولاً!';
+                statusMsg.className = 'fail';
+                return;
+            }
+
+            if (this === activeKey && isWaitingForClick) {
+                handleSuccess(this, e);
+            } else if (isWaitingForClick) {
+                handleWrongPress(this);
+            }
+        });
+    });
+
+    document.addEventListener('keydown', function(e) {
+        const keyChar = e.key.toUpperCase();
+        if (keyChar.length === 1 && keyChar >= 'A' && keyChar <= 'Z') {
+            const keyElement = document.querySelector(`.key[data-key="${keyChar}"]`);
+            if (keyElement) {
+                keyElement.click();
+                keyElement.style.transform = 'scale(0.9)';
+                setTimeout(() => keyElement.style.transform = '', 100);
+            }
+        }
+    });
+
+    // ---- مستويات الصعوبة ----
+    diffBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (isPlaying) return;
+            diffBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            difficulty = this.dataset.diff;
+            const diff = DIFFICULTY[difficulty];
+            timerDisplay.textContent = diff.time;
+            timerBar.style.width = '100%';
+            resetGame();
+        });
+    });
+
+    // ---- أنماط الإضاءة ----
+    styleBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            styleBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            lightStyle = this.dataset.style;
+            if (activeKey) {
+                activeKey.classList.remove('active-glow', 'active-neon', 'active-rainbow');
+                activeKey.classList.add(STYLES[lightStyle]);
+            }
+        });
+    });
+
+    startBtn.addEventListener('click', startGame);
+    resetBtn.addEventListener('click', resetGame);
+
+    const diff = DIFFICULTY[difficulty];
+    timerDisplay.textContent = diff.time;
+    timerBar.style.width = '100%';
+
+})();
+</script>
+</body>
+</html>

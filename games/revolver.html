@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🎯 الروليت الروسية - العقوبات</title>
+    <style>
+        /* ============================================================
+           الروليت الروسية - مع صورة المسدس
+           ============================================================ */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        :root {
+            --primary: #cc0000;
+            --secondary: #1a1a2e;
+            --gold: #ffd700;
+            --green: #00ff41;
+            --dark: #0a0a0a;
+            --panel: #16213e;
+            --red: #ff0040;
+            --white: #ffffff;
+            --font: 'Courier New', monospace;
+            --touch-size: 44px;
+        }
+        body {
+            font-family: var(--font);
+            background: var(--dark);
+            color: var(--white);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        ::selection {
+            background: var(--gold);
+            color: var(--dark);
+        }
+        ::-webkit-scrollbar {
+            width: 3px;
+            height: 3px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--dark);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 3px;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            max-height: 100vh;
+            background: var(--secondary);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid var(--primary);
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .header h1 {
+            font-size: 1.2rem;
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header h1 .blink {
+            animation: blink 1s step-end infinite;
+            color: var(--red);
+        }
+        @keyframes blink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+        .header .stats {
+            display: flex;
+            gap: 12px;
+            font-size: 0.7rem;
+            flex-wrap: wrap;
+        }
+        .header .stats span {
+            background: rgba(255, 0, 64, 0.15);
+            padding: 3px 10px;
+            border-radius: 4px;
+            border: 1px solid var(--primary);
+            color: var(--white);
+        }
+        .header .stats .gold {
+            color: var(--gold);
+            border-color: var(--gold);
+        }
+
+        /* MAIN GAME AREA */
+        .game-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 0;
+        }
+
+        /* REVOLVER DISPLAY - مع صورة */
+        .revolver-area {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at center, #1a0a0a 0%, #0a0505 100%);
+            border-radius: 16px;
+            border: 2px solid var(--primary);
+            position: relative;
+            min-height: 200px;
+            padding: 15px;
+        }
+
+        /* حاوية المسدس والصورة */
+        .revolver-container {
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* صورة المسدس */
+        .revolver-image {
+            width: 100%;
+            max-width: 280px;
+            height: auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.1));
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+        .revolver-image:hover {
+            filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.2));
+        }
+        .revolver-image:active {
+            transform: scale(0.95);
+        }
+
+        /* تأثير إطلاق النار - فلاش */
+        .muzzle-flash {
+            position: absolute;
+            top: 50%;
+            right: -10px;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, rgba(255, 200, 50, 0.9) 0%, rgba(255, 100, 0, 0.6) 40%, rgba(255, 0, 0, 0) 70%);
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.05s;
+            z-index: 10;
+        }
+        .muzzle-flash.active {
+            opacity: 1;
+            animation: flashAnim 0.3s ease-out forwards;
+        }
+        @keyframes flashAnim {
+            0% {
+                opacity: 1;
+                transform: translateY(-50%) scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: translateY(-50%) scale(1.5);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50%) scale(2);
+            }
+        }
+
+        /* تأثير ارتداد المسدس */
+        .revolver-image.recoil {
+            animation: recoilAnim 0.2s ease;
+        }
+        @keyframes recoilAnim {
+            0% {
+                transform: translateX(0) rotate(0deg);
+            }
+            30% {
+                transform: translateX(-15px) rotate(-5deg);
+            }
+            60% {
+                transform: translateX(5px) rotate(2deg);
+            }
+            100% {
+                transform: translateX(0) rotate(0deg);
+            }
+        }
+
+        /* الحجرات - تظهر كدوائر صغيرة فوق المسدس */
+        .chambers-overlay {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .chamber-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #444;
+            background: #1a1a1a;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+        .chamber-dot.current {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+            animation: pulseDot 1s infinite;
+        }
+        @keyframes pulseDot {
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(255, 215, 0, 0.5);
+            }
+        }
+        .chamber-dot.revealed-bullet {
+            border-color: var(--red);
+            background: var(--red);
+            box-shadow: 0 0 30px rgba(255, 0, 64, 0.6);
+            animation: bulletReveal 0.6s ease;
+        }
+        .chamber-dot.revealed-empty {
+            border-color: #444;
+            background: transparent;
+        }
+        .chamber-dot.fired {
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.2);
+        }
+        .chamber-dot.hidden {
+            border-color: #444;
+            background: #1a1a1a;
+        }
+        @keyframes bulletReveal {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.4);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .revolver-area .status-text {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--gold);
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+            margin: 8px 0 4px;
+            text-align: center;
+            min-height: 2.2rem;
+        }
+        .revolver-area .status-text.danger {
+            color: var(--red);
+            text-shadow: 0 0 30px rgba(255, 0, 64, 0.4);
+            animation: dangerPulse 0.8s infinite;
+        }
+        @keyframes dangerPulse {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        .revolver-area .status-text.success {
+            color: var(--green);
+            text-shadow: 0 0 30px rgba(0, 255, 65, 0.3);
+        }
+
+        .revolver-area .bullet-count {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        /* PUNISHMENT DISPLAY */
+        .punishment-area {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            padding: 10px 15px;
+            border: 1px solid #333;
+            min-height: 70px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .punishment-area .label {
+            font-size: 0.6rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .punishment-area .punishment-text {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--gold);
+            margin: 4px 0;
+            min-height: 2rem;
+        }
+        .punishment-area .punishment-text.danger {
+            color: var(--red);
+        }
+        .punishment-area .punishment-text.success {
+            color: var(--green);
+        }
+        .punishment-area .punishment-desc {
+            font-size: 0.7rem;
+            color: #aaa;
+        }
+
+        /* BUTTONS */
+        .button-area {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 4px 0;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-family: var(--font);
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+            min-height: var(--touch-size);
+            min-width: 80px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn:active {
+            transform: scale(0.95);
+            opacity: 0.7;
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+            box-shadow: 0 0 20px rgba(204, 0, 0, 0.3);
+        }
+        .btn-primary:hover:not(:disabled) {
+            box-shadow: 0 0 40px rgba(204, 0, 0, 0.5);
+        }
+        .btn-gold {
+            background: var(--gold);
+            color: var(--dark);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+        .btn-gold:hover:not(:disabled) {
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.4);
+        }
+        .btn-green {
+            background: var(--green);
+            color: var(--dark);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+        }
+        .btn-green:hover:not(:disabled) {
+            box-shadow: 0 0 40px rgba(0, 255, 65, 0.4);
+        }
+        .btn-dark {
+            background: #333;
+            color: var(--white);
+        }
+        .btn-dark:hover:not(:disabled) {
+            background: #555;
+        }
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.65rem;
+            min-height: 30px;
+            min-width: 50px;
+        }
+
+        /* HISTORY */
+        .history-area {
+            flex: 0 0 auto;
+            max-height: 85px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 6px 10px;
+            border: 1px solid #222;
+            margin-top: 4px;
+        }
+        .history-area .history-title {
+            font-size: 0.55rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 3px;
+        }
+        .history-area .history-item {
+            font-size: 0.6rem;
+            padding: 2px 0;
+            border-bottom: 1px solid #111;
+            display: flex;
+            justify-content: space-between;
+        }
+        .history-area .history-item .h-result {
+            font-weight: bold;
+        }
+        .history-area .history-item .h-result.win {
+            color: var(--green);
+        }
+        .history-area .history-item .h-result.lose {
+            color: var(--red);
+        }
+        .history-area .history-item .h-punishment {
+            color: var(--gold);
+        }
+
+        /* DIFFICULTY SELECTOR */
+        .difficulty-area {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+        .difficulty-area .diff-btn {
+            padding: 4px 12px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: transparent;
+            color: #888;
+            font-family: var(--font);
+            font-size: 0.6rem;
+            cursor: pointer;
+            touch-action: manipulation;
+            min-height: 28px;
+            transition: all 0.2s ease;
+        }
+        .difficulty-area .diff-btn.active {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+        }
+        .difficulty-area .diff-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* GLITCH OVERLAY */
+        .glitch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+            background: rgba(255, 0, 64, 0.05);
+            opacity: 0;
+            transition: opacity 0.05s;
+        }
+        .glitch-overlay.active {
+            opacity: 1;
+            animation: glitchAnim 0.5s ease-in-out;
+        }
+        @keyframes glitchAnim {
+            0% {
+                background: rgba(255, 0, 64, 0.15);
+                transform: translate(0);
+            }
+            15% {
+                background: rgba(255, 215, 0, 0.1);
+                transform: translate(-5px);
+            }
+            30% {
+                background: rgba(255, 0, 64, 0.15);
+                transform: translate(5px);
+            }
+            45% {
+                background: rgba(255, 215, 0, 0.1);
+                transform: translate(-2px);
+            }
+            60% {
+                background: rgba(255, 0, 64, 0.15);
+                transform: translate(2px);
+            }
+            100% {
+                background: rgba(255, 0, 64, 0.05);
+                transform: translate(0);
+            }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 500px) {
+            .header h1 {
+                font-size: 0.9rem;
+            }
+            .header .stats {
+                font-size: 0.55rem;
+                gap: 6px;
+            }
+            .header .stats span {
+                padding: 2px 6px;
+            }
+            .revolver-image {
+                max-width: 200px;
+            }
+            .muzzle-flash {
+                width: 40px;
+                height: 40px;
+                right: -5px;
+            }
+            .chamber-dot {
+                width: 12px;
+                height: 12px;
+            }
+            .revolver-area .status-text {
+                font-size: 1rem;
+            }
+            .punishment-area .punishment-text {
+                font-size: 0.9rem;
+            }
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.7rem;
+                min-height: 36px;
+                min-width: 60px;
+            }
+            .btn-small {
+                font-size: 0.55rem;
+                min-height: 26px;
+                min-width: 40px;
+                padding: 4px 8px;
+            }
+            .history-area {
+                max-height: 60px;
+            }
+            .history-area .history-item {
+                font-size: 0.5rem;
+            }
+            .difficulty-area .diff-btn {
+                font-size: 0.5rem;
+                padding: 3px 8px;
+                min-height: 24px;
+            }
+        }
+        @media (max-width: 380px) {
+            .revolver-image {
+                max-width: 150px;
+            }
+            .muzzle-flash {
+                width: 30px;
+                height: 30px;
+            }
+            .chamber-dot {
+                width: 10px;
+                height: 10px;
+            }
+            .revolver-area .status-text {
+                font-size: 0.85rem;
+            }
+            .punishment-area .punishment-text {
+                font-size: 0.75rem;
+            }
+            .btn {
+                font-size: 0.6rem;
+                padding: 4px 8px;
+                min-height: 30px;
+                min-width: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glitch-overlay" id="glitchOverlay"></div>
+
+    <div class="container">
+
+        <!-- HEADER -->
+        <div class="header">
+            <h1>
+                🔫 الروليت الروسية
+                <span class="blink">●</span>
+            </h1>
+            <div class="stats">
+                <span>🎯 الفوز: <span id="winCount">0</span></span>
+                <span>💀 الخسارة: <span id="loseCount">0</span></span>
+                <span class="gold">🏆 السلسلة: <span id="streakCount">0</span></span>
+            </div>
+        </div>
+
+        <!-- GAME AREA -->
+        <div class="game-area">
+
+            <!-- REVOLVER -->
+            <div class="revolver-area">
+                <div class="revolver-container">
+                    <!-- صورة المسدس -->
+                    <img src="revolver.png" alt="Revolver" class="revolver-image" id="revolverImage" onclick="fire()">
+                    <!-- تأثير فلاش الإطلاق -->
+                    <div class="muzzle-flash" id="muzzleFlash"></div>
+                </div>
+
+                <!-- الحجرات كدوائر صغيرة -->
+                <div class="chambers-overlay" id="chambersOverlay"></div>
+
+                <div class="status-text" id="statusText">اضغط على المسدس أو الزر</div>
+                <div class="bullet-count" id="bulletCount">💀 رصاصة واحدة في مكان ما</div>
+            </div>
+
+            <!-- PUNISHMENT -->
+            <div class="punishment-area">
+                <div class="label">⚖️ العقوبة</div>
+                <div class="punishment-text" id="punishmentText">في انتظار الدور...</div>
+                <div class="punishment-desc" id="punishmentDesc">ستظهر العقوبة عند الخسارة</div>
+            </div>
+
+            <!-- DIFFICULTY -->
+            <div class="difficulty-area">
+                <button class="diff-btn active" data-diff="easy" onclick="setDifficulty('easy')">🟢 سهل</button>
+                <button class="diff-btn" data-diff="medium" onclick="setDifficulty('medium')">🟡 متوسط</button>
+                <button class="diff-btn" data-diff="hard" onclick="setDifficulty('hard')">🔴 صعب</button>
+                <button class="diff-btn" data-diff="nightmare" onclick="setDifficulty('nightmare')">💀 كابوس</button>
+            </div>
+
+            <!-- BUTTONS -->
+            <div class="button-area">
+                <button class="btn btn-primary" id="fireBtn" onclick="fire()">🔫 سحب الزناد</button>
+                <button class="btn btn-gold" onclick="spinChamber()">🔄 إعادة التحميل</button>
+                <button class="btn btn-dark btn-small" onclick="resetGame()">🔄 جديد</button>
+            </div>
+
+            <!-- HISTORY -->
+            <div class="history-area" id="historyArea">
+                <div class="history-title">📜 سجل اللعب</div>
+                <div id="historyList">
+                    <div style="color:#555;font-size:0.55rem;">لا توجد جولات بعد</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ================================================================
+        //  الروليت الروسية - مع صورة المسدس
+        // ================================================================
+
+        // ---------- STATE ----------
+        const state = {
+            chambers: [],
+            currentChamber: 0,
+            bulletCount: 1,
+            totalChambers: 6,
+            isLoaded: false,
+            isFiring: false,
+            gameOver: false,
+            difficulty: 'easy',
+            wins: 0,
+            losses: 0,
+            streak: 0,
+            history: [],
+            revealed: false,
+            firedChambers: [],
+        };
+
+        // ---------- PUNISHMENTS DATABASE ----------
+        const punishments = {
+            easy: [
+                { name: '👋 صفعة خفيفة', desc: 'صفعة على الوجه من الجار' },
+                { name: '📝 10 ضغطات', desc: 'قم بـ 10 تمارين ضغط' },
+                { name: '🎤 غني أغنية', desc: 'غني أغنية كاملة بصوت عالٍ' },
+                { name: '🤡 قف كالمهرج', desc: 'اقفز كالمهرج لمدة 30 ثانية' },
+                { name: '📢 صرخ باسمك', desc: 'اصرخ باسمك 3 مرات' },
+                { name: '🕺 ارقص', desc: 'ارقص لمدة دقيقة' },
+                { name: '😄 ابتسم', desc: 'ابتسم لأطول فترة ممكنة' },
+                { name: '👀 أغمض عينيك', desc: 'أغمض عينيك لمدة 30 ثانية' },
+                { name: '🗣️ تحدث بلكنة', desc: 'تحدث بلكنة غريبة لدقيقة' },
+                { name: '✍️ اكتب جملة', desc: 'اكتب جملة مضحكة 3 مرات' },
+            ],
+            medium: [
+                { name: '💪 20 ضغط', desc: 'قم بـ 20 تمرين ضغط' },
+                { name: '🏃 50 قفزة', desc: 'قم بـ 50 قفزة مكانية' },
+                { name: '🎤 ارتجال', desc: 'ارتجل قصة لمدة دقيقتين' },
+                { name: '🤹 تلاعب', desc: 'تلاعب بأي شيء لمدة دقيقة' },
+                { name: '🧘 تأمل', desc: 'تأمل بصمت لمدة 3 دقائق' },
+                { name: '📖 اقرأ بصوت', desc: 'اقرأ أي نص بصوت عالٍ' },
+                { name: '🎭 تمثيل', desc: 'مثل دور شخصية مشهورة' },
+                { name: '🧠 حفظ أرقام', desc: 'احفظ 5 أرقام عشوائية' },
+                { name: '✋ 50 تصفيق', desc: 'صفق 50 مرة بسرعة' },
+                { name: '🔄 دوران', desc: 'دور حول نفسك 10 مرات' },
+            ],
+            hard: [
+                { name: '💀 50 ضغط', desc: 'قم بـ 50 تمرين ضغط' },
+                { name: '🏃 100 قفزة', desc: 'قم بـ 100 قفزة مكانية' },
+                { name: '🎤 غناء أوبريت', desc: 'غني أوبريت كامل' },
+                { name: '🤸 حركات بهلوانية', desc: 'قم بحركات بهلوانية' },
+                { name: '🧘 يوغا صعبة', desc: 'قم بوضعية يوغا صعبة' },
+                { name: '📖 إلقاء خطبة', desc: 'ألقِ خطبة لمدة 3 دقائق' },
+                { name: '🎭 تمثيل مسرحية', desc: 'مثل مشهداً من مسرحية' },
+                { name: '🧠 حل ألغاز', desc: 'حل 3 ألغاز صعبة' },
+                { name: '✍️ كتابة مقال', desc: 'اكتب مقالاً من 100 كلمة' },
+                { name: '🔄 دوران 20 مرة', desc: 'دور حول نفسك 20 مرة' },
+            ],
+            nightmare: [
+                { name: '💀 100 ضغط', desc: 'قم بـ 100 تمرين ضغط' },
+                { name: '🏃 200 قفزة', desc: 'قم بـ 200 قفزة مكانية' },
+                { name: '🎤 غناء أوبرا', desc: 'غني أوبرا كاملة' },
+                { name: '🤸 حركات خطيرة', desc: 'قم بحركات بهلوانية خطيرة' },
+                { name: '🧘 يوغا متطرفة', desc: 'قم بوضعيات يوغا متطرفة' },
+                { name: '📖 حفظ نص طويل', desc: 'احفظ نصاً طويلاً واقرأه' },
+                { name: '🎭 تمثيل درامي', desc: 'مثل مشهداً درامياً مؤثراً' },
+                { name: '🧠 حل ألغاز معقدة', desc: 'حل 5 ألغاز معقدة' },
+                { name: '✍️ كتابة قصة', desc: 'اكتب قصة من 500 كلمة' },
+                { name: '🔄 دوران 50 مرة', desc: 'دور حول نفسك 50 مرة' },
+                { name: '💀 تحدي الموت', desc: 'قم بتحدي جسدي قاسٍ' },
+                { name: '🔥 تحدي النار', desc: 'تحدٍ خطير جداً' },
+            ],
+        };
+
+        // ---------- DOM REFS ----------
+        const revolverImage = document.getElementById('revolverImage');
+        const muzzleFlash = document.getElementById('muzzleFlash');
+        const chambersOverlay = document.getElementById('chambersOverlay');
+        const statusText = document.getElementById('statusText');
+        const bulletCount = document.getElementById('bulletCount');
+        const punishmentText = document.getElementById('punishmentText');
+        const punishmentDesc = document.getElementById('punishmentDesc');
+        const fireBtn = document.getElementById('fireBtn');
+        const winCount = document.getElementById('winCount');
+        const loseCount = document.getElementById('loseCount');
+        const streakCount = document.getElementById('streakCount');
+        const historyList = document.getElementById('historyList');
+        const glitchOverlay = document.getElementById('glitchOverlay');
+
+        // ---------- FUNCTIONS ----------
+
+        // تهيئة المسدس
+        function initChambers() {
+            state.chambers = [];
+            state.firedChambers = [];
+            state.revealed = false;
+            let bulletsPlaced = 0;
+            const total = state.totalChambers;
+            const bulletCount = getBulletCount();
+
+            for (let i = 0; i < total; i++) {
+                state.chambers.push(false);
+            }
+
+            while (bulletsPlaced < bulletCount) {
+                const idx = Math.floor(Math.random() * total);
+                if (!state.chambers[idx]) {
+                    state.chambers[idx] = true;
+                    bulletsPlaced++;
+                }
+            }
+
+            state.currentChamber = 0;
+            state.isLoaded = true;
+            state.gameOver = false;
+            state.isFiring = false;
+            updateDisplay();
+            statusText.textContent = '🔫 المسدس جاهز! اضغط على الصورة أو الزر';
+            statusText.className = 'status-text';
+            updateUI();
+        }
+
+        // عدد الرصاص حسب الصعوبة
+        function getBulletCount() {
+            switch (state.difficulty) {
+                case 'easy':
+                    return 1;
+                case 'medium':
+                    return 2;
+                case 'hard':
+                    return 3;
+                case 'nightmare':
+                    return 4;
+                default:
+                    return 1;
+            }
+        }
+
+        // تدوير المسدس
+        function spinChamber() {
+            if (state.isFiring) return;
+            if (state.gameOver) {
+                resetGame();
+                return;
+            }
+            initChambers();
+            statusText.textContent = '🔄 تم إعادة التحميل! أين الرصاصة؟';
+            statusText.className = 'status-text';
+            playScanSound();
+        }
+
+        // سحب الزناد
+        function fire() {
+            if (state.isFiring) return;
+            if (!state.isLoaded || state.gameOver) {
+                if (state.gameOver) {
+                    statusText.textContent = '💀 اللعبة انتهت! اضغط "جديد"';
+                    statusText.className = 'status-text danger';
+                } else {
+                    statusText.textContent = '⚠️ أعد تحميل المسدس أولاً!';
+                    statusText.className = 'status-text';
+                }
+                return;
+            }
+
+            state.isFiring = true;
+            fireBtn.disabled = true;
+
+            // تأثير الإطلاق
+            triggerMuzzleFlash();
+            revolverImage.classList.add('recoil');
+            setTimeout(() => revolverImage.classList.remove('recoil'), 300);
+
+            // تأثير الصوت والوميض
+            playFireSound();
+            triggerGlitch(0.5);
+
+            // التحقق من الرصاصة
+            const current = state.chambers[state.currentChamber];
+            const isLast = state.currentChamber === state.totalChambers - 1;
+
+            state.revealed = true;
+
+            if (current) {
+                // 💀 خسارة
+                setTimeout(() => {
+                    triggerGlitch(3);
+                    playLoseSound();
+                    statusText.textContent = '💀 💀 💀 رصاصة!';
+                    statusText.className = 'status-text danger';
+                    state.gameOver = true;
+
+                    const punishment = getRandomPunishment();
+                    punishmentText.textContent = punishment.name;
+                    punishmentText.className = 'punishment-text danger';
+                    punishmentDesc.textContent = punishment.desc;
+
+                    state.losses++;
+                    state.streak = 0;
+                    addHistory('💀 خسارة', punishment.name, state.currentChamber + 1);
+
+                    updateDisplay(true);
+                    playGlitchSound();
+                    updateUI();
+
+                    fireBtn.disabled = false;
+                    state.isFiring = false;
+
+                }, 600);
+
+            } else {
+                // ✅ فوز
+                setTimeout(() => {
+                    playWinSound();
+                    statusText.textContent = '✅ نجوت!';
+                    statusText.className = 'status-text success';
+                    punishmentText.textContent = '🎉 نجوت هذه المرة!';
+                    punishmentText.className = 'punishment-text success';
+                    punishmentDesc.textContent = 'لا توجد عقوبة، استمر!';
+
+                    state.wins++;
+                    state.streak++;
+                    state.firedChambers.push(state.currentChamber);
+                    addHistory('✅ فوز', 'نجاة', state.currentChamber + 1);
+
+                    updateDisplay(false);
+
+                    if (isLast) {
+                        statusText.textContent = '🔄 انتهت الجولة! إعادة تحميل...';
+                        setTimeout(() => {
+                            spinChamber();
+                            statusText.textContent = '🔄 تم إعادة التحميل! أين الرصاصة؟';
+                            statusText.className = 'status-text';
+                        }, 800);
+                    } else {
+                        state.currentChamber++;
+                        state.revealed = false;
+                        updateDisplay(false);
+                    }
+
+                    updateUI();
+                    fireBtn.disabled = false;
+                    state.isFiring = false;
+
+                }, 400);
+            }
+        }
+
+        // تأثير فلاش الإطلاق
+        function triggerMuzzleFlash() {
+            muzzleFlash.classList.remove('active');
+            void muzzleFlash.offsetWidth;
+            muzzleFlash.classList.add('active');
+            setTimeout(() => muzzleFlash.classList.remove('active'), 400);
+        }
+
+        // اختيار عقوبة عشوائية
+        function getRandomPunishment() {
+            const pool = punishments[state.difficulty] || punishments.easy;
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        // تحديث عرض الحجرات
+        function updateDisplay(revealBullet = false) {
+            chambersOverlay.innerHTML = '';
+            const totalBullets = state.chambers.filter(c => c).length;
+
+            state.chambers.forEach((hasBullet, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'chamber-dot';
+
+                if (index === state.currentChamber && !state.gameOver) {
+                    dot.classList.add('current');
+                }
+
+                if (state.firedChambers.includes(index)) {
+                    dot.classList.add('fired');
+                } else if (state.gameOver && hasBullet && revealBullet) {
+                    dot.classList.add('revealed-bullet');
+                } else if (state.gameOver && !hasBullet && revealBullet) {
+                    dot.classList.add('revealed-empty');
+                } else {
+                    dot.classList.add('hidden');
+                }
+
+                chambersOverlay.appendChild(dot);
+            });
+
+            const remaining = state.chambers.slice(state.currentChamber).filter(c => c).length;
+            if (state.gameOver) {
+                bulletCount.textContent = `💀 تم الكشف! ${totalBullets} رصاصة في المسدس`;
+            } else {
+                bulletCount.textContent = `💀 ${remaining} رصاصة متبقية (مخفية)`;
+            }
+        }
+
+        // تحديث الواجهة
+        function updateUI() {
+            winCount.textContent = state.wins;
+            loseCount.textContent = state.losses;
+            streakCount.textContent = state.streak;
+            updateHistory();
+        }
+
+        // إضافة إلى السجل
+        function addHistory(result, punishment, chamber) {
+            state.history.unshift({
+                result: result,
+                punishment: punishment,
+                chamber: chamber,
+                time: new Date().toLocaleTimeString(),
+                difficulty: state.difficulty,
+            });
+            if (state.history.length > 50) state.history.pop();
+        }
+
+        // تحديث عرض السجل
+        function updateHistory() {
+            if (state.history.length === 0) {
+                historyList.innerHTML = '<div style="color:#555;font-size:0.55rem;">لا توجد جولات بعد</div>';
+                return;
+            }
+
+            let html = '';
+            state.history.slice(0, 20).forEach(h => {
+                const resultClass = h.result.includes('فوز') ? 'win' : 'lose';
+                const icon = h.result.includes('فوز') ? '✅' : '💀';
+                html += `
+                    <div class="history-item">
+                        <span>${h.time}</span>
+                        <span class="h-result ${resultClass}">${icon} ${h.result}</span>
+                        <span class="h-punishment">${h.punishment}</span>
+                        <span style="color:#666;font-size:0.5rem;">#${h.chamber}</span>
+                    </div>
+                `;
+            });
+            historyList.innerHTML = html;
+        }
+
+        // تعيين الصعوبة
+        function setDifficulty(diff) {
+            if (state.isFiring) return;
+            state.difficulty = diff;
+            document.querySelectorAll('.diff-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.diff === diff);
+            });
+            resetGame();
+            statusText.textContent = `🎯 صعوبة: ${diff}`;
+            statusText.className = 'status-text';
+            playScanSound();
+        }
+
+        // إعادة تعيين اللعبة
+        function resetGame() {
+            state.gameOver = false;
+            state.isFiring = false;
+            fireBtn.disabled = false;
+            punishmentText.textContent = 'في انتظار الدور...';
+            punishmentText.className = 'punishment-text';
+            punishmentDesc.textContent = 'ستظهر العقوبة عند الخسارة';
+            statusText.textContent = '🔄 جولة جديدة!';
+            statusText.className = 'status-text';
+            initChambers();
+            updateUI();
+        }
+
+        // ---------- EFFECTS ----------
+
+        // Glitch
+        function triggerGlitch(intensity = 1) {
+            glitchOverlay.classList.remove('active');
+            void glitchOverlay.offsetWidth;
+            glitchOverlay.style.animationDuration = (0.3 + intensity * 0.1) + 's';
+            glitchOverlay.classList.add('active');
+            setTimeout(() => glitchOverlay.classList.remove('active'), 400 + intensity * 200);
+        }
+
+        // Sound
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                try {
+                    audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {}
+            }
+        }
+
+        function playBeep(freq = 800, duration = 100, type = 'sine', volume = 0.15) {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                gain.gain.value = volume;
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration / 1000);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration / 1000);
+            } catch (e) {}
+        }
+
+        function playFireSound() {
+            playBeep(100, 300, 'sawtooth', 0.25);
+            setTimeout(() => playBeep(200, 200, 'sawtooth', 0.2), 80);
+            setTimeout(() => playBeep(50, 400, 'square', 0.15), 160);
+        }
+
+        function playLoseSound() {
+            playBeep(300, 400, 'sawtooth', 0.2);
+            setTimeout(() => playBeep(200, 300, 'sawtooth', 0.15), 200);
+            setTimeout(() => playBeep(100, 500, 'square', 0.1), 400);
+        }
+
+        function playWinSound() {
+            playBeep(1200, 100, 'sine', 0.15);
+            setTimeout(() => playBeep(1500, 100, 'sine', 0.15), 150);
+            setTimeout(() => playBeep(1800, 150, 'sine', 0.15), 300);
+        }
+
+        function playScanSound() {
+            playBeep(600, 50, 'sine', 0.1);
+            setTimeout(() => playBeep(800, 50, 'sine', 0.1), 100);
+        }
+
+        function playGlitchSound() {
+            playBeep(200, 150, 'sawtooth', 0.1);
+            setTimeout(() => playBeep(400, 100, 'square', 0.08), 100);
+        }
+
+        // ---------- KEYBOARD SUPPORT ----------
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                if (!fireBtn.disabled) fire();
+            }
+            if (e.key === 'r' || e.key === 'R') {
+                spinChamber();
+            }
+        });
+
+        // ---------- INIT ----------
+        initChambers();
+
+        // تفعيل الصوت عند النقر
+        document.addEventListener('click', () => {
+            initAudio();
+        }, { once: true });
+
+        console.log('🔫 الروليت الروسية - مع صورة المسدس');
+        console.log('📁 تأكد من وجود ملف revolver.png في نفس المجلد');
+        console.log('🎯 الصعوبة: ' + state.difficulty);
+        console.log('📖 اضغط Space أو Enter لسحب الزناد');
+        console.log('🔄 اضغط R لإعادة التحميل');
+        console.log('🖱️ يمكنك الضغط على صورة المسدس أيضاً');
+    </script>
+</body>
+</html>

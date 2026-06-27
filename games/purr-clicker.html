@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Purr Clicker · Infinity Cat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#1a0e07; --wood:#3d2010; --wood2:#4e2a14; --panel:#2a1508;
+      --border:#6b3d1e; --caramel:#c4844a; --cream:#f0c987;
+      --text:#fff3dc; --muted:#a0805a; --paw:#e8b87a;
+      --pixel:'Press Start 2P',monospace; --body:'Nunito',sans-serif;
+      --tab-h:64px; --hdr-h:52px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    html{height:100%;overflow:hidden;}
+    body{
+      font-family:var(--body);background:var(--bg);color:var(--text);
+      height:100dvh;display:flex;flex-direction:column;overflow:hidden;
+      touch-action:manipulation;
+    }
+    body::before{
+      content:'';position:fixed;inset:0;
+      background:repeating-linear-gradient(90deg,rgba(0,0,0,0) 0,rgba(0,0,0,0) 18px,rgba(0,0,0,.06) 19px,rgba(0,0,0,0) 20px),
+                 repeating-linear-gradient(0deg,rgba(255,255,255,0) 0,rgba(255,255,255,0) 28px,rgba(255,255,255,.02) 29px,rgba(255,255,255,0) 30px);
+      pointer-events:none;z-index:0;
+    }
+    header{height:calc(var(--hdr-h) + env(safe-area-inset-top,0));background:var(--wood);border-bottom:3px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 14px;padding-top:env(safe-area-inset-top,0);backdrop-filter:blur(2px);}
+    header h1{font-family:var(--pixel);font-size:.6rem;color:var(--cream);text-shadow:2px 2px 0 #6b3000;}
+    .hdr-cat{font-size:1.1rem;}.hdr-spacer{flex:1;}
+    .hdr-stats{display:flex;gap:10px;}
+    .hdr-stat{font-family:var(--pixel);font-size:.38rem;color:var(--muted);display:flex;flex-direction:column;align-items:flex-end;}
+    .hdr-stat span{color:var(--cream);font-size:.48rem;}
+    .btn-icon{background:var(--wood2);border:2px solid var(--border);border-radius:8px;color:var(--cream);width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
+    .btn-icon:active{transform:scale(0.95);background:var(--border);}
+    .tabs-content{flex:1;position:relative;overflow:hidden;}
+    .tab-pane{position:absolute;inset:0;overflow-y:auto;display:none;flex-direction:column;padding:12px;gap:10px;}
+    .tab-pane.active{display:flex;}
+    #tab-cat{background:radial-gradient(ellipse at 50% 85%,rgba(61,32,16,.9) 0%,transparent 55%),var(--bg);align-items:center;justify-content:flex-start;}
+    .counter-wrap{text-align:center;margin-bottom:10px;background:rgba(0,0,0,.3);padding:8px 16px;border-radius:40px;backdrop-filter:blur(6px);}
+    .counter-main{font-family:var(--pixel);font-size:min(1.5rem,7vw);color:var(--cream);text-shadow:0 0 8px #facc15,3px 3px 0 #6b3000;}
+    .counter-label,.counter-cps,.evo-badge{font-family:var(--pixel);font-size:.42rem;color:var(--caramel);}
+    .evo-badge{background:var(--wood2);border:2px solid var(--caramel);border-radius:4px;padding:5px 14px;margin-bottom:12px;box-shadow:0 0 6px var(--caramel);}
+    #catEmoji{
+      cursor:pointer;font-size:min(200px,55vw);line-height:1;filter:drop-shadow(0 0 12px #facc15) drop-shadow(0 0 20px #ffaa44);
+      transition:transform .08s, filter .2s;user-select:none;display:inline-block;
+      animation: catGlow 1.5s infinite alternate;
+    }
+    @keyframes catGlow{
+      0%{filter:drop-shadow(0 0 5px #ffaa44) drop-shadow(0 0 10px #ffaa44);}
+      100%{filter:drop-shadow(0 0 20px #ffdd77) drop-shadow(0 0 30px #ffaa44);}
+    }
+    #catEmoji:active{transform:scale(0.9);filter:drop-shadow(0 0 30px #ff8800);}
+    .den-floor{width:min(260px,65vw);height:22px;background:repeating-linear-gradient(90deg,#3d2010 0,#3d2010 38px,#4e2a14 39px,#4e2a14 77px);border-top:3px solid #6b3d1e;margin-top:-12px;border-radius:0 0 4px 4px;}
+    .cat-name-tag{font-family:var(--pixel);font-size:.48rem;color:var(--paw);text-shadow:0 0 5px #c4844a;margin-top:8px;}
+    .cat-trait{font-size:.75rem;color:var(--muted);font-style:italic;background:rgba(0,0,0,.3);padding:4px 12px;border-radius:40px;}
+    .evo-progress-wrap{width:100%;max-width:300px;margin-top:12px;}
+    .evo-progress-label{display:flex;justify-content:space-between;font-family:var(--pixel);font-size:.32rem;color:var(--muted);margin-bottom:5px;}
+    .evo-bar-track{height:12px;background:var(--panel);border:2px solid var(--border);border-radius:12px;overflow:hidden;}
+    .evo-bar-fill{height:100%;background:linear-gradient(90deg,var(--caramel),var(--cream));width:0%;border-radius:12px;transition:width .3s;box-shadow:0 0 6px var(--cream);}
+    .panel-title{font-family:var(--pixel);font-size:.42rem;color:var(--caramel);background:var(--panel);border:2px solid var(--border);border-radius:4px;padding:7px;text-align:center;margin-bottom:5px;box-shadow:0 0 5px rgba(196,132,74,.5);}
+    .upg-btn, .once-btn{
+      display:flex;flex-direction:row;align-items:center;gap:12px;width:100%;
+      background:var(--panel);border:2px solid var(--border);border-radius:12px;
+      padding:12px 12px;cursor:pointer;transition:all 0.08s linear;margin-bottom:8px;
+      text-align:right;word-break:break-word;
+    }
+    .upg-btn:active:not(:disabled), .once-btn:active:not(:disabled){transform:scale(0.97);background:var(--wood2);}
+    .upg-btn.affordable, .once-btn.affordable{border-color:var(--caramel);box-shadow:0 0 12px rgba(196,132,74,0.6);}
+    .upg-icon, .once-icon{font-size:2rem;flex-shrink:0;width:48px;text-align:center;}
+    .upg-info, .once-info{flex:1;display:flex;flex-direction:column;gap:4px;}
+    .upg-name, .once-name{font-family:var(--pixel);font-size:.45rem;color:var(--cream);line-height:1.4;}
+    .upg-desc, .once-desc{font-size:.7rem;color:var(--muted);line-height:1.3;}
+    .upg-cost, .once-cost{font-family:var(--pixel);font-size:.4rem;color:var(--caramel);margin-top:2px;}
+    @media (max-width: 550px){
+      .upg-btn, .once-btn{padding:10px 8px;gap:8px;}
+      .upg-icon, .once-icon{font-size:1.6rem;width:40px;}
+      .upg-name, .once-name{font-size:.4rem;}
+      .upg-desc, .once-desc{font-size:.65rem;}
+      .upg-cost, .once-cost{font-size:.35rem;}
+    }
+    .tab-bar{
+      flex-shrink:0;background:var(--wood);border-top:3px solid var(--border);
+      display:grid;grid-template-columns:repeat(4,1fr);
+      height:calc(var(--tab-h) + env(safe-area-inset-bottom,0));padding-bottom:env(safe-area-inset-bottom,0);
+      backdrop-filter:blur(4px);
+    }
+    .tab-bar-btn{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+      background:none;border:none;cursor:pointer;font-family:var(--pixel);font-size:.3rem;
+      color:var(--muted);position:relative;transition:all .1s;
+    }
+    .tab-bar-btn .tab-icon{font-size:1.4rem;filter:drop-shadow(0 0 2px #a0805a);}
+    .tab-bar-btn.active{color:var(--caramel);text-shadow:0 0 6px #ffaa66;}
+    .tab-bar-btn.active::after{content:'';position:absolute;top:0;left:20%;right:20%;height:3px;background:var(--caramel);border-radius:0 0 3px 3px;box-shadow:0 0 6px var(--caramel);}
+    .tab-badge{position:absolute;top:4px;right:calc(50% - 20px);background:var(--caramel);color:#1a0e07;font-family:var(--pixel);font-size:.26rem;padding:2px 5px;border-radius:20px;display:none;font-weight:bold;}
+    .tab-badge.show{display:block;animation: pulseBadge .8s infinite;}
+    @keyframes pulseBadge{0%{opacity:0.6;}100%{opacity:1;transform:scale(1.05);}}
+    .toast{
+      position:fixed;bottom:calc(var(--tab-h) + env(safe-area-inset-bottom,0) + 12px);left:50%;
+      transform:translateX(-50%);background:var(--wood2);border:2px solid var(--caramel);
+      border-radius:12px;padding:8px 16px;font-family:var(--pixel);font-size:.45rem;color:var(--cream);
+      opacity:0;transition:opacity .2s;pointer-events:none;z-index:999;box-shadow:0 0 12px #c4844a;white-space:nowrap;
+    }
+    .toast.show{opacity:1;}
+    .ripple{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(255,220,100,0.8),transparent);pointer-events:none;animation:rippleAnim .4s ease-out forwards;}
+    @keyframes rippleAnim{0%{transform:scale(0);opacity:1;}100%{transform:scale(4);opacity:0;}}
+    .small-stat{font-size:.7rem;color:var(--caramel);margin-top:6px;text-align:center;background:rgba(0,0,0,.3);padding:4px 12px;border-radius:40px;}
+    @keyframes float{0%{opacity:1;transform:translateY(0);}100%{opacity:0;transform:translateY(-60px);}}
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="hdr-cat">🐱</span>
+  <h1>Purr Clicker</h1>
+  <div class="hdr-spacer"></div>
+  <div class="hdr-stats">
+    <div class="hdr-stat">ALL-TIME<span id="hdrTotal">0</span></div>
+    <div class="hdr-stat">PER SEC<span id="hdrCps">0</span></div>
+  </div>
+  <button class="btn-icon" id="btnMusic">🎵</button>
+  <button class="btn-icon" id="btnReset">🔄</button>
+</header>
+
+<div class="tabs-content">
+  <div class="tab-pane active" id="tab-cat">
+    <div class="counter-wrap"><div class="counter-main" id="counterMain">0</div><div class="counter-label">purrs collected</div><div class="counter-cps" id="counterCps">+0/s</div></div>
+    <div class="evo-badge" id="evoBadge">Kitten</div>
+    <div class="den-scene" style="text-align:center;"><div id="catEmoji">🐱</div><div class="den-floor"></div></div>
+    <div class="cat-name-tag" id="catNameTag"></div><div class="cat-trait" id="catTrait"></div>
+    <div class="evo-progress-wrap"><div class="evo-progress-label"><span id="evoCur">0</span><span id="evoStage"></span><span id="evoNext"></span></div><div class="evo-bar-track"><div class="evo-bar-fill" id="evoFill" style="width:0%"></div></div></div>
+    <div class="small-stat" id="activeCompanionMsg"></div>
+  </div>
+  <div class="tab-pane" id="tab-upgrades"><div class="panel-title">✨ One-Time Upgrades (50 total)</div><div id="onceList"></div></div>
+  <div class="tab-pane" id="tab-helpers"><div class="panel-title">🏠 Passive Helpers (25 total)</div><div id="buildingList"></div></div>
+  <div class="tab-pane" id="tab-companions"><div class="panel-title">⭐ Companion Cats (15 unique)</div><div id="companionList"></div><div class="small-stat">✨ Companions boost production for 30 seconds!</div></div>
+</div>
+
+<nav class="tab-bar">
+  <button class="tab-bar-btn active" data-tab="tab-cat"><span class="tab-icon">🐱</span>Cat</button>
+  <button class="tab-bar-btn" data-tab="tab-upgrades"><span class="tab-icon">✨</span>Upgrades<span class="tab-badge" id="badge-upgrades"></span></button>
+  <button class="tab-bar-btn" data-tab="tab-helpers"><span class="tab-icon">🏠</span>Helpers<span class="tab-badge" id="badge-helpers"></span></button>
+  <button class="tab-bar-btn" data-tab="tab-companions"><span class="tab-icon">⭐</span>Companions<span class="tab-badge" id="badge-companions"></span></button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  // ---------- USER ID & RNG ----------
+  let userId = localStorage.getItem('purrUserId');
+  if(!userId){ userId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem('purrUserId',userId); }
+  function mulberry32(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return((t^t>>>14)>>>0)/4294967296; }; }
+  function hashStr(s){ let h=0x811c9dc5; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,0x01000193); } return h>>>0; }
+  const rng = mulberry32(hashStr(userId));
+  const FIRST=['Mochi','Biscuit','Walnut','Caramel','Toffee','Brownie','Hazel','Cocoa','Fudge','Truffle','Cinnamon','Maple','Mocha','Chestnut','Pecan'];
+  const LAST=['Pawsworth','Barkley','Crumbleton','von Floof','McWhiskers','Tabbington','Nubbins','Clawsworth','Pouncington','Furball'];
+  const TRAITS=['loves knocking things off shelves','judges you silently','always sits on the warmest spot','has a secret stash of bottle caps','zooms at 3am','plots world domination','knows you\'re faking sleep','steals food from the counter','climbs everything','scratches the furniture'];
+  document.getElementById('catNameTag').textContent = FIRST[Math.floor(rng()*FIRST.length)]+' '+LAST[Math.floor(rng()*LAST.length)];
+  document.getElementById('catTrait').textContent = '"'+TRAITS[Math.floor(rng()*TRAITS.length)]+'"';
+  const personalMult = 1 + rng()*0.15;
+  
+  // ---------- EVOLUTIONS (100 stages, astronomical thresholds) ----------
+  const EVOLUTIONS = [];
+  for(let i=0; i<100; i++){
+    let threshold = i===0 ? 0 : Math.pow(10, (i-1)*0.35 + 1);
+    let name = i===0 ? 'Kitten' : 
+               i===1 ? 'Junior' :
+               i===2 ? 'Lounger' :
+               i===3 ? 'Wanderer' :
+               i===4 ? 'Hunter' :
+               i===5 ? 'Midnight' :
+               i===6 ? 'Ember' :
+               i===7 ? 'Phantom' :
+               i===8 ? 'Celestial' :
+               i===9 ? 'Ancient One' :
+               i===10 ? 'Star Eater' :
+               i===15 ? 'Galactic Paw' :
+               i===20 ? 'Nova Claw' :
+               i===25 ? 'Void Purr' :
+               i===30 ? 'Infinity Fur' :
+               i===35 ? 'Transcendent Meow' :
+               i===40 ? 'Omni Cat' :
+               i===45 ? 'One Who Purrs' :
+               i===50 ? 'The Eternal Floof' :
+               i===55 ? 'God of Clicks' :
+               i===60 ? 'Cosmic Overlord' :
+               i===65 ? 'Universe Weaver' :
+               i===70 ? 'Paradox Claw' :
+               i===75 ? 'Absolute Being' :
+               i===80 ? 'The Final Purr' :
+               i===85 ? 'Beyond Infinity' :
+               i===90 ? 'The Unnamed' :
+               i===95 ? 'The One Above All' : `Ascended ${i}`;
+    EVOLUTIONS.push({name:name, threshold:Math.floor(threshold)});
+  }
+  // ensure last thresholds are huge
+  for(let i=90; i<100; i++) EVOLUTIONS[i].threshold = Math.pow(10, (i-30)*0.8 + 10);
+  EVOLUTIONS[99].threshold = 1e500;
+  
+  // ---------- HELPERS (25 total, sorted by cost) ----------
+  const BUILDINGS_RAW = [
+    {id:'nap',name:'Napping Spot',icon:'😴',desc:'Sunny window ledge.',baseCost:15,baseCps:0.1},
+    {id:'yarn',name:'Yarn Ball',icon:'🧶',desc:'Endless entertainment.',baseCost:100,baseCps:0.5},
+    {id:'bowl',name:'Food Bowl',icon:'🍲',desc:'Keeps energy high.',baseCost:500,baseCps:2},
+    {id:'tree',name:'Cat Tree',icon:'🌳',desc:'Prime surveillance.',baseCost:2000,baseCps:7},
+    {id:'box',name:'Cardboard Box',icon:'📦',desc:'Best present ever.',baseCost:8000,baseCps:20},
+    {id:'laser',name:'Laser Pointer',icon:'🔴',desc:'Infinite energy.',baseCost:30000,baseCps:60},
+    {id:'fish',name:'Fish Pond',icon:'🐟',desc:'Personal seafood.',baseCost:100000,baseCps:200},
+    {id:'catnip',name:'Catnip Garden',icon:'🌿',desc:'Legal substances.',baseCost:400000,baseCps:666},
+    {id:'realm',name:'Parallel Realm',icon:'🌀',desc:'Cats know about this.',baseCost:2e6,baseCps:2000},
+    {id:'coffee',name:'Cat Coffee',icon:'☕',desc:'Brews motivation.',baseCost:1e7,baseCps:5000},
+    {id:'mouse',name:'Mouse Factory',icon:'🐭',desc:'Toy production line.',baseCost:5e7,baseCps:15000},
+    {id:'statue',name:'Golden Statue',icon:'🗿',desc:'Worshiped by cats.',baseCost:2.5e8,baseCps:50000},
+    {id:'portal',name:'Cat Portal',icon:'🌌',desc:'Infinite dimension.',baseCost:1e9,baseCps:200000},
+    {id:'nebula',name:'Nebula Feeder',icon:'🌠',desc:'Cosmic energy.',baseCost:5e9,baseCps:1e6},
+    {id:'singularity',name:'Purr Singularity',icon:'⚫',desc:'Attracts everything.',baseCost:3e10,baseCps:5e6},
+    {id:'tesseract',name:'Tesseract Box',icon:'📐',desc:'Fourth dimensional fun.',baseCost:2e11,baseCps:2.5e7},
+    {id:'cosmicEgg',name:'Cosmic Egg',icon:'🥚',desc:'Contains a universe.',baseCost:1.5e12,baseCps:1e8},
+    {id:'dreamWeaver',name:'Dream Weaver',icon:'🕸️',desc:'Harvests dreams.',baseCost:1e13,baseCps:5e8},
+    {id:'timeless',name:'Timeless Clock',icon:'⏳',desc:'Cats ignore time.',baseCost:8e13,baseCps:2.5e9},
+    {id:'infinityStone',name:'Infinity Stone',icon:'💎',desc:'Unlimited purrs.',baseCost:5e14,baseCps:1e10},
+    {id:'voidEngine',name:'Void Engine',icon:'🕳️',desc:'Consumes reality.',baseCost:2e15,baseCps:5e10},
+    {id:'cosmicForge',name:'Cosmic Forge',icon:'⚒️',desc:'Forges stars.',baseCost:1e16,baseCps:2e11},
+    {id:'dreamCatcher',name:'Dream Catcher',icon:'🌀',desc:'Catches infinite dreams.',baseCost:5e16,baseCps:1e12},
+    {id:'paradoxCore',name:'Paradox Core',icon:'⚛️',desc:'Breaks logic.',baseCost:2e17,baseCps:5e12},
+    {id:'absoluteZero',name:'Absolute Zero',icon:'❄️',desc:'Freezes time.',baseCost:1e18,baseCps:2e13}
+  ];
+  const BUILDINGS = BUILDINGS_RAW.sort((a,b)=>a.baseCost - b.baseCost);
+  
+  // ---------- ONE-TIME UPGRADES (50, sorted by cost) ----------
+  const UPGRADES_RAW = [
+    {id:'sharpclaws',name:'Sharp Claws',icon:'🗡️',desc:'+2× click power',cost:100,mult:2,type:'click'},
+    {id:'fluffcoat',name:'Fluff Coat',icon:'🪮',desc:'+3× click power',cost:500,mult:3,type:'click'},
+    {id:'catnap',name:'Power Nap',icon:'💤',desc:'+2× all production',cost:2000,mult:2,type:'cps'},
+    {id:'fangs',name:'Fangs',icon:'🦷',desc:'+5× click power',cost:10000,mult:5,type:'click'},
+    {id:'purrmotor',name:'Purr Motor',icon:'⚙️',desc:'+3× all production',cost:50000,mult:3,type:'cps'},
+    {id:'midnight',name:'Night Vision',icon:'👁️',desc:'+10× click power',cost:200000,mult:10,type:'click'},
+    {id:'starpaws',name:'Star Paws',icon:'⭐',desc:'+5× all production',cost:1e6,mult:5,type:'cps'},
+    {id:'cosmicfur',name:'Cosmic Fur',icon:'🌌',desc:'+50× click power',cost:5e6,mult:50,type:'click'},
+    {id:'lasereyes',name:'Laser Eyes',icon:'👁️‍🗨️',desc:'+2× click power',cost:8000,mult:2,type:'click'},
+    {id:'ninja',name:'Ninja Reflexes',icon:'🥷',desc:'+3× click power',cost:25000,mult:3,type:'click'},
+    {id:'lucky',name:'Lucky Charm',icon:'🍀',desc:'+2× all production',cost:40000,mult:2,type:'cps'},
+    {id:'ancient',name:'Ancient Wisdom',icon:'📜',desc:'+4× all production',cost:150000,mult:4,type:'cps'},
+    {id:'catnipOD',name:'Catnip Overdose',icon:'🌿💨',desc:'+8× click power',cost:300000,mult:8,type:'click'},
+    {id:'quantum',name:'Quantum Pounce',icon:'⚛️',desc:'+15× click power',cost:1.2e6,mult:15,type:'click'},
+    {id:'purrsonance',name:'Purr Resonance',icon:'🎵',desc:'+7× all production',cost:2.5e6,mult:7,type:'cps'},
+    {id:'infinite',name:'Infinite Treats',icon:'🍬',desc:'+20× click power',cost:8e6,mult:20,type:'click'},
+    {id:'multiverse',name:'Multiverse Collar',icon:'🌌',desc:'+12× all production',cost:2e7,mult:12,type:'cps'},
+    {id:'godly',name:'Godly Whiskers',icon:'👼',desc:'+50× click power',cost:6e7,mult:50,type:'click'},
+    {id:'cosmicpurr',name:'Cosmic Purr',icon:'🌠',desc:'+25× all production',cost:1.5e8,mult:25,type:'cps'},
+    {id:'omnipotent',name:'Omnipotent Meow',icon:'🐱💫',desc:'+100× click power',cost:5e8,mult:100,type:'click'},
+    {id:'voidclaw',name:'Void Claw',icon:'🕳️',desc:'+200× click power',cost:2e9,mult:200,type:'click'},
+    {id:'temporal',name:'Temporal Shift',icon:'⏰',desc:'+50× all production',cost:1e10,mult:50,type:'cps'},
+    {id:'singularityClick',name:'Singularity Click',icon:'💥',desc:'+500× click power',cost:5e10,mult:500,type:'click'},
+    {id:'galacticPurr',name:'Galactic Purr',icon:'🌌',desc:'+100× all production',cost:2e11,mult:100,type:'cps'},
+    {id:'celestialPaw',name:'Celestial Paw',icon:'⭐',desc:'+1,500× click power',cost:1e12,mult:1500,type:'click'},
+    {id:'ethereal',name:'Ethereal Fur',icon:'✨',desc:'+250× all production',cost:5e12,mult:250,type:'cps'},
+    {id:'infiniteClick',name:'Infinite Click',icon:'♾️',desc:'+5,000× click power',cost:2e13,mult:5000,type:'click'},
+    {id:'dreamEater',name:'Dream Eater',icon:'😴',desc:'+1,000× all production',cost:1e14,mult:1000,type:'cps'},
+    {id:'realityBender',name:'Reality Bender',icon:'🌀',desc:'+20,000× click power',cost:5e14,mult:20000,type:'click'},
+    {id:'transcendent',name:'Transcendent',icon:'🙏',desc:'+5,000× all production',cost:2.5e15,mult:5000,type:'cps'},
+    {id:'omniClick',name:'Omni Click',icon:'💢',desc:'+100,000× click power',cost:1e16,mult:100000,type:'click'},
+    {id:'universeCat',name:'Universe Cat',icon:'🌍',desc:'+20,000× all production',cost:5e16,mult:20000,type:'cps'},
+    {id:'multiversal',name:'Multiversal',icon:'🌎🌍🌏',desc:'+500,000× click power',cost:2.5e17,mult:500000,type:'click'},
+    {id:'godClick',name:'God Click',icon:'👑',desc:'+2,000,000× click power',cost:1e18,mult:2e6,type:'click'},
+    {id:'primordial',name:'Primordial Purr',icon:'🔥',desc:'+200,000× all production',cost:5e18,mult:200000,type:'cps'},
+    {id:'eternalClaw',name:'Eternal Claw',icon:'⚡',desc:'+10,000,000× click power',cost:2.5e19,mult:1e7,type:'click'},
+    {id:'infinityCps',name:'Infinity Engine',icon:'♾️',desc:'+1,000,000× all production',cost:1e20,mult:1e6,type:'cps'},
+    {id:'clickGod',name:'Click God',icon:'👁️',desc:'+1e9× click power',cost:5e20,mult:1e9,type:'click'},
+    {id:'beyond',name:'Beyond Infinity',icon:'🌌💫',desc:'+1e12× click power',cost:1e22,mult:1e12,type:'click'},
+    {id:'ultimatePurr',name:'Ultimate Purr',icon:'🐱🔱',desc:'+1e15× all production',cost:5e22,mult:1e15,type:'cps'},
+    {id:'creatorPaw',name:'Creator Paw',icon:'✋',desc:'+1e18× click power',cost:1e24,mult:1e18,type:'click'},
+    {id:'alphaOmega',name:'Alpha & Omega',icon:'🕉️',desc:'+1e21× all production',cost:5e24,mult:1e21,type:'cps'},
+    {id:'purrfect',name:'Purrfect Click',icon:'😸',desc:'+1e24× click power',cost:1e26,mult:1e24,type:'click'},
+    {id:'godUltimate',name:'Ultimate God',icon:'🐉',desc:'+1e30× all production',cost:1e30,mult:1e30,type:'cps'},
+    {id:'infinitePower',name:'Infinite Power',icon:'⚡∞',desc:'+1e50× click power',cost:1e40,mult:1e50,type:'click'},
+    {id:'beyondGod',name:'Beyond God',icon:'👾',desc:'+1e100× all production',cost:1e60,mult:1e100,type:'cps'},
+    {id:'catGod',name:'Cat God',icon:'🐱👑',desc:'+1e200× click power',cost:1e80,mult:1e200,type:'click'},
+    {id:'theOne',name:'The One Who Purrs',icon:'🌟',desc:'+1e300× all production',cost:1e100,mult:1e300,type:'cps'}
+  ];
+  const ONCE_UPGRADES = UPGRADES_RAW.sort((a,b)=>a.cost - b.cost);
+  
+  // ---------- COMPANIONS (15, sorted by cost) ----------
+  const COMPANIONS_RAW = [
+    {id:'tabby',name:'Tabby Tutor',icon:'🐈',desc:'+2× clicks & production',cost:250,clickMult:2,cpsMult:2,duration:30},
+    {id:'siamese',name:'Siamese Sage',icon:'🐱',desc:'+4× clicks',cost:1200,clickMult:4,cpsMult:1,duration:30},
+    {id:'maine',name:'Maine Coon',icon:'🦁',desc:'+5× production',cost:5000,clickMult:1,cpsMult:5,duration:30},
+    {id:'void',name:'Void Cat',icon:'🐈‍⬛',desc:'+8× clicks & +2× prod',cost:25000,clickMult:8,cpsMult:2,duration:30},
+    {id:'rainbow',name:'Rainbow Cat',icon:'🌈',desc:'+6× all + coin attraction',cost:100000,clickMult:6,cpsMult:6,duration:30},
+    {id:'phoenix',name:'Phoenix Cat',icon:'🔥',desc:'+15× clicks & +10× prod',cost:500000,clickMult:15,cpsMult:10,duration:30},
+    {id:'ghost',name:'Ghost Cat',icon:'👻',desc:'+30× clicks',cost:2e6,clickMult:30,cpsMult:1,duration:30},
+    {id:'dragon',name:'Dragon Cat',icon:'🐉',desc:'+50× production',cost:1e7,clickMult:1,cpsMult:50,duration:30},
+    {id:'angel',name:'Angel Cat',icon:'😇',desc:'+100× all',cost:5e7,clickMult:100,cpsMult:100,duration:30},
+    {id:'cosmic',name:'Cosmic Cat',icon:'🌌',desc:'+500× clicks & +500× prod',cost:2.5e8,clickMult:500,cpsMult:500,duration:30},
+    {id:'voidLord',name:'Void Lord',icon:'🕳️',desc:'+2,000× clicks',cost:1e9,clickMult:2000,cpsMult:1,duration:30},
+    {id:'starMaker',name:'Star Maker',icon:'⭐',desc:'+5,000× production',cost:5e9,clickMult:1,cpsMult:5000,duration:30},
+    {id:'dreamWeaver',name:'Dream Weaver Cat',icon:'✨',desc:'+20,000× all',cost:2e10,clickMult:20000,cpsMult:20000,duration:30},
+    {id:'realityBenderCat',name:'Reality Bender',icon:'🌀',desc:'+100,000× clicks & prod',cost:1e11,clickMult:100000,cpsMult:100000,duration:30},
+    {id:'godCompanion',name:'God Companion',icon:'🐱👑',desc:'+1,000,000× all',cost:5e11,clickMult:1e6,cpsMult:1e6,duration:30}
+  ];
+  const COMPANIONS = COMPANIONS_RAW.sort((a,b)=>a.cost - b.cost);
+  
+  // ---------- RANDOM EVENTS ----------
+  const EVENTS = [
+    {msg:'🐟 Stray cat brings you a fish!',effect:()=>{ G.purrs += 500*G.cpsMult; updateUI(); },icon:'🐟'},
+    {msg:'📦 Cardboard box appears! Bonus!',effect:()=>{ G.purrs += Math.floor(1000*G.cpsMult); updateUI(); },icon:'📦'},
+    {msg:'⚡ Meteor shower! 30 sec double production!',effect:()=>{ startTempBuff('cps',2,30); },icon:'⚡'},
+    {msg:'💰 Treasure chest! +5000 purrs!',effect:()=>{ G.purrs += 5000; updateUI(); },icon:'💰'},
+    {msg:'🐾 Lucky paw! 3× clicks for 20 sec!',effect:()=>{ startTempBuff('click',3,20); },icon:'🐾'},
+  ];
+  
+  // ---------- GAME STATE ----------
+  let G = {
+    purrs:0, totalPurrs:0, clickPower:1, cps:0, buildings:{}, owned:{}, evoIndex:0, clickMult:1, cpsMult:1,
+    activeCompanion: null, companionEndTime:0,
+    tempClickBuff:1, tempCpsBuff:1, tempBuffEnd:0,
+  };
+  try{ const s = localStorage.getItem('purrSaveInf'); if(s) Object.assign(G, JSON.parse(s)); }catch(e){}
+  function save(){ localStorage.setItem('purrSaveInf', JSON.stringify(G)); }
+  
+  function buildingCost(b){ return Math.floor(b.baseCost * Math.pow(1.15, G.buildings[b.id]||0)); }
+  function buildingCps(b){ return (G.buildings[b.id]||0)*b.baseCps*G.cpsMult*personalMult; }
+  function totalCps(){ return BUILDINGS.reduce((s,b)=>s+buildingCps(b),0); }
+  function getClickPower(){ return Math.floor(G.clickMult * personalMult * G.tempClickBuff); }
+  function getCpsMult(){ return G.cpsMult * G.tempCpsBuff; }
+  function startTempBuff(type, mult, durationSec){
+    if(type==='click'){ G.tempClickBuff = mult; G.tempBuffEnd = Date.now() + durationSec*1000; }
+    else if(type==='cps'){ G.tempCpsBuff = mult; G.tempBuffEnd = Date.now() + durationSec*1000; }
+    setTimeout(()=>{ if(Date.now()>=G.tempBuffEnd){ G.tempClickBuff=1; G.tempCpsBuff=1; updateUI(); toast('✨ Buff expired!'); } }, durationSec*1000);
+    updateUI();
+  }
+  function checkTempBuff(){ if(G.tempBuffEnd && Date.now()>G.tempBuffEnd){ G.tempClickBuff=1; G.tempCpsBuff=1; G.tempBuffEnd=0; updateUI(); } }
+  
+  function activateCompanion(c){
+    if(G.activeCompanion && Date.now()<G.companionEndTime){ toast('Another companion is already active!'); return; }
+    if(G.purrs < c.cost){ toast(`Need ${fmtNum(c.cost)} purrs!`); return; }
+    G.purrs -= c.cost;
+    G.activeCompanion = c.id;
+    G.companionEndTime = Date.now() + c.duration*1000;
+    G.clickMult *= c.clickMult;
+    G.cpsMult *= c.cpsMult;
+    updateUI();
+    toast(`✨ ${c.name} appears! +${c.clickMult}x clicks, +${c.cpsMult}x production for ${c.duration}s`);
+    playSfx();
+    setTimeout(()=>{
+      if(G.activeCompanion===c.id){
+        G.clickMult /= c.clickMult;
+        G.cpsMult /= c.cpsMult;
+        G.activeCompanion = null;
+        updateUI();
+        toast(`😿 ${c.name} left... buffs are gone.`);
+      }
+    }, c.duration*1000);
+    buildCompanionPanel();
+  }
+  
+  let nextEventTime = Date.now() + 45000 + Math.random()*45000;
+  setInterval(()=>{
+    if(!document.hasFocus()) return;
+    if(Date.now()>=nextEventTime){
+      const ev = EVENTS[Math.floor(Math.random()*EVENTS.length)];
+      ev.effect();
+      toast(ev.msg);
+      playSfx();
+      nextEventTime = Date.now() + 45000 + Math.random()*45000;
+    }
+  }, 5000);
+  
+  function buildUpgradePanel(){
+    const list=document.getElementById('onceList'); list.innerHTML='';
+    ONCE_UPGRADES.forEach(u=>{
+      const owned=G.owned[u.id];
+      let btn=document.createElement('button');
+      btn.className='once-btn'+(owned?'':(G.purrs>=u.cost?' affordable':''));
+      btn.disabled=!!owned;
+      btn.innerHTML=`<div class="once-icon">${u.icon}</div><div class="once-info"><div class="once-name">${u.name}</div><div class="once-desc">${u.desc}</div><div class="once-cost">${owned?'✓ owned':fmtNum(u.cost)+' purrs'}</div></div>`;
+      if(!owned) btn.onclick=()=>buyOnce(u);
+      list.appendChild(btn);
+    });
+  }
+  function buildBuildingPanel(){
+    const list=document.getElementById('buildingList'); list.innerHTML='';
+    BUILDINGS.forEach(b=>{
+      let cost=buildingCost(b), owned=G.buildings[b.id]||0, cps=buildingCps(b);
+      let btn=document.createElement('button');
+      btn.className='upg-btn'+(G.purrs>=cost?' affordable':'');
+      btn.innerHTML=`<div class="upg-icon">${b.icon}</div><div class="upg-info"><div class="upg-name">${b.name}</div><div class="upg-desc">${b.desc}</div><div class="upg-cost">${fmtNum(cost)} purrs</div><div style="font-size:.6rem;color:var(--paw);">Owned: ${owned} (+${fmtNum(cps,2)}/s)</div></div>`;
+      btn.onclick=()=>buyBuilding(b);
+      list.appendChild(btn);
+    });
+  }
+  function buildCompanionPanel(){
+    const list=document.getElementById('companionList'); list.innerHTML='';
+    COMPANIONS.forEach(c=>{
+      let btn=document.createElement('button');
+      btn.className='once-btn'+(G.purrs>=c.cost?' affordable':'');
+      btn.innerHTML=`<div class="once-icon">${c.icon}</div><div class="once-info"><div class="once-name">${c.name}</div><div class="once-desc">${c.desc}</div><div class="once-cost">${fmtNum(c.cost)} purrs</div></div>`;
+      btn.onclick=()=>activateCompanion(c);
+      list.appendChild(btn);
+    });
+  }
+  function refreshPanels(){
+    buildUpgradePanel(); buildBuildingPanel(); buildCompanionPanel();
+    let canUpg = ONCE_UPGRADES.some(u=>!G.owned[u.id]&&G.purrs>=u.cost);
+    let canHelp = BUILDINGS.some(b=>G.purrs>=buildingCost(b));
+    let canComp = COMPANIONS.some(c=>G.purrs>=c.cost && (!G.activeCompanion || Date.now()>=G.companionEndTime));
+    document.getElementById('badge-upgrades').classList.toggle('show',canUpg);
+    document.getElementById('badge-helpers').classList.toggle('show',canHelp);
+    document.getElementById('badge-companions').classList.toggle('show',canComp);
+  }
+  function buyBuilding(b){
+    let cost = buildingCost(b);
+    if(G.purrs<cost){ toast(`Need ${fmtNum(cost)} purrs!`); return; }
+    G.purrs -= cost;
+    G.buildings[b.id] = (G.buildings[b.id]||0)+1;
+    buildBuildingPanel(); refreshPanels();
+    toast(`${b.icon} ${b.name} added!`); playSfx();
+  }
+  function buyOnce(u){
+    if(G.owned[u.id]) return;
+    if(G.purrs<u.cost){ toast(`Need ${fmtNum(u.cost)} purrs!`); return; }
+    G.purrs -= u.cost; G.owned[u.id]=true;
+    if(u.type==='click') G.clickMult *= u.mult;
+    else G.cpsMult *= u.mult;
+    buildUpgradePanel(); refreshPanels();
+    toast(`✨ ${u.name} unlocked!`); playSfx();
+  }
+  function updateUI(){
+    checkTempBuff();
+    document.getElementById('counterMain').textContent = fmtNum(Math.floor(G.purrs));
+    document.getElementById('hdrTotal').textContent = fmtNum(Math.floor(G.totalPurrs));
+    const cps = totalCps() * getCpsMult();
+    document.getElementById('counterCps').textContent = `+${fmtNum(cps,1)}/s`;
+    document.getElementById('hdrCps').textContent = fmtNum(cps,1);
+    const evo = EVOLUTIONS[G.evoIndex];
+    document.getElementById('evoBadge').textContent = evo.name;
+    document.getElementById('evoStage').textContent = evo.name;
+    const next = EVOLUTIONS[G.evoIndex+1];
+    if(next){
+      let pct = Math.min(100, ((G.totalPurrs-evo.threshold)/(next.threshold-evo.threshold))*100);
+      document.getElementById('evoFill').style.width = pct+'%';
+      document.getElementById('evoCur').textContent = fmtNum(G.totalPurrs-evo.threshold);
+      document.getElementById('evoNext').textContent = fmtNum(next.threshold-evo.threshold);
+    } else { document.getElementById('evoFill').style.width='100%'; document.getElementById('evoCur').textContent='MAX'; document.getElementById('evoNext').textContent=''; }
+    if(G.activeCompanion && Date.now()<G.companionEndTime){
+      let comp = COMPANIONS.find(c=>c.id===G.activeCompanion);
+      if(comp) document.getElementById('activeCompanionMsg').innerHTML = `⭐ Active: ${comp.name} (${Math.ceil((G.companionEndTime-Date.now())/1000)}s left)`;
+      else document.getElementById('activeCompanionMsg').innerHTML = '';
+    } else document.getElementById('activeCompanionMsg').innerHTML = '';
+    refreshPanels();
+  }
+  function checkEvolution(){
+    let newIdx=0;
+    for(let i=EVOLUTIONS.length-1;i>=0;i--) if(G.totalPurrs>=EVOLUTIONS[i].threshold){ newIdx=i; break; }
+    if(newIdx!==G.evoIndex){ G.evoIndex=newIdx; toast(`🎉 Evolved to ${EVOLUTIONS[newIdx].name}!`); playSfx(); updateUI(); }
+  }
+  
+  const catEmoji = document.getElementById('catEmoji');
+  catEmoji.addEventListener('pointerdown',e=>{
+    e.preventDefault();
+    let earn = Math.max(1, Math.floor(getClickPower()));
+    G.purrs += earn; G.totalPurrs += earn;
+    playSfx();
+    catEmoji.style.transform = 'scale(0.92)';
+    setTimeout(()=>{ catEmoji.style.transform = 'scale(1)'; }, 100);
+    let rect=catEmoji.getBoundingClientRect();
+    let x = (e.clientX||e.touches?.[0]?.clientX||rect.left+rect.width/2) - rect.left;
+    let y = (e.clientY||e.touches?.[0]?.clientY||rect.top+rect.height/2) - rect.top;
+    let ripple = document.createElement('div');
+    ripple.className='ripple'; ripple.style.left=x+'px'; ripple.style.top=y+'px'; ripple.style.width='30px'; ripple.style.height='30px';
+    catEmoji.parentElement.appendChild(ripple); setTimeout(()=>ripple.remove(),400);
+    let particle=document.createElement('div'); particle.style.position='absolute'; particle.style.left=(rect.left+x-30)+'px'; particle.style.top=(rect.top+y-30)+'px'; particle.style.fontSize='1.3rem'; particle.textContent='+'+fmtNum(earn); particle.style.pointerEvents='none'; particle.style.fontWeight='bold'; particle.style.color='var(--cream)'; particle.style.textShadow='0 0 6px #ffaa44'; particle.style.animation='float 0.9s ease-out forwards'; document.body.appendChild(particle); setTimeout(()=>particle.remove(),1000);
+    checkEvolution(); updateUI();
+  });
+  
+  let audioCtx=null, musicOn=false, musicNodes=[], arpInt,bassInt,ambInt;
+  const SCALES=[[261.63,293.66,329.63,349.23,392.00,440.00,493.88,523.25],[293.66,329.63,369.99,392.00,440.00,493.88,554.37,587.33],[261.63,293.66,311.13,349.23,392.00,415.30,466.16,523.25],[220.00,246.94,261.63,293.66,329.63,349.23,392.00,440.00]];
+  function getScale(){ let idx=Math.min(G.evoIndex,SCALES.length-1); return SCALES[idx]; }
+  function note(freq,start,dur,vol,type='square'){ if(!audioCtx)return; let osc=audioCtx.createOscillator(), gain=audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.type=type; osc.frequency.value=freq; gain.gain.setValueAtTime(vol,start); gain.gain.exponentialRampToValueAtTime(0.01,start+dur); osc.start(start); osc.stop(start+dur); musicNodes.push({osc,gain}); }
+  function arp(){ if(!audioCtx||!musicOn)return; let sc=getScale(); let now=audioCtx.currentTime; [0,2,4,7,4,2,0,4].forEach((si,i)=>note(sc[si%sc.length],now+i*0.13,0.18,0.045,'square')); }
+  function bass(){ if(!audioCtx||!musicOn)return; let sc=getScale(); let now=audioCtx.currentTime; [0,0,4,3].forEach((i,idx)=>note(sc[i]*0.5,now+idx*0.42,0.38,0.05,'sawtooth')); }
+  function amb(){ if(!audioCtx||!musicOn)return; let sc=getScale(); let now=audioCtx.currentTime; [0,2,4].forEach(si=>{ note(sc[si]*0.5,now,1.8,0.012,'sine'); }); }
+  function startMusic(){ if(!audioCtx){ audioCtx=new(window.AudioContext||window.webkitAudioContext)(); } if(audioCtx.state==='suspended') audioCtx.resume(); musicOn=true; arpInt=setInterval(arp,1040); bassInt=setInterval(bass,1680); ambInt=setInterval(amb,3360); }
+  function stopMusic(){ musicOn=false; clearInterval(arpInt);clearInterval(bassInt);clearInterval(ambInt); musicNodes.forEach(n=>{ try{ n.osc.stop(); n.osc.disconnect(); n.gain.disconnect(); }catch(e){} }); musicNodes=[]; document.getElementById('btnMusic').textContent='🎵'; }
+  function playSfx(){ if(audioCtx && musicOn) note(880, audioCtx.currentTime, 0.1, 0.08, 'square'); }
+  document.getElementById('btnMusic').onclick=()=>{ if(musicOn) stopMusic(); else startMusic(); document.getElementById('btnMusic').textContent=musicOn?'🔇':'🎵'; };
+  document.getElementById('btnReset').onclick=()=>{ if(confirm('Reset game? All progress lost!')){ localStorage.removeItem('purrSaveInf'); location.reload(); } };
+  
+  let lastTick=Date.now();
+  setInterval(()=>{ let now=Date.now(), dt=(now-lastTick)/1000; lastTick=now; let earn = totalCps() * getCpsMult() * dt; if(earn>0){ G.purrs+=earn; G.totalPurrs+=earn; checkEvolution(); updateUI(); } save(); }, 100);
+  function toast(msg){ let el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2500); }
+  function fmtNum(n,dec=0){ if(n>=1e12) return (n/1e12).toFixed(1)+'T'; if(n>=1e9) return (n/1e9).toFixed(1)+'B'; if(n>=1e6) return (n/1e6).toFixed(1)+'M'; if(n>=1e3) return (n/1e3).toFixed(1)+'K'; if(dec>0) return n.toFixed(dec); return Math.floor(n).toString(); }
+  
+  document.querySelectorAll('.tab-bar-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const target=btn.dataset.tab;
+      document.querySelectorAll('.tab-bar-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(target).classList.add('active');
+      if(target==='tab-upgrades') document.getElementById('badge-upgrades').classList.remove('show');
+      if(target==='tab-helpers') document.getElementById('badge-helpers').classList.remove('show');
+      if(target==='tab-companions') document.getElementById('badge-companions').classList.remove('show');
+    });
+  });
+  
+  function init(){
+    buildUpgradePanel(); buildBuildingPanel(); buildCompanionPanel();
+    updateUI();
+    refreshPanels();
+    if(!musicOn && localStorage.getItem('purrMusicPref')!=='off') startMusic();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
