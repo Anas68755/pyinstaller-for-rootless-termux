@@ -679,48 +679,48 @@ def generate_self_decrypting_html(input_path: str, output_html: str, password: s
     const expiryMsg = document.getElementById('expiryMsg');
 
     // ---- Attempt tracking ----
-    function getAttempts() {{ try {{ return parseInt(localStorage.getItem('_scf_att') || '0', 10); }} catch(e) {{ return 0; }} }}
-    function addAttempt() {{ try {{ localStorage.setItem('_scf_att', String(getAttempts() + 1)); }} catch(e) {{}} }}
-    function resetAttempts() {{ try {{ localStorage.removeItem('_scf_att'); }} catch(e) {{}} }}
-    function isLockedOut() {{ return MAX_ATTEMPTS > 0 && getAttempts() >= MAX_ATTEMPTS; }}
+    function getAttempts() { try { return parseInt(localStorage.getItem('_scf_att') || '0', 10); } catch(e) { return 0; } }
+    function addAttempt() { try { localStorage.setItem('_scf_att', String(getAttempts() + 1)); } catch(e) {} }
+    function resetAttempts() { try { localStorage.removeItem('_scf_att'); } catch(e) {} }
+    function isLockedOut() { return MAX_ATTEMPTS > 0 && getAttempts() >= MAX_ATTEMPTS; }
 
     // ---- Expiry check ----
-    if (EXPIRY_TS > 0) {{
-        function checkExpiry() {{
+    if (EXPIRY_TS > 0) {
+        function checkExpiry() {
             const now = Math.floor(Date.now() / 1000);
             const remaining = EXPIRY_TS - now;
-            if (remaining <= 0) {{
+            if (remaining <= 0) {
                 expiryMsg.textContent = 'This file has expired and cannot be decrypted.';
                 expiryMsg.classList.add('active');
                 unlockBtn.disabled = true;
                 return true;
-            }}
+            }
             const days = Math.floor(remaining / 86400);
             const hrs = Math.floor((remaining % 86400) / 3600);
             expiryMsg.textContent = 'Expires in ' + (days > 0 ? days + 'd ' : '') + hrs + 'h';
             expiryMsg.classList.add('active');
             return false;
-        }}
-        if (checkExpiry()) {{ /* already expired */ }}
-        else {{ setInterval(checkExpiry, 60000); }}
-    }}
+        }
+        if (checkExpiry()) { /* already expired */ }
+        else { setInterval(checkExpiry, 60000); }
+    }
 
     // ---- Lockout check ----
-    if (isLockedOut()) {{
+    if (isLockedOut()) {
         lockoutMsg.textContent = 'Locked out: too many failed attempts (' + MAX_ATTEMPTS + ' max). Clear localStorage to reset.';
         lockoutMsg.classList.add('active');
         unlockBtn.disabled = true;
-    }}
+    }
 
-    function setStatus(msg, type) {{ statusMsg.textContent = msg; statusMsg.className = 'status'; if (type) statusMsg.classList.add(type); }}
-    function clearStatus() {{ statusMsg.className = 'status'; statusMsg.textContent = ''; }}
-    function updateProgress(pct, label) {{ progressWrap.classList.add('active'); progressFill.style.width = pct + '%'; progPercent.textContent = Math.round(pct) + '%'; if (label) progLabel.textContent = label; }}
-    function resetProgress() {{ progressWrap.classList.remove('active'); progressFill.style.width = '0%'; progPercent.textContent = '0%'; progLabel.textContent = 'Decrypting...'; }}
-    function setLoading(loading) {{ unlockBtn.disabled = loading; unlockBtn.textContent = loading ? 'Unlocking...' : 'Unlock & Restore'; }}
+    function setStatus(msg, type) { statusMsg.textContent = msg; statusMsg.className = 'status'; if (type) statusMsg.classList.add(type); }
+    function clearStatus() { statusMsg.className = 'status'; statusMsg.textContent = ''; }
+    function updateProgress(pct, label) { progressWrap.classList.add('active'); progressFill.style.width = pct + '%'; progPercent.textContent = Math.round(pct) + '%'; if (label) progLabel.textContent = label; }
+    function resetProgress() { progressWrap.classList.remove('active'); progressFill.style.width = '0%'; progPercent.textContent = '0%'; progLabel.textContent = 'Decrypting...'; }
+    function setLoading(loading) { unlockBtn.disabled = loading; unlockBtn.textContent = loading ? 'Unlocking...' : 'Unlock & Restore'; }
 
     // ---- Password strength ----
-    function getStrength(pw) {{
-        if (!pw) return {{ score: 0, label: '' }};
+    function getStrength(pw) {
+        if (!pw) return { score: 0, label: '' };
         let score = 0;
         if (pw.length >= 8) score++;
         if (pw.length >= 12) score++;
@@ -730,62 +730,62 @@ def generate_self_decrypting_html(input_path: str, output_html: str, password: s
         if (classes >= 4 && pw.length >= 16) score++;
         const labels = ['', 'Weak', 'Fair', 'Strong', 'Very strong'];
         const colors = ['', '#ff6b6b', '#f0b429', '#5ddf8a', '#2dd4bf'];
-        return {{ score, label: labels[score], color: colors[score] }};
-    }}
+        return { score, label: labels[score], color: colors[score] };
+    }
 
-    pwInput.addEventListener('input', () => {{
+    pwInput.addEventListener('input', () => {
         const s = getStrength(pwInput.value);
         strengthFill.style.width = (s.score * 25) + '%';
         strengthFill.style.background = s.color || 'transparent';
         strengthLabel.textContent = s.label;
         strengthLabel.style.color = s.color;
-    }});
+    });
 
-    toggleVis.addEventListener('click', () => {{
+    toggleVis.addEventListener('click', () => {
         const t = pwInput.type === 'password' ? 'text' : 'password';
         pwInput.type = t;
         toggleVis.textContent = t === 'password' ? '\\u{1f441}' : '\\u{1f648}';
-    }});
+    });
 
-    function base64ToBytes(b64) {{
+    function base64ToBytes(b64) {
         const bin = atob(b64);
         const arr = new Uint8Array(bin.length);
         for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
         return arr;
-    }}
+    }
 
-    async function deriveKey(password, salt, iterations) {{
+    async function deriveKey(password, salt, iterations) {
         const enc = new TextEncoder();
         const keyMat = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
         return await crypto.subtle.deriveKey(
-            {{ name: 'PBKDF2', salt, iterations, hash: 'SHA-256' }},
-            keyMat, {{ name: 'AES-GCM', length: 256 }}, false, ['decrypt']
+            { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+            keyMat, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
         );
-    }}
+    }
 
-    async function decryptFilename(key, nameNonce, encNameWithTag) {{
+    async function decryptFilename(key, nameNonce, encNameWithTag) {
         const enc = encNameWithTag.slice(0, encNameWithTag.length - NAME_TAG_SIZE);
         const tag = encNameWithTag.slice(encNameWithTag.length - NAME_TAG_SIZE);
         const full = new Uint8Array(enc.length + tag.length);
         full.set(enc, 0); full.set(tag, enc.length);
         const buf = await crypto.subtle.decrypt(
-            {{ name: 'AES-GCM', iv: nameNonce, tagLength: 128 }},
+            { name: 'AES-GCM', iv: nameNonce, tagLength: 128 },
             key, full
         );
         return new TextDecoder().decode(buf);
-    }}
+    }
 
-    async function maybeDecompress(buffer, flag) {{
+    async function maybeDecompress(buffer, flag) {
         if ((flag & 1) === 0) return buffer;
-        if (typeof DecompressionStream === 'undefined') {{
+        if (typeof DecompressionStream === 'undefined') {
             throw new Error('Compressed but browser lacks DecompressionStream. Try Chrome/Firefox/Edge.');
-        }}
+        }
         const ds = new DecompressionStream('deflate');
         const stream = new Blob([buffer]).stream().pipeThrough(ds);
         return await new Response(stream).arrayBuffer();
-    }}
+    }
 
-    async function decryptBlob(encryptedBytes, password) {{
+    async function decryptBlob(encryptedBytes, password) {
         const data = new Uint8Array(encryptedBytes);
         let off = MAGIC_SIZE;
         const salt = data.slice(off, off + SALT_SIZE); off += SALT_SIZE;
@@ -798,10 +798,10 @@ def generate_self_decrypting_html(input_path: str, output_html: str, password: s
         const maxAtt = (data[off]<<8|data[off+1]); off += 2;
 
         // Check expiry
-        if (expiry > 0) {{
+        if (expiry > 0) {
             const now = Math.floor(Date.now() / 1000);
             if (now > expiry) throw new Error('This file has expired.');
-        }}
+        }
 
         const nameLen = (data[off]<<8|data[off+1]); off += 2;
         const encNameBlock = nameLen > 0 ? data.slice(off, off + nameLen) : null; off += nameLen;
@@ -821,38 +821,38 @@ def generate_self_decrypting_html(input_path: str, output_html: str, password: s
 
         const key = await deriveKey(password, salt, iterations);
         const plainCompressed = await crypto.subtle.decrypt(
-            {{ name: 'AES-GCM', iv: nonce, additionalData: aad, tagLength: 128 }},
+            { name: 'AES-GCM', iv: nonce, additionalData: aad, tagLength: 128 },
             key, full
         );
         const plainBuf = await maybeDecompress(plainCompressed, flag);
 
         // Decrypt filename
         let fileName = DISPLAY_NAME;
-        if ((flag & 2) && encNameBlock && encNameBlock.length > NAME_NONCE_SIZE) {{
-            try {{
+        if ((flag & 2) && encNameBlock && encNameBlock.length > NAME_NONCE_SIZE) {
+            try {
                 const nameNonce = encNameBlock.slice(0, NAME_NONCE_SIZE);
                 const encNameWithTag = encNameBlock.slice(NAME_NONCE_SIZE);
                 fileName = await decryptFilename(key, nameNonce, encNameWithTag);
-            }} catch(e) {{ /* keep display name */ }}
-        }}
+            } catch(e) { /* keep display name */ }
+        }
 
-        return {{ buffer: plainBuf, fileName }};
-    }}
+        return { buffer: plainBuf, fileName };
+    }
 
-    unlockBtn.addEventListener('click', async () => {{
-        if (isLockedOut()) {{
+    unlockBtn.addEventListener('click', async () => {
+        if (isLockedOut()) {
             setStatus('Locked out. Too many failed attempts.', 'error');
             return;
-        }}
+        }
         const password = pwInput.value;
-        if (!password) {{ setStatus('Please enter the password.', 'error'); return; }}
+        if (!password) { setStatus('Please enter the password.', 'error'); return; }
 
         clearStatus();
         setLoading(true);
         resetProgress();
         updateProgress(5, 'Preparing...');
 
-        try {{
+        try {
             updateProgress(15, 'Decoding data...');
             const encryptedBytes = base64ToBytes(B64_DATA);
 
@@ -872,51 +872,51 @@ def generate_self_decrypting_html(input_path: str, output_html: str, password: s
             resetAttempts();
 
             // Show SHA for verification
-            if (SHA256_HASH && SHA256_HASH !== 'SHA_PLACEHOLDER') {{
+            if (SHA256_HASH && SHA256_HASH !== 'SHA_PLACEHOLDER') {
                 shaCode.textContent = 'SHA-256: ' + SHA256_HASH;
                 shaRow.classList.add('visible');
-            }}
-        }} catch (err) {{
+            }
+        } catch (err) {
             console.error(err);
             addAttempt();
             let msg = 'Decryption failed. ';
             const attempts = getAttempts();
-            if (err.message && err.message.toLowerCase().includes('expired')) {{
+            if (err.message && err.message.toLowerCase().includes('expired')) {
                 msg = 'This file has expired.';
-            }} else if (err.message && (err.message.toLowerCase().includes('decrypt') || err.message.toLowerCase().includes('operation'))) {{
+            } else if (err.message && (err.message.toLowerCase().includes('decrypt') || err.message.toLowerCase().includes('operation'))) {
                 msg += 'Wrong password or corrupted file.';
-            }} else if (err.message) {{
+            } else if (err.message) {
                 msg += err.message;
-            }} else {{
+            } else {
                 msg += 'Check your password and try again.';
-            }}
-            if (MAX_ATTEMPTS > 0 && attempts >= MAX_ATTEMPTS) {{
+            }
+            if (MAX_ATTEMPTS > 0 && attempts >= MAX_ATTEMPTS) {
                 msg += ' LOCKED OUT (' + MAX_ATTEMPTS + ' max attempts reached).';
                 lockoutMsg.textContent = 'Locked out. Clear localStorage to reset.';
                 lockoutMsg.classList.add('active');
                 unlockBtn.disabled = true;
-            }} else if (MAX_ATTEMPTS > 0) {{
+            } else if (MAX_ATTEMPTS > 0) {
                 msg += ' (' + (MAX_ATTEMPTS - attempts) + ' attempts remaining)';
-            }}
+            }
             setStatus(msg, 'error');
             resetProgress();
-        }} finally {{
+        } finally {
             setLoading(false);
-        }}
-    }});
+        }
+    });
 
-    shaCopy.addEventListener('click', () => {{
-        if (shaCode.textContent) {{
-            navigator.clipboard.writeText(shaCode.textContent).then(() => {{
+    shaCopy.addEventListener('click', () => {
+        if (shaCode.textContent) {
+            navigator.clipboard.writeText(shaCode.textContent).then(() => {
                 shaCopy.textContent = 'Copied!';
-                setTimeout(() => {{ shaCopy.textContent = 'Copy'; }}, 1500);
-            }}).catch(() => {{}});
-        }}
-    }});
+                setTimeout(() => { shaCopy.textContent = 'Copy'; }, 1500);
+            }).catch(() => {});
+        }
+    });
 
-    pwInput.addEventListener('keydown', (e) => {{ if (e.key === 'Enter') unlockBtn.click(); }});
+    pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') unlockBtn.click(); });
     console.log('secfil self-decrypting page ready.');
-}});
+})();
 </script>
 </body>
 </html>
