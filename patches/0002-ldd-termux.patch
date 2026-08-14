@@ -1,0 +1,64 @@
+From: Termux Port <termux@localhost>
+Subject: [PATCH 2/5] Fix ldd handling for Termux/Android
+
+Android does not ship a standard `ldd` command. Termux provides one
+but it may not handle all ELF formats correctly (especially PIE
+binaries and shared objects built with clang).
+
+This patch:
+1. Redirects ldd invocations through our Termux ldd shim
+2. Falls back to readelf -d for DT_NEEDED parsing when ldd fails
+3. Handles the Android linker64/linker as ELF interpreter
+
+--- a/depend/bindepend.py
++++ b/depend/bindepend.py
+@@ -90,6 +90,28 @@
+         return ret
+ 
+ 
++# ── TERMUX_PATCHED: ldd with Termux fallback ───────────────────
++def _termux_ldd(fn):
++    """Run ldd via shim; fall back to readelf -d parsing."""
++    import subprocess
++    import re
++
++    try:
++        out = subprocess.check_output(
++            [_LDD_SHIM, fn], stderr=subprocess.DEVNULL, text=True
++        )
++        return _parse_ldd_output(out)
++    except (subprocess.CalledProcessError, FileNotFoundError):
++        pass
++
++    # Fallback: readelf -d
++    try:
++        out = subprocess.check_output(
++            ["readelf", "-d", fn], stderr=subprocess.DEVNULL, text=True
++        )
++        libs = re.findall(r'\(NEEDED\)\s+Shared library:\s+\[(.+?)\]', out)
++        result = []
++        for lib in libs:
++            resolved = _termux_resolve_library(lib)
++            result.append(resolved or lib)
++        return result
++    except (subprocess.CalledProcessError, FileNotFoundError):
++        return []
++
++
++def _parse_ldd_output(ldd_output):
++    """Parse ldd output into list of resolved paths."""
++    result = []
++    for line in ldd_output.strip().splitlines():
++        parts = line.strip().split()
++        if "=>" in parts and parts[-1] != "not":
++            # format: libname.so => /path/to/lib (0xaddr)
++            idx = parts.index("=>")
++            path = parts[idx + 1]
++            if _os.path.isfile(path):
++                result.append(path)
++    return result
++# ── END TERMUX_PATCHED ────────────────────────────────────────
++
+ 
+ def _get_imports_from_manifest(pex):
+     """

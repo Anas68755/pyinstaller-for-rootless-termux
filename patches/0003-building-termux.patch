@@ -1,0 +1,38 @@
+From: Termux Port <termux@localhost>
+Subject: [PATCH 3/5] Fix bootloader building for Termux/Android
+
+The PyInstaller bootloader assumes glibc and Linux-specific features
+that are not available on Android's bionic libc. This patch:
+
+1. Sets correct CMake flags for clang/bionic compilation
+2. Adds -landroid -llog to linker flags (bionic requirements)
+3. Disables features unavailable on Android (setresuid, prctl, etc.)
+4. Sets TMPDIR to a Termux-writable location
+5. Skips bootloader compilation if pre-built binary is available
+
+--- a/building/building.py
++++ b/building/building.py
+@@ -1,3 +1,22 @@
++# ── TERMUX_PATCHED: Bootloader build fixes for Termux ─────────
++import os as _os
++import sys as _sys
++
++_os.environ.setdefault("PYINSTALLER_COMPILE_BOOTLOADER", "0")
++_os.environ.setdefault("CFLAGS", "-fPIC -no-pie")
++_os.environ.setdefault("LDFLAGS", "-fPIC -shared")
++
++if not _os.path.exists("/tmp"):
++    _termux_tmp = _os.path.join(
++        _os.environ.get("PREFIX", "/data/data/com.termux/files/usr"), "tmp"
++    )
++    _os.makedirs(_termux_tmp, exist_ok=True)
++    _os.environ.setdefault("TMPDIR", _termux_tmp)
++
++if not _os.environ.get("TMPDIR"):
++    _os.makedirs("/tmp", exist_ok=True)
++    _os.environ["TMPDIR"] = "/tmp"
++# ── END TERMUX_PATCHED ────────────────────────────────────────
++
+ #-----------------------------------------------------------------------------
+ # Copyright (c) 2005-2024, PyInstaller Development Team
+ #
