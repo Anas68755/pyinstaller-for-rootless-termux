@@ -1,86 +1,63 @@
-# gh-exe-build
+# termux-pyinstaller-setup
 
-Build real Windows `.exe` files from Python scripts, triggered from Termux
-(or anywhere) via `git push` — no Windows machine, no root, no local
-cross-compiling.
+Get PyInstaller working in Termux (Android) with no root required.
 
-## Why
+## Background
 
-PyInstaller cannot cross-compile: it only builds an executable for the
-OS it runs on. Termux runs on Android/Linux, so it can never produce a
-Windows `.exe` locally, no matter what's patched or installed. This
-workflow solves that by offloading the actual build to a real Windows
-machine — a `windows-latest` GitHub Actions runner — for free, on
-GitHub's infrastructure.
+PyInstaller historically didn't work out of the box in Termux because:
 
-## Setup (one-time)
+1. Termux ships no `gcc`, and PyInstaller's bootloader needs to compile
+   itself on first install.
+2. Older PyInstaller versions used SysV semaphores in the bootloader,
+   which don't exist in Android's Bionic libc.
+3. Older versions also looked for `libpython3.x.so` only in `/lib` and
+   `/usr/lib`, not Termux's actual prefix.
 
-1. Create a new GitHub repo (or use an existing one).
-2. Copy this whole folder's contents into the repo root, so you have:
-   ```
-   your-repo/
-     .github/workflows/build-exe.yml
-     main.py              <- your script
-     requirements.txt     <- optional, only if you have dependencies
-   ```
-3. From Termux:
-   ```bash
-   pkg install git
-   cd your-repo
-   git init
-   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
-   git add .
-   git commit -m "initial commit"
-   git push -u origin main
-   ```
+**As of PyInstaller 6.20.0 (April 2026), all of this is fixed upstream.**
+The project added native Termux detection (`is_termux`) and switched the
+bootloader to POSIX semaphores. No forking or source patching is needed
+anymore — you just need the right toolchain and a current version.
 
-Pushing to `main` automatically triggers a build.
+This script automates that setup and proves it works with a real test
+build, rather than just trusting that `pip install` succeeded.
 
-## Usage after setup
-
-Every time you push a change to a `.py` file:
+## Usage
 
 ```bash
-git add .
-git commit -m "update script"
-git push
+bash termux-pyinstaller-setup.sh
 ```
 
-GitHub builds the `.exe` on a Windows runner automatically. No local
-compiling, no Termux limitations.
+The script will:
 
-### Manually triggering a build
+1. Update Termux packages.
+2. Install `clang`, `binutils`, `ldd`, `python`, `python-pip` (the
+   toolchain PyInstaller's bootloader needs to compile).
+3. Force-install a clean, current copy of PyInstaller.
+4. Verify the installed version is ≥ 6.20.0 and fail with a clear
+   message if not.
+5. Build and run a "Hello World" binary to confirm the whole pipeline
+   actually works end to end.
 
-You can also trigger a build without pushing new code, and specify
-which script to build, from the GitHub web UI:
+If the last step prints `SUCCESS`, PyInstaller is ready — use it
+normally from there:
 
-1. Go to your repo → **Actions** tab → **Build Windows EXE** workflow.
-2. Click **Run workflow**.
-3. Enter the path to your entry script (default: `main.py`).
+```bash
+pyinstaller -F yourscript.py
+```
 
-### Getting the .exe
+## Troubleshooting
 
-1. Go to the **Actions** tab in your repo.
-2. Click the latest successful run.
-3. Under **Artifacts**, download `windows-exe` — it's a zip containing
-   your `.exe`.
+- **Bootloader fails to compile:** confirm `clang` and `binutils`
+  installed correctly (`clang --version`, `strip --version`), then
+  re-run the script.
+- **Version check fails:** you're likely pulling from a stale
+  pip cache or mirror. Run `pip install --no-cache-dir
+  'pyinstaller>=6.20.0'` manually.
+- **Still fails on your device:** a few ARM32-vs-ARM64 edge cases have
+  been reported even post-fix. Share the exact error output for
+  further debugging.
 
-You can also download artifacts from Termux with `curl` and a
-[GitHub personal access token](https://github.com/settings/tokens) if
-you want to fetch the `.exe` without opening a browser — ask if you
-want that added as a script.
+## Requirements
 
-## Notes
-
-- By default the workflow looks for `main.py` in the repo root. Rename
-  your script or edit `entry_script` default in the workflow file to
-  match, or pass a different path via **Run workflow** as above.
-- If your script has dependencies, list them in `requirements.txt` in
-  the repo root — the workflow installs them automatically before
-  building.
-- The build uses `--onefile`, producing a single standalone `.exe`. Edit
-  the `pyinstaller` line in `.github/workflows/build-exe.yml` if you
-  want different PyInstaller flags (e.g. `--windowed` for GUI apps with
-  no console window, or `--icon=yourfile.ico`).
-- Builds are free on public repos. Private repos get a monthly free
-  minutes allowance on GitHub's standard plans.
+- Termux (no root needed)
+- Internet access on first run (for `pkg` and `pip` installs)
