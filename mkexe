@@ -1,0 +1,399 @@
+#!/usr/bin/env bash
+# mkexe - build Windows .exe files from Python scripts, straight from Termux.
+#
+# PyInstaller can't cross-compile, so mkexe sends your project to a private
+# GitHub repo, builds it on a real Windows runner (GitHub Actions) and
+# downloads the finished .exe back to your device. No root needed.
+set -euo pipefail
+
+VERSION="2.0.0"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/mkexe"
+CONFIG_FILE="$CONFIG_DIR/config"
+WORKFLOW_FILE="build-exe.yml"
+KEEP_JOBS=10
+MAX_KB=90000
+
+c_red=$'\033[31m'; c_grn=$'\033[32m'; c_ylw=$'\033[33m'; c_off=$'\033[0m'
+if [ ! -t 1 ]; then c_red=""; c_grn=""; c_ylw=""; c_off=""; fi
+info() { printf '%s==>%s %s\n' "$c_grn" "$c_off" "$*"; }
+warn() { printf '%swarning:%s %s\n' "$c_ylw" "$c_off" "$*" >&2; }
+die()  { printf '%serror:%s %s\n' "$c_red" "$c_off" "$*" >&2; exit 1; }
+
+usage() {
+cat <<EOF
+mkexe $VERSION - build Windows .exe files from Python, from Termux
+
+Usage:
+  mkexe [options] SOURCE
+
+  SOURCE is a .py file, or a project folder (entry defaults to main.py).
+
+Options:
+  -n, --name NAME          output name (default: entry script name)
+  -e, --entry FILE         entry script inside a project folder (default: main.py)
+  -r, --requirements FILE  requirements file (auto-detects requirements.txt)
+  -w, --windowed           no console window (GUI apps)
+  -d, --onedir             build a folder and return it as .zip (default: one .exe)
+  -i, --icon FILE.ico      icon for the exe
+  -o, --out DIR            where to save the result (default: current folder)
+      --pyver VERSION      Python version on the runner (default: 3.12)
+      --repo OWNER/REPO    build repo (default: <you>/mkexe-builds, created private)
+      --no-wait            start the build and exit, don't wait or download
+      --local              build on this device with PyInstaller instead
+                           (makes an Android/Linux binary, NOT a .exe)
+      --setup              only log in to GitHub and create the build repo
+  -h, --help               show this help
+  -V, --version            show version
+
+Examples:
+  mkexe tool.py
+  mkexe -w -i app.ico -n MyApp gui.py
+  mkexe ~/projects/myapp -e run.py -o ~/storage/downloads
+EOF
+}
+
+# ---------------------------------------------------------------- arguments
+NAME=""; ENTRY=""; REQS=""; WINDOWED=false; ONEDIR=false; ICON=""
+OUT="."; PYVER="3.12"; REPO=""; WAIT=true; LOCAL=false; SETUP_ONLY=false
+SOURCE=""
+
+need_val() { [ $# -ge 2 ] || die "option $1 needs a value"; }
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -n|--name)          need_val "$@"; NAME="$2"; shift 2;;
+    -e|--entry)         need_val "$@"; ENTRY="$2"; shift 2;;
+    -r|--requirements)  need_val "$@"; REQS="$2"; shift 2;;
+    -i|--icon)          need_val "$@"; ICON="$2"; shift 2;;
+    -o|--out)           need_val "$@"; OUT="$2"; shift 2;;
+    --pyver)            need_val "$@"; PYVER="$2"; shift 2;;
+    --repo)             need_val "$@"; REPO="$2"; shift 2;;
+    -w|--windowed)      WINDOWED=true; shift;;
+    -d|--onedir)        ONEDIR=true; shift;;
+    --no-wait)          WAIT=false; shift;;
+    --local)            LOCAL=true; shift;;
+    --setup)            SETUP_ONLY=true; shift;;
+    -h|--help)          usage; exit 0;;
+    -V|--version)       echo "mkexe $VERSION"; exit 0;;
+    --)                 shift; break;;
+    -*)                 die "unknown option: $1 (try --help)";;
+    *)                  [ -z "$SOURCE" ] || die "only one SOURCE allowed"; SOURCE="$1"; shift;;
+  esac
+done
+if [ $# -gt 0 ] && [ -z "$SOURCE" ]; then SOURCE="$1"; fi
+
+# --------------------------------------------------------------- GitHub bits
+ensure_gh() {
+  command -v git >/dev/null || die "git not found. Run install.sh (or: pkg install git)"
+  command -v gh  >/dev/null || die "GitHub CLI not found. Run install.sh (or: pkg install gh)"
+  if ! gh auth status >/dev/null 2>&1; then
+    info "Log in to GitHub: choose GitHub.com > HTTPS > 'Login with a web browser' (or paste a token)"
+    gh auth login
+  fi
+  local st
+  st=$(gh auth status 2>&1 || true)
+  if printf '%s' "$st" | grep -q "Token scopes" && ! printf '%s' "$st" | grep -q "workflow"; then
+    info "Adding the 'workflow' permission (needed to push the build workflow)"
+    gh auth refresh -h github.com -s workflow
+  fi
+  gh auth setup-git >/dev/null 2>&1 || true
+}
+
+load_repo() {
+  if [ -z "$REPO" ] && [ -f "$CONFIG_FILE" ]; then
+    REPO=$(sed -n 's/^REPO=//p' "$CONFIG_FILE" | head -n1)
+  fi
+  if [ -z "$REPO" ]; then
+    local user
+    user=$(gh api user -q .login) || die "could not read your GitHub username"
+    REPO="$user/mkexe-builds"
+  fi
+  case "$REPO" in
+    */*) ;;
+    *) die "--repo must look like OWNER/REPO";;
+  esac
+}
+
+ensure_repo() {
+  if ! gh repo view "$REPO" >/dev/null 2>&1; then
+    info "Creating private build repo $REPO"
+    gh repo create "$REPO" --private --add-readme \
+      --description "Build jobs for mkexe" >/dev/null
+  fi
+  mkdir -p "$CONFIG_DIR"
+  printf 'REPO=%s\n' "$REPO" > "$CONFIG_FILE"
+}
+
+# ------------------------------------------------------------- the workflow
+write_workflow() {
+  cat > "$1" <<'YAML'
+name: Build Windows EXE
+run-name: Build ${{ inputs.job_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: Job folder under jobs/
+        required: true
+        type: string
+      name:
+        description: Output name
+        required: true
+        type: string
+      entry:
+        description: Entry script
+        required: true
+        type: string
+      windowed:
+        description: No console window
+        required: false
+        default: 'false'
+        type: string
+      onedir:
+        description: Folder build returned as zip
+        required: false
+        default: 'false'
+        type: string
+      icon:
+        description: Icon file (inside the job folder)
+        required: false
+        default: ''
+        type: string
+      pyver:
+        description: Python version
+        required: false
+        default: '3.12'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      JOB_ID: ${{ inputs.job_id }}
+      EXE_NAME: ${{ inputs.name }}
+      ENTRY: ${{ inputs.entry }}
+      WINDOWED: ${{ inputs.windowed }}
+      ONEDIR: ${{ inputs.onedir }}
+      ICON: ${{ inputs.icon }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.pyver }}
+
+      - name: Build
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$(pwd)"
+          cd "jobs/$JOB_ID/src"
+          python -m pip install --upgrade pip pyinstaller
+          if [ -f requirements.txt ]; then
+            python -m pip install -r requirements.txt
+          fi
+          ARGS=(--noconfirm --clean --name "$EXE_NAME")
+          if [ "$ONEDIR" = "true" ]; then ARGS+=(--onedir); else ARGS+=(--onefile); fi
+          if [ "$WINDOWED" = "true" ]; then ARGS+=(--windowed); fi
+          if [ -n "$ICON" ]; then ARGS+=(--icon "$ICON"); fi
+          pyinstaller "${ARGS[@]}" "$ENTRY"
+          mkdir -p "$ROOT/out"
+          if [ "$ONEDIR" = "true" ]; then
+            (cd dist && python -m zipfile -c "$ROOT/out/$EXE_NAME-windows.zip" "$EXE_NAME")
+          else
+            cp "dist/$EXE_NAME.exe" "$ROOT/out/"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exe-${{ inputs.job_id }}
+          path: out/*
+          if-no-files-found: error
+          retention-days: 7
+YAML
+}
+
+# ------------------------------------------------------------------- helpers
+pyinstaller_args() {
+  # prints PyInstaller args, one per line (for local builds)
+  printf '%s\n' --noconfirm --clean --name "$NAME"
+  if [ "$ONEDIR" = true ]; then echo --onedir; else echo --onefile; fi
+  if [ "$WINDOWED" = true ]; then echo --windowed; fi
+  if [ -n "$ICON_IN" ]; then printf '%s\n' --icon "$ICON_IN"; fi
+}
+
+STAGE=""
+cleanup() { [ -n "$STAGE" ] && rm -rf "$STAGE"; return 0; }
+trap cleanup EXIT
+
+# --------------------------------------------------------------- setup only
+if [ "$SETUP_ONLY" = true ]; then
+  ensure_gh; load_repo; ensure_repo
+  info "Ready. Build repo: https://github.com/$REPO"
+  exit 0
+fi
+
+# ------------------------------------------------------- validate the input
+[ -n "$SOURCE" ] || { usage; exit 1; }
+[ -e "$SOURCE" ] || die "not found: $SOURCE"
+
+STAGE=$(mktemp -d)
+SRC="$STAGE/src"
+mkdir -p "$SRC"
+
+if [ -d "$SOURCE" ]; then
+  [ -n "$ENTRY" ] || ENTRY="main.py"
+  tar -C "$SOURCE" \
+      --exclude=.git --exclude=dist --exclude=build --exclude=__pycache__ \
+      --exclude='*.pyc' --exclude='*.spec' -cf - . | tar -C "$SRC" -xf -
+  AUTO_REQ="$SOURCE/requirements.txt"
+else
+  case "$SOURCE" in *.py) ;; *) die "SOURCE must be a .py file or a folder";; esac
+  ENTRY=$(basename "$SOURCE")
+  cp "$SOURCE" "$SRC/$ENTRY"
+  AUTO_REQ="$(dirname "$SOURCE")/requirements.txt"
+fi
+
+[ -f "$SRC/$ENTRY" ] || die "entry script '$ENTRY' not found in $SOURCE (use --entry)"
+
+if [ -n "$REQS" ]; then
+  [ -f "$REQS" ] || die "requirements file not found: $REQS"
+  cp "$REQS" "$SRC/requirements.txt"
+elif [ ! -f "$SRC/requirements.txt" ] && [ -f "$AUTO_REQ" ]; then
+  cp "$AUTO_REQ" "$SRC/requirements.txt"
+fi
+[ -f "$SRC/requirements.txt" ] && info "Using requirements.txt"
+
+ICON_IN=""
+if [ -n "$ICON" ]; then
+  [ -f "$ICON" ] || die "icon not found: $ICON"
+  ICON_IN=$(basename "$ICON")
+  cp "$ICON" "$SRC/$ICON_IN"
+fi
+
+if [ -z "$NAME" ]; then NAME=$(basename "$ENTRY" .py); fi
+case "$NAME" in
+  *[!A-Za-z0-9._-]*|"") die "--name may only contain letters, digits, . _ -";;
+esac
+
+KB=$(du -sk "$SRC" | cut -f1)
+[ "$KB" -le "$MAX_KB" ] || die "project is ${KB} KB; GitHub limits files to 100 MB. Remove large data files."
+
+if command -v python3 >/dev/null 2>&1; then
+  python3 -c 'import sys; compile(open(sys.argv[1], "rb").read(), sys.argv[1], "exec")' "$SRC/$ENTRY" \
+    || die "syntax error in $ENTRY - fix it before building"
+fi
+
+mkdir -p "$OUT"
+OUT=$(cd "$OUT" && pwd)
+
+# --------------------------------------------------------------- local build
+if [ "$LOCAL" = true ]; then
+  command -v pyinstaller >/dev/null || die "pyinstaller not found. Run: install.sh --with-local"
+  warn "--local builds for THIS device (Android/Linux). It will not run on Windows."
+  mapfile -t PYI < <(pyinstaller_args)
+  (
+    cd "$SRC"
+    if [ -f requirements.txt ]; then python3 -m pip install -r requirements.txt; fi
+    pyinstaller "${PYI[@]}" "$ENTRY"
+  )
+  if [ "$ONEDIR" = true ]; then
+    rm -rf "$OUT/$NAME"; cp -a "$SRC/dist/$NAME" "$OUT/$NAME"
+  else
+    cp "$SRC/dist/$NAME" "$OUT/$NAME"
+  fi
+  info "Built: $OUT/$NAME"
+  exit 0
+fi
+
+# -------------------------------------------------------------- remote build
+ensure_gh
+load_repo
+ensure_repo
+
+JOB_ID="$(date +%Y%m%d-%H%M%S)-$RANDOM"
+info "Job $JOB_ID -> $REPO"
+
+CLONE="$STAGE/repo"
+gh repo clone "$REPO" "$CLONE" -- --depth 1 >/dev/null 2>&1 || die "could not clone $REPO"
+BRANCH=$(git -C "$CLONE" rev-parse --abbrev-ref HEAD)
+
+mkdir -p "$CLONE/.github/workflows" "$CLONE/jobs/$JOB_ID"
+write_workflow "$STAGE/workflow.yml"
+if ! cmp -s "$STAGE/workflow.yml" "$CLONE/.github/workflows/$WORKFLOW_FILE" 2>/dev/null; then
+  cp "$STAGE/workflow.yml" "$CLONE/.github/workflows/$WORKFLOW_FILE"
+fi
+cp -a "$SRC" "$CLONE/jobs/$JOB_ID/src"
+
+# keep only the newest jobs so the repo stays small
+if [ -d "$CLONE/jobs" ]; then
+  OLD=$(ls -1 "$CLONE/jobs" | sort | head -n "-$KEEP_JOBS" || true)
+  if [ -n "$OLD" ]; then
+    while IFS= read -r d; do rm -rf "$CLONE/jobs/$d"; done <<< "$OLD"
+  fi
+fi
+
+(
+  cd "$CLONE"
+  git add -A
+  git -c user.name="mkexe" -c user.email="mkexe@users.noreply.github.com" \
+      commit -q -m "mkexe job $JOB_ID: $NAME"
+  git push -q origin "HEAD:$BRANCH"
+) || die "push failed. If it mentions 'workflow' scope, run: gh auth refresh -s workflow"
+
+info "Starting Windows build"
+DISPATCHED=false
+for _ in 1 2 3 4 5 6 7 8; do
+  if gh workflow run "$WORKFLOW_FILE" --repo "$REPO" --ref "$BRANCH" \
+       -f job_id="$JOB_ID" -f name="$NAME" -f entry="$ENTRY" \
+       -f windowed="$WINDOWED" -f onedir="$ONEDIR" -f icon="$ICON_IN" \
+       -f pyver="$PYVER" >/dev/null 2>&1; then
+    DISPATCHED=true; break
+  fi
+  sleep 4   # GitHub can take a few seconds to register a new workflow file
+done
+[ "$DISPATCHED" = true ] || die "could not start the workflow on $REPO"
+
+RUN_ID=""
+for _ in $(seq 1 20); do
+  RUN_ID=$(gh run list --repo "$REPO" --workflow "$WORKFLOW_FILE" --limit 10 \
+             --json databaseId,displayTitle \
+             --jq "[.[] | select(.displayTitle | contains(\"$JOB_ID\"))][0].databaseId // empty" \
+             2>/dev/null || true)
+  [ -n "$RUN_ID" ] && break
+  sleep 3
+done
+[ -n "$RUN_ID" ] || die "build started but its run was not found; check https://github.com/$REPO/actions"
+
+RUN_URL="https://github.com/$REPO/actions/runs/$RUN_ID"
+info "Run: $RUN_URL"
+
+if [ "$WAIT" = false ]; then
+  info "Not waiting. Download later with:"
+  echo "  gh run download $RUN_ID --repo $REPO -n exe-$JOB_ID -D \"$OUT\""
+  exit 0
+fi
+
+if ! gh run watch "$RUN_ID" --repo "$REPO" --exit-status --interval 5; then
+  echo
+  warn "Build failed. Last log lines:"
+  gh run view "$RUN_ID" --repo "$REPO" --log-failed 2>/dev/null | tail -n 40 || true
+  die "full log: $RUN_URL"
+fi
+
+info "Downloading result"
+gh run download "$RUN_ID" --repo "$REPO" -n "exe-$JOB_ID" -D "$OUT" \
+  || die "download failed; try: gh run download $RUN_ID --repo $REPO -D \"$OUT\""
+
+if [ "$ONEDIR" = true ]; then RESULT="$OUT/$NAME-windows.zip"; else RESULT="$OUT/$NAME.exe"; fi
+if [ -f "$RESULT" ]; then
+  info "Done: $RESULT ($(du -h "$RESULT" | cut -f1))"
+else
+  warn "Downloaded, but expected file not found. Contents of $OUT:"
+  ls -l "$OUT"
+fi

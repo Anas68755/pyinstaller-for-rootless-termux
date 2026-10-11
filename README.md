@@ -1,63 +1,100 @@
-# termux-pyinstaller-setup
+# mkexe
 
-Get PyInstaller working in Termux (Android) with no root required.
+Build Windows `.exe` files from Python scripts, straight from Termux. No root, no Windows PC.
 
-## Background
+```bash
+mkexe myscript.py      # -> myscript.exe in the current folder
+```
 
-PyInstaller historically didn't work out of the box in Termux because:
+## How it works
 
-1. Termux ships no `gcc`, and PyInstaller's bootloader needs to compile
-   itself on first install.
-2. Older PyInstaller versions used SysV semaphores in the bootloader,
-   which don't exist in Android's Bionic libc.
-3. Older versions also looked for `libpython3.x.so` only in `/lib` and
-   `/usr/lib`, not Termux's actual prefix.
+PyInstaller can only build for the OS it runs on, so Termux (Android/Linux) can never produce a Windows `.exe` locally. `mkexe` gets around that:
 
-**As of PyInstaller 6.20.0 (April 2026), all of this is fixed upstream.**
-The project added native Termux detection (`is_termux`) and switched the
-bootloader to POSIX semaphores. No forking or source patching is needed
-anymore — you just need the right toolchain and a current version.
+1. Copies your script (or project folder) into a **private** GitHub repo it manages for you (`<you>/mkexe-builds`).
+2. Starts a GitHub Actions build on a real **Windows** runner using PyInstaller.
+3. Waits for it, then downloads the finished `.exe` to your device.
 
-This script automates that setup and proves it works with a real test
-build, rather than just trusting that `pip install` succeeded.
+You only run one command. Everything else is automatic.
+
+## Install
+
+Copy the folder to your device, then:
+
+```bash
+bash install.sh
+mkexe --setup        # one-time: log in to GitHub, create the build repo
+```
+
+`install.sh` installs `git`, `gh` (GitHub CLI) and `python` with `pkg`, and puts `mkexe` on your PATH.
+
+During `mkexe --setup`, choose **GitHub.com > HTTPS > Login with a web browser** (or paste a personal access token). If asked for the `workflow` permission, accept it; it is needed to push the build workflow.
 
 ## Usage
 
-```bash
-bash termux-pyinstaller-setup.sh
+```
+mkexe [options] SOURCE
 ```
 
-The script will:
+`SOURCE` is a `.py` file, or a project folder (entry script defaults to `main.py`).
 
-1. Update Termux packages.
-2. Install `clang`, `binutils`, `ldd`, `python`, `python-pip` (the
-   toolchain PyInstaller's bootloader needs to compile).
-3. Force-install a clean, current copy of PyInstaller.
-4. Verify the installed version is ≥ 6.20.0 and fail with a clear
-   message if not.
-5. Build and run a "Hello World" binary to confirm the whole pipeline
-   actually works end to end.
+| Option | What it does |
+|---|---|
+| `-n, --name NAME` | Output name (default: script name) |
+| `-e, --entry FILE` | Entry script inside a project folder |
+| `-r, --requirements FILE` | Requirements file (auto-detects `requirements.txt`) |
+| `-w, --windowed` | No console window (GUI apps) |
+| `-d, --onedir` | Folder build returned as a `.zip` instead of a single `.exe` |
+| `-i, --icon FILE.ico` | Icon for the exe |
+| `-o, --out DIR` | Where to save the result (default: current folder) |
+| `--pyver VERSION` | Python version on the runner (default `3.12`) |
+| `--repo OWNER/REPO` | Use a different build repo |
+| `--no-wait` | Start the build and exit; prints the download command |
+| `--local` | Build on this device instead (see below) |
+| `--setup` | Only log in and create the build repo |
 
-If the last step prints `SUCCESS`, PyInstaller is ready — use it
-normally from there:
+### Examples
 
 ```bash
-pyinstaller -F yourscript.py
+mkexe tool.py
+mkexe -w -i app.ico -n MyApp gui.py
+mkexe ~/projects/myapp -e run.py -o ~/storage/downloads
 ```
+
+To save into your phone's Downloads folder, run `termux-setup-storage` once, then use `-o ~/storage/downloads`.
+
+## Dependencies
+
+If a `requirements.txt` sits next to your script (or inside your project folder), it is installed on the runner before building. Or pass one with `-r`.
+
+## Local builds (optional)
+
+```bash
+bash install.sh --with-local
+mkexe --local myscript.py
+```
+
+This installs PyInstaller on your device (`clang`, `binutils`, `ldd`) and builds a binary for **Android/Linux**. It is not a Windows `.exe`. PyInstaller has supported Termux upstream since 6.20.0, so no patching is involved.
+
+## Good to know
+
+- **Your code is uploaded** to your private GitHub repo. Don't include secrets in the project folder.
+- Only the 10 most recent jobs are kept in the repo; older ones are pruned automatically. Build artifacts expire after 7 days.
+- **Cost:** public repos get free Actions minutes; private repos have a monthly free allowance, and Windows minutes count at a higher rate. Check GitHub's current limits if you build a lot.
+- PyInstaller `.exe` files are sometimes flagged by antivirus software (false positives). `--onedir` is flagged less often than single-file builds.
+- A build that fails prints the last log lines and a link to the full log.
 
 ## Troubleshooting
 
-- **Bootloader fails to compile:** confirm `clang` and `binutils`
-  installed correctly (`clang --version`, `strip --version`), then
-  re-run the script.
-- **Version check fails:** you're likely pulling from a stale
-  pip cache or mirror. Run `pip install --no-cache-dir
-  'pyinstaller>=6.20.0'` manually.
-- **Still fails on your device:** a few ARM32-vs-ARM64 edge cases have
-  been reported even post-fix. Share the exact error output for
-  further debugging.
+| Problem | Fix |
+|---|---|
+| `push failed ... workflow scope` | `gh auth refresh -s workflow`, then retry |
+| `could not start the workflow` | Wait a few seconds and retry; GitHub is slow to register a new workflow file |
+| Build fails on `ModuleNotFoundError` | Add the package to `requirements.txt` |
+| Exe crashes at startup | Rebuild without `-w` to see the console error |
+| Wrong build repo | `mkexe --repo OWNER/REPO --setup` (saved to `~/.config/mkexe/config`) |
 
-## Requirements
+## Files
 
-- Termux (no root needed)
-- Internet access on first run (for `pkg` and `pip` installs)
+- `mkexe`: the tool (the Windows build workflow is embedded inside it and pushed automatically)
+- `install.sh`: installer
+- `README.md`: this file
